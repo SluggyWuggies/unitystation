@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using AdminTools;
-using Audio;
+using Audio.Containers;
 using UnityEngine;
 using Mirror;
+using DiscordWebhook;
 
 public partial class PlayerNetworkActions : NetworkBehaviour
 {
@@ -884,6 +883,29 @@ public partial class PlayerNetworkActions : NetworkBehaviour
 	public void CmdGetAdminOverlayFullUpdate(string adminId, string adminToken)
 	{
 		AdminOverlay.RequestFullUpdate(adminId, adminToken);
+	}
+
+	[Command]
+	public void CmdToggleOOCMute(string adminId, string adminToken)
+	{
+		var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
+		if (admin == null) return;
+
+		string msg;
+
+		if (Chat.OOCMute)
+		{
+			Chat.OOCMute = false;
+			msg = "OOC has been unmuted";
+		}
+		else
+		{
+			Chat.OOCMute = true;
+			msg = "OOC has been muted";
+		}
+
+		Chat.AddGameWideSystemMsgToChat($"<color=blue>{msg}</color>");
+		DiscordWebhookMessage.Instance.AddWebHookMessageToQueue(DiscordWebhookURLs.DiscordWebhookOOCURL, msg, "");
 	}
 	#endregion
 
