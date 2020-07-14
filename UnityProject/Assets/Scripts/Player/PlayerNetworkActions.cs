@@ -2,10 +2,16 @@
 using System.Linq;
 using System.Text.RegularExpressions;
 using AdminTools;
+using Audio;
+using Items.PDA;
+using UnityEngine;
+using Mirror;
+using UI.PDA;
 using Audio.Containers;
 using UnityEngine;
 using Mirror;
 using DiscordWebhook;
+using InGameEvents;
 
 public partial class PlayerNetworkActions : NetworkBehaviour
 {
@@ -623,6 +629,20 @@ public partial class PlayerNetworkActions : NetworkBehaviour
 		}
 	}
 
+
+	/// <summary>
+	/// A variation of CmdRequestPaperEdit, but is used for the PDA notes system
+	/// </summary>
+	[Command]
+	public void CmdRequestNoteEdit(GameObject pdaObject, string newMsg)
+	{
+		if (!Validations.CanInteract(playerScript, NetworkSide.Server)) return;
+		PDANotesNetworkHandler noteNetworkScript = pdaObject.GetComponent<PDANotesNetworkHandler>();
+		noteNetworkScript.SetServerString(newMsg);
+		noteNetworkScript.UpdatePlayer(gameObject);
+
+	}
+
 	[Command]
 	public void CmdRequestRename(GameObject target, string customName)
 	{
@@ -916,6 +936,47 @@ public partial class PlayerNetworkActions : NetworkBehaviour
 
 		Chat.AddGameWideSystemMsgToChat($"<color=blue>{msg}</color>");
 		DiscordWebhookMessage.Instance.AddWebHookMessageToQueue(DiscordWebhookURLs.DiscordWebhookOOCURL, msg, "");
+	}
+
+	[Command]
+	public void CmdTriggerGameEvent(string adminId, string adminToken, int eventIndex, bool isFake, bool announceEvent, InGameEventType eventType)
+	{
+		var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
+		if (admin == null) return;
+
+		InGameEventsManager.Instance.TriggerSpecificEvent(eventIndex, eventType, isFake, PlayerList.Instance.GetByUserID(adminId).Username, announceEvent);
+	}
+
+	[Command]
+	public void CmdChangeNextMap(string adminId, string adminToken, string nextMap)
+	{
+		var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
+		if (admin == null) return;
+
+		if (SubSceneManager.AdminForcedMainStation == nextMap) return;
+
+		var msg = $"{PlayerList.Instance.GetByUserID(adminId).Username}: Changed the next round map from {SubSceneManager.AdminForcedMainStation} to {nextMap}.";
+
+		UIManager.Instance.adminChatWindows.adminToAdminChat.ServerAddChatRecord(msg, null);
+		DiscordWebhookMessage.Instance.AddWebHookMessageToQueue(DiscordWebhookURLs.DiscordWebhookAdminLogURL, msg, "");
+
+		SubSceneManager.AdminForcedMainStation = nextMap;
+	}
+
+	[Command]
+	public void CmdChangeAwaySite(string adminId, string adminToken, string nextAwaySite)
+	{
+		var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
+		if (admin == null) return;
+
+		if (SubSceneManager.AdminForcedAwaySite == nextAwaySite) return;
+
+		var msg = $"{PlayerList.Instance.GetByUserID(adminId).Username}: Changed the next round away site from {SubSceneManager.AdminForcedAwaySite} to {nextAwaySite}.";
+
+		UIManager.Instance.adminChatWindows.adminToAdminChat.ServerAddChatRecord(msg, null);
+		DiscordWebhookMessage.Instance.AddWebHookMessageToQueue(DiscordWebhookURLs.DiscordWebhookAdminLogURL, msg, "");
+
+		SubSceneManager.AdminForcedAwaySite = nextAwaySite;
 	}
 	#endregion
 

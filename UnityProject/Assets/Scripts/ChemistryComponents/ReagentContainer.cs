@@ -61,7 +61,7 @@ namespace Chemistry.Components
 		/// Server side only. Current reagent mix inside container.
 		/// Invoke OnReagentMixChanged if you change anything in reagent mix
 		/// </summary>
-		private ReagentMix CurrentReagentMix
+		public ReagentMix CurrentReagentMix
 		{
 			get
 			{
@@ -206,7 +206,10 @@ namespace Chemistry.Components
 			// add addition to reagent mix
 			CurrentReagentMix.Add(addition);
 			//Reactions happen here
-			ReactionSet.Apply(this, CurrentReagentMix);
+			if (ReactionSet != null)
+			{
+				ReactionSet.Apply(this, CurrentReagentMix);
+			}
 
 			// get mix total after all reactions
 			var afterReactionTotal = CurrentReagentMix.Total;

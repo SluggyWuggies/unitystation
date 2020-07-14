@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEngine;
 using Mirror;
 using AdminTools;
+using InGameEvents;
 
 public class AdminToolRefreshMessage : ServerMessage
 {
@@ -32,6 +33,14 @@ public class AdminToolRefreshMessage : ServerMessage
 		pageData.isSecret = GameManager.Instance.SecretGameMode;
 		pageData.currentGameMode = GameManager.Instance.GetGameModeName(true);
 		pageData.nextGameMode = GameManager.Instance.NextGameMode;
+
+		//Event Manager
+		pageData.randomEventsAllowed = InGameEventsManager.Instance.RandomEventsAllowed;
+
+		//Round Manager
+		pageData.nextMap = SubSceneManager.AdminForcedMainStation;
+		pageData.nextAwaySite = SubSceneManager.AdminForcedAwaySite;
+		pageData.allowLavaLand = SubSceneManager.AdminAllowLavaland;
 
 		//Player list info:
 		pageData.players = GetAllPlayerStates(adminID);

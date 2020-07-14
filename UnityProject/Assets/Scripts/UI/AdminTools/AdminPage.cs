@@ -42,6 +42,14 @@ namespace AdminTools
 		public bool isSecret;
 		public string nextGameMode;
 
+		//Event Manager Updates:
+		public bool randomEventsAllowed;
+
+		//Round Manager
+		public string nextMap;
+		public string nextAwaySite;
+		public bool allowLavaLand;
+
 		//Player Management:
 		public List<AdminPlayerEntryData> players = new List<AdminPlayerEntryData>();
 	}

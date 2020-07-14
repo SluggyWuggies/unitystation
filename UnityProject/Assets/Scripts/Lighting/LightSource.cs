@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections;
-using System.Linq;
-using System.Runtime.Remoting.Messaging;
+﻿using System.Collections;
 using Light2D;
 using Lighting;
 using Mirror;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-public class LightSource : ObjectTrigger, ICheckedInteractable<HandApply>, IAPCPowered, IServerDespawn
+public class LightSource : ObjectTrigger, ICheckedInteractable<HandApply>, IAPCPowered, IServerLifecycle, ISetMultitoolSlave
 {
 	public LightSwitchV2 relatedLightSwitch;
 	private float coolDownTime = 2.0f;
@@ -31,9 +28,9 @@ public class LightSource : ObjectTrigger, ICheckedInteractable<HandApply>, IAPCP
 	[SerializeField]private SpriteRenderer spriteRenderer;
 	[SerializeField]private SpriteRenderer spriteRendererLightOn;
 	private LightSprite lightSprite;
-	private EmergencyLightAnimator emergencyLightAnimator;
-	private Integrity integrity;
-	private Directional directional;
+	[SerializeField]private EmergencyLightAnimator emergencyLightAnimator;
+	[SerializeField]private Integrity integrity;
+	[SerializeField]private Directional directional;
 
 	[SerializeField] private BoxCollider2D boxColl = null;
 	[SerializeField] private Vector4 collDownSetting = Vector4.zero;
@@ -48,36 +45,28 @@ public class LightSource : ObjectTrigger, ICheckedInteractable<HandApply>, IAPCP
 	private GameObject itemInMount;
 	private float integrityThreshBar;
 
-	private bool isInit = false;
+	[SerializeField]
+	private MultitoolConnectionType conType = MultitoolConnectionType.LightSwitch;
+	public MultitoolConnectionType ConType  => conType;
 
-	private void Awake()
+	public void SetMaster(ISetMultitoolMaster Imaster)
 	{
-		EnsureInit();
+		var lightSwitch = (Imaster as Component)?.gameObject.GetComponent<LightSwitchV2>();
+		if (lightSwitch != relatedLightSwitch)
+		{
+			SubscribeToSwitchEvent(lightSwitch);
+		}
 	}
 
 	private void EnsureInit()
 	{
-		if (isInit) return;
 		if (mLightRendererObject == null)
 			mLightRendererObject = LightSpriteBuilder.BuildDefault(gameObject, new Color(0, 0, 0, 0), 12);
 
-		if(spriteRenderer == null)
-			spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-
-		if(spriteRendererLightOn == null) spriteRendererLightOn = GetComponentsInChildren<SpriteRenderer>().Length > 1
-			? GetComponentsInChildren<SpriteRenderer>()[1] : GetComponentsInChildren<SpriteRenderer>()[0];
+		directional.OnDirectionChange.AddListener(OnDirectionChange);
 
 		if(lightSprite == null)
 			lightSprite = mLightRendererObject.GetComponent<LightSprite>();
-
-		if(emergencyLightAnimator == null)
-			emergencyLightAnimator = GetComponent<EmergencyLightAnimator>();
-
-		if (integrity == null)
-			integrity = GetComponent<Integrity>();
-
-		if(directional == null)
-			directional = GetComponent<Directional>();
 
 		if(currentState == null)
 			ChangeCurrentState(InitialState);
@@ -89,16 +78,22 @@ public class LightSource : ObjectTrigger, ICheckedInteractable<HandApply>, IAPCP
 			switchState = InitialState == LightMountState.On;
 	}
 
-	public override void OnStartServer()
+	private void OnDirectionChange(Orientation newDir)
 	{
-		EnsureInit();
-		base.OnStartServer();
-		mState = InitialState;
+		SetSprites();
+	}
+
+	public void OnSpawnServer(SpawnInfo info)
+	{
+		if (!info.SpawnItems)
+		{
+			mState = LightMountState.MissingBulb;
+		}
 	}
 
 	public override void OnStartClient()
 	{
-		EnsureInit();
+		//EnsureInit();
 		base.OnStartClient();
 		GetComponent<RegisterTile>().WaitForMatrixInit(InitClientValues);
 
@@ -318,21 +313,19 @@ public class LightSource : ObjectTrigger, ICheckedInteractable<HandApply>, IAPCP
 
 	#region SwitchRelatedLogic
 
-	public bool SubscribeToSwitchEvent(LightSwitchV2 lightSwitch)
+	public void SubscribeToSwitchEvent(LightSwitchV2 lightSwitch)
 	{
-		if (lightSwitch == null) return false;
 		UnSubscribeFromSwitchEvent();
 		relatedLightSwitch = lightSwitch;
 		lightSwitch.switchTriggerEvent += Trigger;
-		return true;
 	}
 
-	public bool UnSubscribeFromSwitchEvent()
+	public void UnSubscribeFromSwitchEvent()
 	{
-		if (relatedLightSwitch == null) return false;
+		if (relatedLightSwitch == null)
+			return;
 		relatedLightSwitch.switchTriggerEvent -= Trigger;
 		relatedLightSwitch = null;
-		return true;
 	}
 
 	public override void Trigger(bool newState)

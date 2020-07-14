@@ -53,5 +53,4 @@ public class Scrubber : AdvancedPipe
 			metaDataLayer.UpdateSystemsAt(RegisterTile.LocalPositionServer);
 		}
 	}
-
 }

@@ -1,11 +1,14 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using Electric.Inheritance;
 using UnityEngine;
 using Mirror;
 
 /// <summary>
 /// Allows object to function as a door switch - opening / closing door when clicked.
 /// </summary>
-public class DoorSwitch : NetworkBehaviour, ICheckedInteractable<HandApply>
+public class DoorSwitch : SubscriptionController, ICheckedInteractable<HandApply>, ISetMultitoolMaster
 {
 	private SpriteRenderer spriteRenderer;
 	public Sprite greenSprite;
@@ -19,10 +22,22 @@ public class DoorSwitch : NetworkBehaviour, ICheckedInteractable<HandApply>
 	public Access access;
 
 
-	public DoorController[] doorControllers;
+	public List<DoorController> doorControllers = new List<DoorController>();
 
 	private bool buttonCoolDown = false;
 	private AccessRestrictions accessRestrictions;
+
+	[SerializeField]
+	private MultitoolConnectionType conType = MultitoolConnectionType.DoorButton;
+	public MultitoolConnectionType ConType  => conType;
+
+	private bool multiMaster = true;
+	public bool MultiMaster => multiMaster;
+
+	public void AddSlave(object SlaveObject)
+	{
+	}
+
 
 	private void Start()
 	{
@@ -55,42 +70,31 @@ public class DoorSwitch : NetworkBehaviour, ICheckedInteractable<HandApply>
 	{
 		if (accessRestrictions != null && restricted)
 		{
-			if (accessRestrictions.CheckAccess(interaction.Performer))
-			{
-				RunDoorController();
-				RpcPlayButtonAnim(true);
-			}
-			else
+			if (!accessRestrictions.CheckAccess(interaction.Performer))
 			{
 				RpcPlayButtonAnim(false);
+				return;
 			}
 		}
-		else
-		{
-			RunDoorController();
-			RpcPlayButtonAnim(true);
-		}
+
+		RunDoorController();
+		RpcPlayButtonAnim(true);
+
 	}
 
 	private void RunDoorController()
 	{
-		for (int i = 0; i < doorControllers.Length; i++)
+		for (int i = 0; i < doorControllers.Count; i++)
 		{
 			if(doorControllers[i] == null) continue;
 
 			if (doorControllers[i].IsClosed)
 			{
-				if (doorControllers[i] != null)
-				{
-					doorControllers[i].ServerOpen();
-				}
+				doorControllers[i].ServerOpen();
 			}
 			else
 			{
-				if (doorControllers[i] != null)
-				{
-					doorControllers[i].ServerClose();
-				}
+				doorControllers[i].ServerClose();
 			}
 		}
 	}
@@ -148,6 +152,8 @@ public class DoorSwitch : NetworkBehaviour, ICheckedInteractable<HandApply>
 		spriteRenderer.sprite = greenSprite;
 	}
 
+	#region Editor
+
 	void OnDrawGizmosSelected()
 	{
 		var sprite = GetComponentInChildren<SpriteRenderer>();
@@ -156,7 +162,7 @@ public class DoorSwitch : NetworkBehaviour, ICheckedInteractable<HandApply>
 
 		//Highlighting all controlled doors with red lines and spheres
 		Gizmos.color = new Color(1, 0.5f, 0, 1);
-		for (int i = 0; i < doorControllers.Length; i++)
+		for (int i = 0; i < doorControllers.Count; i++)
 		{
 			var doorController = doorControllers[i];
 			if(doorController == null) continue;
@@ -164,4 +170,34 @@ public class DoorSwitch : NetworkBehaviour, ICheckedInteractable<HandApply>
 			Gizmos.DrawSphere(doorController.transform.position, 0.25f);
 		}
 	}
+
+	public override IEnumerable<GameObject> SubscribeToController(IEnumerable<GameObject> potentialObjects)
+	{
+		var approvedObjects = new List<GameObject>();
+
+		foreach (var potentialObject in potentialObjects)
+		{
+			var doorController = potentialObject.GetComponent<DoorController>();
+			if (doorController == null) continue;
+			AddDoorControllerFromScene(doorController);
+			approvedObjects.Add(potentialObject);
+		}
+
+		return approvedObjects;
+	}
+
+	private void AddDoorControllerFromScene(DoorController doorController)
+	{
+		if (doorControllers.Contains(doorController))
+		{
+			doorControllers.Remove(doorController);
+		}
+		else
+		{
+			doorControllers.Add(doorController);
+		}
+	}
+
+	#endregion
+
 }

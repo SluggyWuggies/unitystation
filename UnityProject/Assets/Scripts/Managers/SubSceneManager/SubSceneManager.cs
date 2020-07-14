@@ -13,8 +13,11 @@ public partial class SubSceneManager : NetworkBehaviour
 	public AwayWorldListSO awayWorldList;
 	[SerializeField] private MainStationListSO mainStationList = null;
 	[SerializeField] private AsteroidListSO asteroidList = null;
+	[SerializeField] private AdditionalSceneListSO additionalSceneList = null;
 
 	readonly ScenesSyncList loadedScenesList = new ScenesSyncList();
+
+	public MainStationListSO MainStationList => mainStationList;
 
 	public bool AwaySiteLoaded { get; private set; }
 	public bool MainStationLoaded { get; private set; }
@@ -76,7 +79,8 @@ public enum SceneType
 {
 	MainStation,
 	AwaySite,
-	Asteroid
+	Asteroid,
+	AdditionalScenes
 }
 
 [System.Serializable]
