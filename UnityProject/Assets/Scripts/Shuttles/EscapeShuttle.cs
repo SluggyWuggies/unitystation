@@ -20,13 +20,25 @@ public class EscapeShuttle : NetworkBehaviour
 	/// <summary>
 	/// Orientation for docking at station, eg Up if north to south.
 	/// </summary>
+	[Tooltip("Orientation for docking at station, eg Up if north to south.")]
 	public OrientationEnum orientationForDocking = OrientationEnum.Up;
+
+	/// <summary>
+	/// Orientation for docking at CentCom, eg Up if south to north.
+	/// </summary>
+	[Tooltip("Orientation for docking at CentCom, eg Up if south to north.")]
+	public OrientationEnum orientationForDockingAtCentcom = OrientationEnum.Right;
 
 	//Coord set in inspector
 	public Vector2 stationDockingLocation;
 	public Vector2 stationTeleportLocation;
 
 	public int reverseDockOffset = 50;
+
+	/// <summary>
+	/// How far to travel after teleport until it reaches centcom.
+	/// </summary>
+	public int centComDockingOffset = 1000;
 
 	//Destination Stuff
 	[HideInInspector]
@@ -69,6 +81,8 @@ public class EscapeShuttle : NetworkBehaviour
 		set => initialTimerSeconds = value;
 	}
 	[Range( 0, 2000 )] [SerializeField] private int initialTimerSeconds = 120;
+
+	private int initialTimerSecondsCache;
 
 	/// <summary>
 	/// How many seconds should be left before arrival when recall should be blocked, affected by alert level
@@ -122,6 +136,14 @@ public class EscapeShuttle : NetworkBehaviour
 
 	[SerializeField] private EscapeShuttleStatus internalStatus = EscapeShuttleStatus.DockedCentcom;
 
+	private Vector3 centComTeleportPosOffset = Vector3.zero;
+
+	[HideInInspector]
+	public bool blockCall;
+
+	[HideInInspector]
+	public bool blockRecall;
+
 	private void Start()
 	{
 		switch (orientationForDocking)
@@ -145,11 +167,35 @@ public class EscapeShuttle : NetworkBehaviour
 		}
 
 		centComm = GameManager.Instance.GetComponent<CentComm>();
+
+		initialTimerSecondsCache = initialTimerSeconds;
 	}
 
 	public void InitDestination(Vector3 newPos)
 	{
-		CentTeleportToCentDock = new Destination { Orientation = Orientation.Right, Position = newPos};
+		Orientation orientation = Orientation.Right;
+
+		switch (orientationForDockingAtCentcom)
+		{
+			case OrientationEnum.Up:
+				centComTeleportPosOffset += new Vector3(0, -centComDockingOffset, 0);
+				orientation = Orientation.Up;
+				break;
+			case OrientationEnum.Down:
+				centComTeleportPosOffset += new Vector3(0, centComDockingOffset, 0);
+				orientation = Orientation.Down;
+				break;
+			case OrientationEnum.Left:
+				centComTeleportPosOffset += new Vector3(centComDockingOffset, 0, 0);
+				orientation = Orientation.Left;
+				break;
+			default:
+				centComTeleportPosOffset += new Vector3(-centComDockingOffset, 0, 0);
+				orientation = Orientation.Right;
+				break;
+		}
+
+		CentTeleportToCentDock = new Destination { Orientation = orientation, Position = newPos};
 	}
 
 	private void Awake()
@@ -244,7 +290,7 @@ public class EscapeShuttle : NetworkBehaviour
 				}
 			}
 
-			else if ( DistanceToDestination < reverseDockOffset)
+			else if ( DistanceToDestination < reverseDockOffset && Status == EscapeShuttleStatus.OnRouteStation)
 			{
 				TryPark();
 			}
@@ -285,6 +331,11 @@ public class EscapeShuttle : NetworkBehaviour
 				}
 			}
 		}
+	}
+
+	private void OnDisable()
+	{
+		StopAllCoroutines();
 	}
 
 	//sorry, not really clean, robust or universal
@@ -335,15 +386,21 @@ public class EscapeShuttle : NetworkBehaviour
 	/// <summary>
 	/// Calls the shuttle from afar.
 	/// </summary>
-	public bool CallShuttle(out string callResult, int seconds = 0)
+	public bool CallShuttle(out string callResult, int seconds = 0, bool bypassLimits = false)
 	{
-		startedMovingToStation = false;
+		if (blockCall && !bypassLimits)
+		{
+			callResult = "The emergency shuttle cannot be called at this time.";
+			return false;
+		}
 
 		if ( Status != EscapeShuttleStatus.DockedCentcom )
 		{
 			callResult = "Can't call shuttle: not docked at Centcom!";
 			return false;
 		}
+
+		startedMovingToStation = false;
 
 		var Alert = centComm.CurrentAlertLevel;
 
@@ -352,8 +409,8 @@ public class EscapeShuttle : NetworkBehaviour
 		if (Alert == CentComm.AlertLevel.Green)
 		{
 			//Double the Time
-			InitialTimerSeconds *= 2;
-			TooLateToRecallSeconds *= 2;
+			InitialTimerSeconds = initialTimerSecondsCache * 2;
+			TooLateToRecallSeconds = initialTimerSecondsCache * 2;
 		}
 		else if (Alert == CentComm.AlertLevel.Blue)
         {
@@ -362,8 +419,8 @@ public class EscapeShuttle : NetworkBehaviour
 		else if (Alert == CentComm.AlertLevel.Red || Alert == CentComm.AlertLevel.Delta)
 		{
 			//Half the Time
-			InitialTimerSeconds /= 2;
-			TooLateToRecallSeconds /= 2;
+			InitialTimerSeconds = initialTimerSecondsCache / 2;
+			TooLateToRecallSeconds = initialTimerSecondsCache / 2;
 		}
 
 
@@ -421,16 +478,21 @@ public class EscapeShuttle : NetworkBehaviour
 
 	#region Recall
 
-	public bool RecallShuttle(out string callResult)
+	public bool RecallShuttle(out string callResult, bool ignoreTooLateToRecall = false)
 	{
-		startedMovingToStation = false;
+		if (blockRecall && !ignoreTooLateToRecall)
+		{
+			callResult = "The emergency shuttle cannot be recalled at this time.";
+			return false;
+		}
 
-		if ( Status != EscapeShuttleStatus.OnRouteStation
-		     || CurrentTimerSeconds < TooLateToRecallSeconds )
+		if ( Status != EscapeShuttleStatus.OnRouteStation || (!ignoreTooLateToRecall && CurrentTimerSeconds < TooLateToRecallSeconds) )
 		{
 			callResult = "Can't recall shuttle: not on route to Station or too late to recall!";
 			return false;
 		}
+
+		startedMovingToStation = false;
 
 		this.TryStopCoroutine( ref timerHandle );
 		this.StartCoroutine( TickTimer( true ), ref timerHandle );
@@ -456,7 +518,9 @@ public class EscapeShuttle : NetworkBehaviour
 		mm.StopMovement();
 		Status = EscapeShuttleStatus.OnRouteToCentCom;
 
-		mm.SetPosition( CentTeleportToCentDock.Position - new Vector3(1000,0,0) );
+		HasShuttleDockedToStation = false;
+
+		mm.SetPosition( CentTeleportToCentDock.Position + centComTeleportPosOffset);
 		mm.SetSpeed( 90 );
 		MoveTo(CentTeleportToCentDock);
 
@@ -504,7 +568,7 @@ public class EscapeShuttle : NetworkBehaviour
 	public void TeleportToCentTeleport()
 	{
 		mm.StopMovement();
-		mm.SetPosition(CentTeleportToCentDock.Position - new Vector3(1000,0,0) );
+		mm.SetPosition(CentTeleportToCentDock.Position + centComTeleportPosOffset);
 		MoveTo(CentTeleportToCentDock);
 	}
 

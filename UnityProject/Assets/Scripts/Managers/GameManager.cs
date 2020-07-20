@@ -33,6 +33,11 @@ public partial class GameManager : MonoBehaviour
 	public float RoundEndTime { get; set; } = 60f;
 
 	/// <summary>
+	/// How long to wait between ending the round and starting a new one
+	/// </summary>
+	public int ShuttleDepartTime { get; set; } = 30;
+
+	/// <summary>
 	/// The current time left on the countdown timer
 	/// </summary>
 	public float CountdownTime { get; private set; }
@@ -122,7 +127,7 @@ public partial class GameManager : MonoBehaviour
 	/// If the JSON is configured incorrectly (null entry), uses default values.
 	///</summary>
 	// TODO: Currently, there is no data validation to ensure the config has reasonable values, need to configure setters.
-	private void LoadConfig() 
+	private void LoadConfig()
 	{
 		if(GameConfigManager.GameConfig.MinPlayersForCountdown != null)
 			MinPlayersForCountdown = GameConfigManager.GameConfig.MinPlayersForCountdown;
@@ -141,6 +146,9 @@ public partial class GameManager : MonoBehaviour
 
 		if(GameConfigManager.GameConfig.RespawnAllowed != null)
 			RespawnAllowed = GameConfigManager.GameConfig.RespawnAllowed;
+
+		if(GameConfigManager.GameConfig.ShuttleDepartTime != null)
+			ShuttleDepartTime = GameConfigManager.GameConfig.ShuttleDepartTime;
 	}
 
 	private void OnEnable()
@@ -486,13 +494,17 @@ public partial class GameManager : MonoBehaviour
 
 		string message = $"A new round is starting on {ServerData.ServerConfig.ServerName}.\nThe current gamemode is: {msg}\n";
 
-		if (PlayerList.Instance.ConnectionCount == 1)
+		var playerNumber = PlayerList.Instance.ConnectionCount > PlayerList.LastRoundPlayerCount
+			? PlayerList.Instance.ConnectionCount
+			: PlayerList.LastRoundPlayerCount;
+
+		if (playerNumber == 1)
 		{
 			message += "There is 1 player online.\n";
 		}
 		else
 		{
-			message += $"There are {PlayerList.Instance.ConnectionCount} players online.\n";
+			message += $"There are {playerNumber} players online.\n";
 		}
 
 		DiscordWebhookMessage.Instance.AddWebHookMessageToQueue(DiscordWebhookURLs.DiscordWebhookAnnouncementURL, message, "");
@@ -651,5 +663,7 @@ public partial class GameManager : MonoBehaviour
 		yield return WaitFor.Seconds(0.2f);
 
 		CustomNetworkManager.Instance.ServerChangeScene("OnlineScene");
+
+		StopAllCoroutines();
 	}
 }

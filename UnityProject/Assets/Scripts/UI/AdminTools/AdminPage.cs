@@ -49,6 +49,11 @@ namespace AdminTools
 		public string nextMap;
 		public string nextAwaySite;
 		public bool allowLavaLand;
+		public string alertLevel;
+
+		//Centcom
+		public bool blockCall;
+		public bool blockRecall;
 
 		//Player Management:
 		public List<AdminPlayerEntryData> players = new List<AdminPlayerEntryData>();
