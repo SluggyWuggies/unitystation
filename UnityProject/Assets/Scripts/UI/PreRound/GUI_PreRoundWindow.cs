@@ -3,6 +3,9 @@ using Mirror;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using DatabaseAPI;
+using ServerInfo;
+using AdminCommands;
 
 public class GUI_PreRoundWindow : MonoBehaviour
 {
@@ -45,10 +48,26 @@ public class GUI_PreRoundWindow : MonoBehaviour
 	[SerializeField]
 	private Button characterButton = null;
 
+	public GameObject serverInfo;
+
 	// Internal variables
 	private bool doCountdown;
 	private double countdownEndTime;
 	private bool isReady;
+
+	public static GUI_PreRoundWindow Instance;
+
+	void Awake()
+	{
+		if (Instance == null)
+		{
+			Instance = this;
+		}
+		else
+		{
+			Destroy(gameObject);
+		}
+	}
 
 	private void OnDisable()
 	{
@@ -59,9 +78,9 @@ public class GUI_PreRoundWindow : MonoBehaviour
 
 	private void Update()
 	{
-		// TODO: remove once admin system is in
-		if (Input.GetKeyDown(KeyCode.F7) && !BuildPreferences.isForRelease)
+		if (Input.GetKeyDown(KeyCode.F7))
 		{
+			if(PlayerList.Instance.AdminToken == null) return;
 			adminPanel.SetActive(true);
 		}
 
@@ -105,12 +124,7 @@ public class GUI_PreRoundWindow : MonoBehaviour
 
 	public void StartNowButton()
 	{
-		if (CustomNetworkManager.Instance._isServer == false)
-		{
-			Logger.LogError("Can only execute command from server.", Category.DebugConsole);
-			return;
-		}
-		GameManager.Instance.StartRound();
+		ServerCommandVersionOneMessageClient.Send(ServerData.UserID, PlayerList.Instance.AdminToken, "CmdStartRound");
 	}
 
 	public void SyncCountdown(bool started, double endTime)
@@ -171,6 +185,14 @@ public class GUI_PreRoundWindow : MonoBehaviour
 		readyText.text = (!ready) ? "Ready" : "Unready";
 	}
 
+	private void SetInfoScreenOn()
+	{
+		ServerInfoLobbyMessageClient.Send(ServerData.UserID);
+		serverInfo.SetActive(false);
+		if(string.IsNullOrEmpty(ServerInfoUI.serverDesc)) return;
+		serverInfo.SetActive(true);
+	}
+
 	/// <summary>
 	/// Show waiting for players text
 	/// </summary>
@@ -181,6 +203,8 @@ public class GUI_PreRoundWindow : MonoBehaviour
 		playerWaitPanel.SetActive(true);
 		mainPanel.SetActive(false);
 		rejoiningRoundPanel.SetActive(false);
+
+		SetInfoScreenOn();
 	}
 
 	/// <summary>
@@ -194,6 +218,8 @@ public class GUI_PreRoundWindow : MonoBehaviour
 		playerWaitPanel.SetActive(false);
 		mainPanel.SetActive(true);
 		rejoiningRoundPanel.SetActive(false);
+
+		SetInfoScreenOn();
 	}
 
 	/// <summary>
@@ -206,6 +232,8 @@ public class GUI_PreRoundWindow : MonoBehaviour
 		playerWaitPanel.SetActive(false);
 		mainPanel.SetActive(true);
 		rejoiningRoundPanel.SetActive(false);
+
+		SetInfoScreenOn();
 	}
 
 	public void ShowRejoiningPanel()

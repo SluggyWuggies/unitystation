@@ -1,7 +1,10 @@
-﻿using TMPro;
+﻿using Audio.Containers;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using System;
+using System.Globalization;
 
 /// <summary>
 /// Manages the UI buttons for letting the player choose their desired job.
@@ -83,7 +86,7 @@ public class GUI_PlayerJobs : MonoBehaviour
 		{
 			// Job selection is finished, close the window.
 			waitForSpawnTimer = 0;
-			SoundManager.SongTracker.Stop();
+			MusicManager.SongTracker.Stop();
 			gameObject.SetActive(false);
 			waitMessage.SetActive(false);
 			screen_Jobs.SetActive(true);
@@ -134,8 +137,11 @@ public class GUI_PlayerJobs : MonoBehaviour
 			// This line was added for unit testing - but now it's only rewrite occupations meta
 			//occupation.name = jobType.ToString();
 
-			occupationGO.GetComponent<Image>().color = occupation.ChoiceColor;
-			occupationGO.GetComponentInChildren<TextMeshProUGUI>().text = occupation.DisplayName + " (" + active + " of " + available + ")";
+			var image = occupationGO.GetComponent<Image>();
+			var text = occupationGO.GetComponentInChildren<TextMeshProUGUI>();
+
+			image.color = occupation.ChoiceColor;
+			text.text = occupation.DisplayName + " (" + active + " of " + available + ")";
 			occupationGO.transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
 
 			// Disabled button for full jobs
@@ -146,6 +152,20 @@ public class GUI_PlayerJobs : MonoBehaviour
 			else // Enabled button with listener for vacant jobs
 			{
 				occupationGO.GetComponent<Button>().onClick.AddListener(() => { BtnOk(jobType); });
+			}
+
+			var check = PlayerList.Instance.ClientCheckBanReturn(occupation.JobType);
+
+			if (check != null)
+			{
+				var entryTime = DateTime.ParseExact(check.dateTimeOfBan,"O",CultureInfo.InvariantCulture);
+				var totalMins = Mathf.Abs((float)(entryTime - DateTime.Now).TotalMinutes);
+
+				image.color = Color.red;
+				var msg = check.isPerma ? "Perma Banned" : $"banned for {Mathf.RoundToInt((float)check.minutes - totalMins)} minutes";
+				text.text = occupation.DisplayName + $" is {msg}";
+
+				occupationGO.GetComponent<Button>().interactable = false;
 			}
 
 			// Job window listener
@@ -170,7 +190,7 @@ public class GUI_PlayerJobs : MonoBehaviour
 		occupationGO.GetComponent<Image>().color = Color.white;
 		occupationGO.GetComponentInChildren<TextMeshProUGUI>().text = "Spectate";
 		occupationGO.transform.localScale = new Vector3(1.0f, 1f, 1.0f);
-		occupationGO.GetComponent<Button>().onClick.AddListener(() => { PlayerManager.LocalViewerScript.CmdSpectate(); });
+		occupationGO.GetComponent<Button>().onClick.AddListener(() => { PlayerManager.LocalViewerScript.Spectate(); });
 
 	}
 }

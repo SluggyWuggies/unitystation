@@ -5,7 +5,7 @@ using UnityEngine;
 using Mirror;
 using System.Collections.Generic;
 
-public class DoorController : NetworkBehaviour, IServerSpawn
+public class DoorController : NetworkBehaviour, IServerSpawn, ISetMultitoolSlave
 {
 	//public bool isWindowed = false;
 	public enum OpeningDirection
@@ -53,6 +53,25 @@ public class DoorController : NetworkBehaviour, IServerSpawn
 
 	[Tooltip("Does this door open automatically when you walk into it?")]
 	public bool IsAutomatic = true;
+
+	[SerializeField]
+	private MultitoolConnectionType conType = MultitoolConnectionType.DoorButton;
+	public MultitoolConnectionType ConType  => conType;
+
+	public void SetMaster(ISetMultitoolMaster Imaster)
+	{
+		var doorSwitch = (Imaster as DoorSwitch);
+		if (doorSwitch)
+		{
+			doorSwitch.doorControllers.Add(this);
+			return;
+		}
+		var statusDisplay = (Imaster as StatusDisplay);
+		if (statusDisplay)
+		{
+			//statusDisplay.LinkDoor(this);
+		}
+	}
 
 	/// <summary>
 	/// Makes registerTile door closed state accessible
@@ -352,14 +371,22 @@ public class DoorController : NetworkBehaviour, IServerSpawn
 		}
 	}
 
-	public void ServerOpen()
+	public void HackingServerOpen()
+	{
+		ServerOpen();
+	}
+
+	public void ServerOpen(bool startCloseTimer = true)
 	{
 		if (this == null || gameObject == null) return; // probably destroyed by a shuttle crash
 		if (Time.time < delayStartTime + inputDelay) return;
 
 		delayStartTime = Time.time;
 
-		ResetWaiting();
+		if (startCloseTimer)
+		{
+			ResetWaiting();
+		}
 		IsClosed = false;
 
 		if (isHackable && hackingLoaded)
@@ -540,7 +567,7 @@ public class DoorController : NetworkBehaviour, IServerSpawn
 	{
 
 		HackingNode openDoor = hackingProcess.GetNodeWithInternalIdentifier("OpenDoor");
-		openDoor.AddToInputMethods(ServerOpen);
+		openDoor.AddToInputMethods(HackingServerOpen);
 
 		HackingNode closeDoor = hackingProcess.GetNodeWithInternalIdentifier("CloseDoor");
 		closeDoor.AddToInputMethods(ServerClose);

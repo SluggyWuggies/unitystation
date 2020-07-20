@@ -56,7 +56,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   UseStandardExamine: 1
-  ExamineAmount: 0
+  ExamineAmount: 1
   ExamineContent: 0
   traitWhitelist: []
   reagentWhitelist:
@@ -73,6 +73,7 @@ MonoBehaviour:
       - {fileID: 11400000, guid: f4f9cca4ec6d74752a99cdbf95072489, type: 2}
       m_values:
       - 20
+  destroyOnEmpty: 0
 --- !u!1 &7095945559787729905
 GameObject:
   m_ObjectHideFlags: 0

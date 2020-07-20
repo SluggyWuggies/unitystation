@@ -40,6 +40,11 @@ public partial class PlayerList : NetworkBehaviour
 	public Dictionary<PlayerScript, List<PlayerScript>>
 		KillTracker = new Dictionary<PlayerScript, List<PlayerScript>>();
 
+	/// <summary>
+	/// Records the last round player count
+	/// </summary>
+	public static int LastRoundPlayerCount = 0;
+
 	private void Awake()
 	{
 		if (Instance == null)
@@ -50,6 +55,21 @@ public partial class PlayerList : NetworkBehaviour
 		{
 			Destroy(gameObject);
 		}
+	}
+
+	void OnEnable()
+	{
+		EventManager.AddHandler(EVENT.RoundEnded, SetEndOfRoundPlayerCount);
+	}
+
+	void OnDisable()
+	{
+		EventManager.RemoveHandler(EVENT.RoundEnded, SetEndOfRoundPlayerCount);
+	}
+
+	private void SetEndOfRoundPlayerCount()
+	{
+		LastRoundPlayerCount = Instance.ConnectionCount;
 	}
 
 	public override void OnStartServer()
@@ -169,7 +189,7 @@ public partial class PlayerList : NetworkBehaviour
 		if (loggedOffClient  != null)
 		{
 			Logger.Log(
-				$"ConnectedPlayer {player} already exists in this server's PlayerList as {loggedOff}. " +
+				$"ConnectedPlayer Username({player.Username}) already exists in this server's PlayerList as Character({loggedOffClient.Name}) " +
 				$"Will update existing player instead of adding this new connected player.");
 
 			if (loggedOffClient.GameObject == null)
