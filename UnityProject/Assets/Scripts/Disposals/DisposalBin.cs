@@ -33,7 +33,6 @@ namespace Disposals
 		// GUI instances can listen to this, to update UI state.
 		public event Action BinStateUpdated;
 
-		[SyncVar(hook = nameof(OnSyncBinState))]
 		BinState binState = BinState.Disconnected;
 		[SyncVar]
 		int chargePressure = 0;
@@ -78,6 +77,7 @@ namespace Disposals
 
 			chargePressure = CHARGED_PRESSURE;
 			binState = BinState.Ready;
+			OnSyncBinState(binState);
 		}
 
 		public override void OnStartClient()
@@ -95,7 +95,7 @@ namespace Disposals
 
 		#region Sync
 
-		void OnSyncBinState(BinState oldState, BinState newState)
+		void OnSyncBinState(BinState newState)
 		{
 			binState = newState;
 			UpdateSpriteBinState();
@@ -187,6 +187,10 @@ namespace Disposals
 		public bool WillInteract(MouseDrop interaction, NetworkSide side)
 		{
 			if (!DefaultWillInteract.Default(interaction, side)) return false;
+			if (!Validations.IsInReach(
+					interaction.Performer.RegisterTile(),
+					interaction.UsedObject.RegisterTile(),
+					side == NetworkSide.Server)) return false;
 
 			return true;
 		}
@@ -197,7 +201,7 @@ namespace Disposals
 			if (interaction.UsedObject == null) return;
 			if (!interaction.UsedObject.TryGetComponent<PlayerScript>(out var script)) return; // Test to see if player
 
-			//Dont store player unless secured so they dont get stuck.
+			// Don't store player unless secured.
 			if (!MachineSecured) return;
 			StartStoringPlayer(interaction);
 		}
@@ -330,6 +334,7 @@ namespace Disposals
 			if (BinCharged)
 			{
 				binState = BinState.Ready;
+				OnSyncBinState(binState);
 				if (ServerHasContents)
 				{
 					this.RestartCoroutine(AutoFlush(), ref autoFlushCoroutine);
@@ -338,6 +343,7 @@ namespace Disposals
 			else
 			{
 				binState = BinState.Recharging;
+				OnSyncBinState(binState);
 				this.RestartCoroutine(Recharge(), ref rechargeCoroutine);
 			}
 		}
@@ -350,6 +356,7 @@ namespace Disposals
 			if (autoFlushCoroutine != null) StopCoroutine(autoFlushCoroutine);
 			if (rechargeCoroutine != null) StopCoroutine(rechargeCoroutine);
 			binState = BinState.Off;
+			OnSyncBinState(binState);
 		}
 
 		IEnumerator Recharge()
@@ -363,6 +370,7 @@ namespace Disposals
 			if (!PowerOff && !PowerDisconnected)
 			{
 				binState = BinState.Ready;
+				OnSyncBinState(binState);
 				this.RestartCoroutine(AutoFlush(), ref autoFlushCoroutine);
 			}
 
@@ -374,6 +382,7 @@ namespace Disposals
 		{
 			// Bin orifice closes...
 			binState = BinState.Flushing;
+			OnSyncBinState(binState);
 			yield return WaitFor.Seconds(ANIMATION_TIME);
 
 			// Bin orifice closed. Release the charge.
@@ -388,6 +397,7 @@ namespace Disposals
 
 			// Restore charge.
 			binState = BinState.Recharging;
+			OnSyncBinState(binState);
 			StartCoroutine(Recharge());
 		}
 
@@ -419,23 +429,23 @@ namespace Disposals
 		void UseScrewdriver()
 		{
 			// Advance construction state by connecting power.
-			if (PowerDisconnected) binState = BinState.Off;
+			if (PowerDisconnected) OnSyncBinState(BinState.Off);
 
 			// Retard construction state - deconstruction beginning - by disconnecting power.
-			else binState = BinState.Disconnected;
+			else  OnSyncBinState(BinState.Disconnected);
 		}
 
 		protected override void SetMachineInstalled()
 		{
 			base.SetMachineInstalled();
-			binState = BinState.Disconnected;
+			OnSyncBinState(BinState.Disconnected);
 			netTab.enabled = true;
 		}
 
 		protected override void SetMachineUninstalled()
 		{
 			base.SetMachineUninstalled();
-			binState = BinState.Disconnected;
+			OnSyncBinState(BinState.Disconnected);
 			netTab.enabled = false;
 		}
 
