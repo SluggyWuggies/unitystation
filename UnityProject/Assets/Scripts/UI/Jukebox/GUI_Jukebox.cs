@@ -4,16 +4,19 @@ using UnityEngine.UI;
 public class GUI_Jukebox : NetTab
 {
 	[SerializeField]
-	private NetLabel labelSong;
+	private NetLabel labelSong = null;
 
 	[SerializeField]
-	private NetLabel labelArtist;
+	private NetLabel labelArtist = null;
 
 	[SerializeField]
-	private NetLabel labelTrack;
+	private NetLabel labelTrack = null;
 
 	[SerializeField]
-	private NetPrefabImage prefabImagePlayStop;
+	private NetPrefabImage prefabImagePlayStop = null;
+
+	[SerializeField]
+	private NetSlider sliderVolume = null;
 
 	private Jukebox _JukeboxController;
 	private Jukebox jukeboxController
@@ -56,5 +59,10 @@ public class GUI_Jukebox : NetTab
 	public void ClosePanel()
 	{
 		ControlTabs.CloseTab(Type, Provider);
+	}
+
+	public void VolumeChange()
+	{
+		jukeboxController.VolumeChange(float.Parse(sliderVolume.Value) / 100);
 	}
 }

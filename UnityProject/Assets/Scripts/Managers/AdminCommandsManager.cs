@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
-using UnityEngine;
-using Mirror;
-using DiscordWebhook;
+﻿using DiscordWebhook;
 using InGameEvents;
-using Object = System.Object;
+using Mirror;
+using Newtonsoft.Json;
+using System;
+using Messages.Client;
+using UnityEngine;
+using UnityEngine.Profiling;
+using System.Collections;
+using System.IO;
 
 namespace AdminCommands
 {
@@ -42,13 +43,22 @@ namespace AdminCommands
 			}
 		}
 
+		public static bool IsAdmin(string adminId, string adminToken)
+		{
+			var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
+			if (admin == null)
+			{
+				return false;
+			}
+			return true;
+		}
+
 		#region GamemodePage
 
 		[Server]
 		public void CmdToggleOOCMute(string adminId, string adminToken)
 		{
-			var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
-			if (admin == null) return;
+			if (IsAdmin(adminId, adminToken) == false) return;
 
 			string msg;
 
@@ -74,13 +84,12 @@ namespace AdminCommands
 		[Server]
 		public void CmdTriggerGameEvent(string adminId, string adminToken, int eventIndex, bool isFake,
 			bool announceEvent,
-			InGameEventType eventType)
+			InGameEventType eventType, string serializedEventParameters)
 		{
-			var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
-			if (admin == null) return;
+			if (IsAdmin(adminId, adminToken) == false) return;
 
 			InGameEventsManager.Instance.TriggerSpecificEvent(eventIndex, eventType, isFake,
-				PlayerList.Instance.GetByUserID(adminId).Username, announceEvent);
+				PlayerList.Instance.GetByUserID(adminId).Username, announceEvent, serializedEventParameters);
 		}
 
 		#endregion
@@ -90,8 +99,7 @@ namespace AdminCommands
 		[Server]
 		public void CmdStartRound(string adminId, string adminToken)
 		{
-			var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
-			if (admin == null) return;
+			if (IsAdmin(adminId, adminToken) == false) return;
 
 			if (GameManager.Instance.CurrentRoundState == RoundState.PreRound && GameManager.Instance.waitForStart)
 			{
@@ -111,8 +119,7 @@ namespace AdminCommands
 		[Server]
 		public void CmdEndRound(string adminId, string adminToken)
 		{
-			var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
-			if (admin == null) return;
+			if (IsAdmin(adminId, adminToken) == false) return;
 
 			VideoPlayerMessage.Send(VideoType.RestartRound);
 			GameManager.Instance.EndRound();
@@ -127,8 +134,7 @@ namespace AdminCommands
 		[Server]
 		public void CmdChangeNextMap(string adminId, string adminToken, string nextMap)
 		{
-			var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
-			if (admin == null) return;
+			if (IsAdmin(adminId, adminToken) == false) return;
 
 			if (SubSceneManager.AdminForcedMainStation == nextMap) return;
 
@@ -145,8 +151,7 @@ namespace AdminCommands
 		[Server]
 		public void CmdChangeAwaySite(string adminId, string adminToken, string nextAwaySite)
 		{
-			var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
-			if (admin == null) return;
+			if (IsAdmin(adminId, adminToken) == false) return;
 
 			if (SubSceneManager.AdminForcedAwaySite == nextAwaySite) return;
 
@@ -163,8 +168,7 @@ namespace AdminCommands
 		[Server]
 		public void CmdChangeAlertLevel(string adminId, string adminToken, CentComm.AlertLevel alertLevel)
 		{
-			var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
-			if (admin == null) return;
+			if (IsAdmin(adminId, adminToken) == false) return;
 
 			var currentLevel = GameManager.Instance.CentComm.CurrentAlertLevel;
 
@@ -187,8 +191,7 @@ namespace AdminCommands
 		[Server]
 		public void CmdCallShuttle(string adminId, string adminToken, string text)
 		{
-			var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
-			if (admin == null) return;
+			if (IsAdmin(adminId, adminToken) == false) return;
 
 			var shuttle = GameManager.Instance.PrimaryEscapeShuttle;
 
@@ -210,8 +213,7 @@ namespace AdminCommands
 		[Server]
 		public void CmdRecallShuttle(string adminId, string adminToken, string text)
 		{
-			var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
-			if (admin == null) return;
+			if (IsAdmin(adminId, adminToken) == false) return;
 
 			var success = GameManager.Instance.PrimaryEscapeShuttle.RecallShuttle(out var result, true);
 
@@ -229,8 +231,7 @@ namespace AdminCommands
 		[Server]
 		public void CmdSendCentCommAnnouncement(string adminId, string adminToken, string text)
 		{
-			var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
-			if (admin == null) return;
+			if (IsAdmin(adminId, adminToken) == false) return;
 
 			CentComm.MakeAnnouncement(CentComm.CentCommAnnounceTemplate, text, CentComm.UpdateSound.notice);
 
@@ -244,8 +245,7 @@ namespace AdminCommands
 		[Server]
 		public void CmdSendCentCommReport(string adminId, string adminToken, string text)
 		{
-			var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
-			if (admin == null) return;
+			if (IsAdmin(adminId, adminToken) == false) return;
 
 			GameManager.Instance.CentComm.MakeCommandReport(text, CentComm.UpdateSound.notice);
 
@@ -259,12 +259,11 @@ namespace AdminCommands
 		[Server]
 		public void CmdSendBlockShuttleCall(string adminId, string adminToken, bool toggleBool)
 		{
-			var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
-			if (admin == null) return;
+			if (IsAdmin(adminId, adminToken) == false) return;
 
 			var shuttle = GameManager.Instance.PrimaryEscapeShuttle;
 
-			if(shuttle.blockCall == toggleBool) return;
+			if (shuttle.blockCall == toggleBool) return;
 
 			shuttle.blockCall = toggleBool;
 
@@ -279,12 +278,11 @@ namespace AdminCommands
 		[Server]
 		public void CmdSendBlockShuttleRecall(string adminId, string adminToken, bool toggleBool)
 		{
-			var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
-			if (admin == null) return;
+			if (IsAdmin(adminId, adminToken) == false) return;
 
 			var shuttle = GameManager.Instance.PrimaryEscapeShuttle;
 
-			if(shuttle.blockRecall == toggleBool) return;
+			if (shuttle.blockRecall == toggleBool) return;
 
 			shuttle.blockRecall = toggleBool;
 
@@ -298,13 +296,40 @@ namespace AdminCommands
 
 		#endregion
 
+		#region PlayerCommands
+
+		/// <summary>
+		/// Smites the selected user, gibbing him instantly.
+		/// </summary>
+		/// <param name="adminId">Id of the admin performing the action</param>
+		/// <param name="adminToken">Token that proves the admin privileges</param>
+		/// <param name="userToSmite">User Id of the user to smite</param>
+		[Server]
+		public void CmdSmitePlayer(string adminId, string adminToken, string userToSmite)
+		{
+			GameObject admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
+			if (admin == null) return;
+
+			var players = PlayerList.Instance.GetAllByUserID(userToSmite);
+			if (players.Count != 0)
+			{
+				foreach (ConnectedPlayer player in players)
+				{
+					string message = $"{PlayerList.Instance.GetByUserID(adminId).Username}: Smited Username: {player.Username} ({player.Name})";
+					Logger.Log(message);
+					UIManager.Instance.adminChatWindows.adminToAdminChat.ServerAddChatRecord(message, null); DiscordWebhookMessage.Instance.AddWebHookMessageToQueue(DiscordWebhookURLs.DiscordWebhookAdminLogURL, message, "");
+					player.Script.playerHealth.ServerGibPlayer();
+				}
+			}
+		}
+		#endregion
+
 		#region Sound
 
 		[Server]
 		public void CmdPlaySound(string adminId, string adminToken, string index)
 		{
-			var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
-			if (admin == null) return;
+			if (IsAdmin(adminId, adminToken) == false) return;
 
 			var players = FindObjectsOfType(typeof(PlayerScript));
 
@@ -324,6 +349,66 @@ namespace AdminCommands
 		}
 
 		#endregion
+
+
+		public bool runningProfile = false;
+
+		[Server]
+		public void CmdStartProfile(string adminId, string adminToken, int frameCount)
+		{
+			if (IsAdmin(adminId, adminToken) == false) return;
+
+			if (runningProfile) return;
+			if (frameCount > 300)
+				frameCount = 300;
+
+			runningProfile = true;
+
+			Directory.CreateDirectory("Profiles");
+			Profiler.logFile = "Profiles/" + DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss");
+			Profiler.enableBinaryLog = true;
+			Profiler.enabled = true;
+			StartCoroutine(RunPorfile(frameCount));
+		}
+
+		private IEnumerator RunPorfile(int frameCount)
+		{
+			while (frameCount > 0)
+			{
+				frameCount--;
+				yield return null;
+			}
+
+			runningProfile = false;
+			Profiler.enabled = false;
+			Profiler.enableBinaryLog = true;
+			Profiler.logFile = "";
+
+			ProfileMessage.SendToApplicable();
+		}
+
+		[Server]
+		public void CmdRequestProfiles(string adminId, string adminToken)
+		{
+			if (IsAdmin(adminId, adminToken) == false) return;
+			var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
+			ProfileMessage.Send(admin);
+		}
+
+		[Server]
+		public void CmdDeleteProfile(string adminId, string adminToken, string profileName)
+		{
+			if (IsAdmin(adminId, adminToken) == false) return;
+			if (runningProfile) return;
+
+			string path = Directory.GetCurrentDirectory() + "/Profiles/" + profileName;
+			if (File.Exists(path))
+			{
+				File.Delete(path);
+			}
+			ProfileMessage.SendToApplicable();
+		}
+
 	}
 
 	/// <summary>
@@ -337,8 +422,8 @@ namespace AdminCommands
 
 		public override void Process()
 		{
-			var admin = PlayerList.Instance.GetAdmin(AdminId, AdminToken);
-			if (admin == null) return;
+			if (AdminCommandsManager.IsAdmin(AdminId, AdminToken) == false)
+				return;
 
 			object[] paraObject =
 			{
@@ -380,8 +465,8 @@ namespace AdminCommands
 
 		public override void Process()
 		{
-			var admin = PlayerList.Instance.GetAdmin(AdminId, AdminToken);
-			if (admin == null) return;
+			if (AdminCommandsManager.IsAdmin(AdminId, AdminToken) == false)
+				return;
 
 			object[] paraObject =
 			{
@@ -425,8 +510,8 @@ namespace AdminCommands
 
 		public override void Process()
 		{
-			var admin = PlayerList.Instance.GetAdmin(AdminId, AdminToken);
-			if (admin == null) return;
+			if (AdminCommandsManager.IsAdmin(AdminId, AdminToken) == false)
+				return;
 
 			object[] paraObject =
 			{
@@ -471,10 +556,15 @@ namespace AdminCommands
 		public InGameEventType EventType;
 		public string Action;
 
+		/// <summary>
+		/// JSon Serialization of the extra event parameters
+		/// </summary>
+		public string SerializedEventParameters;
+
 		public override void Process()
 		{
-			var admin = PlayerList.Instance.GetAdmin(AdminId, AdminToken);
-			if (admin == null) return;
+			if (AdminCommandsManager.IsAdmin(AdminId, AdminToken) == false)
+				return;
 
 			object[] paraObject =
 			{
@@ -483,7 +573,8 @@ namespace AdminCommands
 				EventIndex,
 				IsFake,
 				AnnounceEvent,
-				EventType
+				EventType,
+				SerializedEventParameters
 			};
 
 			var instance = AdminCommandsManager.Instance;
@@ -496,7 +587,7 @@ namespace AdminCommands
 
 		public static ServerCommandVersionFourMessageClient Send(string adminId, string adminToken, int eventIndex,
 			bool isFake, bool announceEvent, InGameEventType eventType,
-			string action)
+			string action, BaseEventParameters eventParameters = null)
 		{
 			ServerCommandVersionFourMessageClient msg = new ServerCommandVersionFourMessageClient
 			{
@@ -506,7 +597,8 @@ namespace AdminCommands
 				IsFake = isFake,
 				AnnounceEvent = announceEvent,
 				EventType = eventType,
-				Action = action
+				Action = action,
+				SerializedEventParameters = JsonConvert.SerializeObject(eventParameters)
 			};
 			msg.Send();
 			return msg;
@@ -525,8 +617,8 @@ namespace AdminCommands
 
 		public override void Process()
 		{
-			var admin = PlayerList.Instance.GetAdmin(AdminId, AdminToken);
-			if (admin == null) return;
+			if (AdminCommandsManager.IsAdmin(AdminId, AdminToken) == false)
+				return;
 
 			object[] paraObject =
 			{

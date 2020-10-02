@@ -17,12 +17,13 @@ public class PlayerEatDrinkEffects : NetworkBehaviour
 public class PlayerEatDrinkEffectsServerMessage : ServerMessage
 {
 	public int alcoholValue;
+	public GameObject clientPlayer = null;
 
 	public override void Process()
 	{
 		var camera = Camera.main;
 		if (camera == null) return;
-		camera.GetComponent<CameraEffectControlScript>().drunkCameraTime += alcoholValue;
+		camera.GetComponent<CameraEffectControlScript>().AddDrunkTime(alcoholValue);
 	}
 
 	/// <summary>

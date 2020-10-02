@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using AdminCommands;
 using DatabaseAPI;
+using UI.AdminTools;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,46 +12,19 @@ namespace AdminTools
 		[SerializeField] private Button banBtn;
 		[SerializeField] private Button deputiseBtn = null;
 		[SerializeField] private Button respawnBtn = null;
-		[SerializeField] private Button respawnAsBtn = null;
-		[SerializeField] private Dropdown adminJobsDropdown = null;
-		[SerializeField] private Button teleportAdminToPlayer = null;
-		[SerializeField] private Button teleportPlayerToAdmin = null;
-		[SerializeField] private Button teleportAdminToPlayerAghost = null;
-		[SerializeField] private Button teleportAllPlayersToPlayer = null;
+		[SerializeField] private Button teleportAdminToPlayer = null; // TODO: this is unused and is creating a compiler warning.
+		[SerializeField] private Button teleportPlayerToAdmin = null; // Same issue with this.
+		[SerializeField] private Button teleportAdminToPlayerAghost = null; // This too.
+		[SerializeField] private Button teleportAllPlayersToPlayer = null; // And this.
+		[SerializeField] private AdminRespawnPage adminRespawnPage;
 		private AdminPlayerEntry playerEntry;
-
-		public override void OnPageRefresh(AdminPageRefreshData adminPageData)
-		{
-			base.OnPageRefresh(adminPageData);
-
-			var optionData = new List<Dropdown.OptionData>
-			{
-				new Dropdown.OptionData
-				{
-					text = "Select an admin job..."
-				}
-			};
-
-			foreach (var job in SOAdminJobsList.Instance.AdminAvailableJobs)
-			{
-				optionData.Add(new Dropdown.OptionData
-				{
-					text = job.DisplayName
-				});
-			}
-
-			adminJobsDropdown.value = 0;
-			adminJobsDropdown.options = optionData;
-		}
+		public AdminPlayerEntry PlayerEntry => playerEntry;
 
 		public void SetData(AdminPlayerEntry entry)
 		{
 			playerEntry = entry;
 			deputiseBtn.interactable = !entry.PlayerData.isAdmin;
-			respawnBtn.interactable = !playerEntry.PlayerData.isAlive;
-			respawnAsBtn.interactable = !playerEntry.PlayerData.isAlive &&
-			                            adminJobsDropdown.value != 0;
-			adminJobsDropdown.interactable = !playerEntry.PlayerData.isAlive;
+			// respawnBtn.interactable = !playerEntry.PlayerData.isAlive;
 		}
 
 		public void OnKickBtn()
@@ -68,6 +42,13 @@ namespace AdminTools
 			adminTools.kickBanEntryPage.SetPage(false, playerEntry.PlayerData, true);
 		}
 
+		public void OnSmiteBtn()
+		{
+			adminTools.areYouSurePage.SetAreYouSurePage(
+				$"Are you sure you want to smite {playerEntry.PlayerData.name}?",
+				SendSmitePlayerRequest);
+		}
+
 		public void OnDeputiseBtn()
 		{
 			adminTools.areYouSurePage.SetAreYouSurePage(
@@ -77,23 +58,17 @@ namespace AdminTools
 
 		public void OnRespawnButton()
 		{
-			adminTools.areYouSurePage.SetAreYouSurePage(
-				$"Respawn the player: {playerEntry.PlayerData.name}?",
-				SendPlayerRespawnRequest);
+			adminRespawnPage.SetTabsWithPlayerEntry(playerEntry);
+			adminTools.ShowRespawnPage();
 		}
 
-		public void OnRespawnAsButton()
+		/// <summary>
+		/// Sends the command to smite a player
+		/// </summary>
+		void SendSmitePlayerRequest()
 		{
-			adminTools.areYouSurePage.SetAreYouSurePage(
-				$"Respawn the player: {playerEntry.PlayerData.name}" +
-				$" as {SOAdminJobsList.Instance.AdminAvailableJobs[adminJobsDropdown.value - 1].name}?",
-				SendPlayerRespawnAsRequest);
-		}
-
-		public void OnDropdownValueChanged()
-		{
-			respawnAsBtn.interactable = !playerEntry.PlayerData.isAlive &&
-			                            adminJobsDropdown.value != 0;
+			ServerCommandVersionTwoMessageClient.Send(ServerData.UserID, PlayerList.Instance.AdminToken, playerEntry.PlayerData.uid, "CmdSmitePlayer");
+			RefreshPage();
 		}
 
 		void SendMakePlayerAdminRequest()
@@ -102,32 +77,6 @@ namespace AdminTools
 				ServerData.UserID,
 				PlayerList.Instance.AdminToken,
 				playerEntry.PlayerData.uid);
-			RefreshPage();
-		}
-
-		void SendPlayerRespawnRequest()
-		{
-			RequestRespawnPlayer.Send(
-				ServerData.UserID,
-				PlayerList.Instance.AdminToken,
-				playerEntry.PlayerData.uid);
-			RefreshPage();
-		}
-
-		void SendPlayerRespawnAsRequest()
-		{
-			var value = adminJobsDropdown.value;
-			var occupation = value != 0
-				? SOAdminJobsList.Instance.AdminAvailableJobs[value - 1]
-				//Just a safe value in case for whatever reason user didn't select a job and can click the button
-				: SOAdminJobsList.Instance.AdminAvailableJobs.PickRandom();
-
-			RequestRespawnPlayer.SendAdminJob(
-				ServerData.UserID,
-				PlayerList.Instance.AdminToken,
-				playerEntry.PlayerData.uid,
-				occupation);
-
 			RefreshPage();
 		}
 
@@ -149,7 +98,7 @@ namespace AdminTools
 				RequestAdminTeleport.OpperationList.AdminToPlayer,
 				false,
 				new Vector3(0, 0, 0)
-				);
+			);
 		}
 
 		public void OnTeleportPlayerToAdmin()

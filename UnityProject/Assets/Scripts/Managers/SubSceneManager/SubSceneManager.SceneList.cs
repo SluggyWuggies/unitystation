@@ -110,7 +110,7 @@ public partial class SubSceneManager
 		//CENTCOM
 		foreach (var centComData in additionalSceneList.CentComScenes)
 		{
-			if (centComData.DependentScene == null || centComData.CentComSceneName == null)continue;
+			if (centComData.DependentScene == null || centComData.CentComSceneName == null) continue;
 
 			if (centComData.DependentScene != serverChosenMainStation) continue;
 
@@ -125,12 +125,14 @@ public partial class SubSceneManager
 			yield break;
 		}
 
+		var pickedMap = additionalSceneList.defaultCentComScenes.PickRandom();
+
 		//If no special CentCom load default.
-		yield return StartCoroutine(LoadSubScene(additionalSceneList.defaultCentComScene, loadTimer));
+		yield return StartCoroutine(LoadSubScene(pickedMap, loadTimer));
 
 		loadedScenesList.Add(new SceneInfo
 		{
-			SceneName = additionalSceneList.defaultCentComScene,
+			SceneName = pickedMap,
 			SceneType = SceneType.AdditionalScenes
 		});
 	}
@@ -142,6 +144,7 @@ public partial class SubSceneManager
 		{
 			yield return null;
 		}
+
 		loadTimer.IncrementLoadBar("Loading Additional Scenes");
 		foreach (var additionalScene in additionalSceneList.AdditionalScenes)
 		{
@@ -208,6 +211,44 @@ public partial class SubSceneManager
 			});
 		}
 	}
+
+	#region SyndicateScene
+
+	public IEnumerator LoadSyndicate()
+	{
+		if (SyndicateLoaded) yield break;
+
+		foreach (var syndicateData in additionalSceneList.SyndicateScenes)
+		{
+			if (syndicateData.DependentScene == null || syndicateData.SyndicateSceneName == null) continue;
+
+			if (syndicateData.DependentScene != serverChosenMainStation) continue;
+
+			yield return StartCoroutine(LoadSubScene(syndicateData.SyndicateSceneName));
+
+			loadedScenesList.Add(new SceneInfo
+			{
+				SceneName = syndicateData.SyndicateSceneName,
+				SceneType = SceneType.AdditionalScenes
+			});
+
+			yield break;
+		}
+
+		var pickedMap = additionalSceneList.defaultSyndicateScenes.PickRandom();
+
+		yield return StartCoroutine(LoadSubScene(pickedMap));
+
+		loadedScenesList.Add(new SceneInfo
+		{
+			SceneName = pickedMap,
+			SceneType = SceneType.AdditionalScenes
+		});
+
+		SyndicateLoaded = true;
+	}
+
+	#endregion
 
 	string GetEditorPrevScene()
 	{

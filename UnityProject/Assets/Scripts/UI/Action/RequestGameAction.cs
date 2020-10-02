@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Messages.Client;
 
 public class RequestGameAction : ClientMessage
 {
@@ -79,6 +80,7 @@ public class RequestGameAction : ClientMessage
 				ComponentType =	componentType,
 			};
 			msg.Send();
+			return;
 		}
 
 		Logger.LogError("Failed to find IServerActionGUI on NetworkIdentity");

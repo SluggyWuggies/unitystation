@@ -10,6 +10,10 @@ using UI.PDA;
 using Audio.Containers;
 using DiscordWebhook;
 using InGameEvents;
+using ScriptableObjects;
+using System.Collections;
+using System.Collections.Generic;
+using Antagonists;
 
 public partial class PlayerNetworkActions : NetworkBehaviour
 {
@@ -176,6 +180,9 @@ public partial class PlayerNetworkActions : NetworkBehaviour
 					restraintOverlay.ServerBeginUnCuffAttempt();
 				}
 			}
+		}else if (playerScript.playerMove.IsTrapped) // Check if trapped.
+		{
+			playerScript.PlayerSync.TryEscapeContainer();
 		}
 	}
 
@@ -456,7 +463,7 @@ public partial class PlayerNetworkActions : NetworkBehaviour
 	{
 		if (occupation != null)
 		{
-			foreach (var job in SOAdminJobsList.Instance.AdminAvailableJobs)
+			foreach (var job in OccupationList.Instance.Occupations)
 			{
 				if (job.name != occupation)
 				{
@@ -470,6 +477,41 @@ public partial class PlayerNetworkActions : NetworkBehaviour
 
 		PlayerSpawn.ServerRespawnPlayer(playerScript.mind);
 	}
+
+	[Server]
+	public void ServerRespawnPlayerSpecial(string occupation = null)
+	{
+		if (occupation != null)
+		{
+			foreach (var job in SOAdminJobsList.Instance.SpecialJobs)
+			{
+				if (job.name != occupation)
+				{
+					continue;
+				}
+
+				playerScript.mind.occupation = job;
+				break;
+			}
+		}
+
+		PlayerSpawn.ServerRespawnPlayer(playerScript.mind);
+	}
+
+	[Server]
+	public void ServerRespawnPlayerAntag(ConnectedPlayer playerToRespawn, string antagonist)
+	{
+		foreach (var antag in SOAdminJobsList.Instance.Antags)
+		{
+			if (antag.AntagName != antagonist)
+			{
+				continue;
+			}
+			AntagManager.Instance.ServerRespawnAsAntag(playerToRespawn, antag);
+			break;
+		}
+	}
+
 
 	[Command]
 	public void CmdToggleAllowCloning()
@@ -557,6 +599,22 @@ public partial class PlayerNetworkActions : NetworkBehaviour
 	public void CmdSetActiveHand(NamedSlot hand)
 	{
 		activeHand = hand;
+	}
+
+	[Command]
+	public void CmdPoint(GameObject pointTarget, Vector3 mousePos)
+	{
+		if (playerScript.IsGhost || playerScript.playerHealth.ConsciousState != ConsciousState.CONSCIOUS)
+			return;
+		string pointedName = pointTarget.name;
+		var interactableTiles = pointTarget.GetComponent<InteractableTiles>();
+		if (interactableTiles)
+		{
+			LayerTile tile = interactableTiles.LayerTileAt(mousePos);
+			pointedName = tile.DisplayName;
+		}
+		Effect.PlayParticleDirectional(gameObject, mousePos);
+		Chat.AddActionMsgToChat(playerScript.gameObject, $"You point at {pointedName}.", $"{playerScript.gameObject.name} points at {pointTarget.name}.");
 	}
 
 	[Command]

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -7,8 +7,9 @@ using Mirror;
 using UnityEngine.SceneManagement;
 using UnityEngine.Events;
 using DatabaseAPI;
+using Initialisation;
 
-public class CustomNetworkManager : NetworkManager
+public class CustomNetworkManager : NetworkManager, IInitialise
 {
 	public static bool IsServer => Instance._isServer;
 
@@ -40,8 +41,9 @@ public class CustomNetworkManager : NetworkManager
 			Destroy(gameObject);
 		}
 	}
+	public InitialisationSystems Subsystem => InitialisationSystems.CustomNetworkManager;
 
-	public override void Start()
+	void IInitialise.Initialise()
 	{
 		CheckTransport();
 		ApplyConfig();
@@ -192,7 +194,7 @@ public class CustomNetworkManager : NetworkManager
 	public override void OnServerDisconnect(NetworkConnection conn)
 	{
 		//register them as removed from our own player list
-		PlayerList.Instance.Remove(conn);
+		PlayerList.Instance.RemoveByConnection(conn);
 
 		//NOTE: We don't call the base.OnServerDisconnect method because it destroys the player object -
 		//we want to keep the object around so player can rejoin and reenter their body.

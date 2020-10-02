@@ -104,6 +104,10 @@ MonoBehaviour:
   SpriteIdle: {fileID: 11400000, guid: f0ef570011ab3c3448bc70e91b398ef4, type: 2}
   SpritePlaying: {fileID: 11400000, guid: 92d17c50f2351c94cb27834ffd5b9009, type: 2}
   SpriteDamaged: {fileID: 11400000, guid: fcc308c26f6ee4044a16d7cb8764c24c, type: 2}
+  MinSoundDistance: 4
+  MaxSoundDistance: 14
+  Volume: 1
+  Spread: 192
 --- !u!114 &114977697586778270
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -347,7 +351,7 @@ SpriteRenderer:
   m_SortingLayerID: 142874271
   m_SortingLayer: 10
   m_SortingOrder: 1
-  m_Sprite: {fileID: 21300000, guid: caea9604c8c2d954b95ff42a3b71876a, type: 3}
+  m_Sprite: {fileID: 21300004, guid: caea9604c8c2d954b95ff42a3b71876a, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -372,7 +376,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   NetworkThis: 1
   SubCatalogue: []
-  PresentSpriteSet: {fileID: 0}
+  PresentSpriteSet: {fileID: 11400000, guid: 92d17c50f2351c94cb27834ffd5b9009, type: 2}
+  pushTextureOnStartUp: 1
   variantIndex: 0
   palette: []
   Sprites: []

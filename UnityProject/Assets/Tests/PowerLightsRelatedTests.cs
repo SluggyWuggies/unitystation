@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Electricity.PoweredDevices;
 using Lighting;
 using NUnit.Framework;
 using UnityEditor;
@@ -74,7 +75,7 @@ namespace Tests
 					    countSelfPowered++;
 					    continue;
 				    }
-				    if (device.RelatedAPC == null && device.SelfPowered == false)
+				    if (device.RelatedAPC == null && device.IsSelfPowered == false)
 				    {
 					    countMissingAPC++;
 					    missingAPCinDeviceReport.Add((currentSceneName,objectDevice.name));

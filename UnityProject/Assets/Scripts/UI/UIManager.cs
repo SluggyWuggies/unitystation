@@ -2,14 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using AdminTools;
 using Audio.Managers;
+using Initialisation;
 using Mirror;
+using UI.Jobs;
 using UI.UI_Bottom;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
-public class UIManager : MonoBehaviour
+public class UIManager : MonoBehaviour, IInitialise
 {
 	private static UIManager uiManager;
 	public GUI_VariableViewer VariableViewer;
@@ -39,8 +41,12 @@ public class UIManager : MonoBehaviour
 	public AnimationCurve strandedZoomOutCurve;
 	public AdminChatButtons adminChatButtons;
 	public AdminChatWindows adminChatWindows;
+	public ProfileScrollView profileScrollView;
 	public PlayerAlerts playerAlerts;
+	public GUIAntagBanner antagBanner;
 	private bool preventChatInput;
+	[SerializeField] [Range(0.1f,10f)] private float PhoneZoomFactor = 1.6f;
+	public LobbyUIPlayerListController lobbyUIPlayerListController = null;
 
 	public static bool PreventChatInput
 	{
@@ -109,6 +115,24 @@ public class UIManager : MonoBehaviour
 #else
 	public static bool UseGamePad = false;
 #endif
+
+	public static bool IsTablet => DeviceDiagonalSizeInInches > 6.5f && AspectRatio < 2f;
+	public static float AspectRatio =>
+		(float) Mathf.Max(Screen.width, Screen.height) / Mathf.Min(Screen.width, Screen.height);
+
+	public static float DeviceDiagonalSizeInInches
+	{
+		get
+		{
+			float screenWidth = Screen.width / Screen.dpi;
+			float screenHeight = Screen.height / Screen.dpi;
+			float diagonalInches = Mathf.Sqrt (Mathf.Pow (screenWidth, 2) + Mathf.Pow (screenHeight, 2));
+
+			Debug.Log ("Getting device inches: " + diagonalInches);
+
+			return diagonalInches;
+		}
+	}
 
 	//		public static ControlChat Chat => Instance.chatControl; //Use ChatRelay.Instance.AddToChatLog instead!
 	public static PlayerHealthUI PlayerHealthUI => Instance.playerHealthUI;
@@ -194,10 +218,13 @@ public class UIManager : MonoBehaviour
 	/// </summary>
 	public static bool IsOxygen { get; set; }
 
-	private void Start()
+	public InitialisationSystems Subsystem => InitialisationSystems.UIManager;
+
+	void IInitialise.Initialise()
 	{
 		DetermineInitialTargetFrameRate();
 		Logger.Log("Touchscreen support = " + CommonInput.IsTouchscreen, Category.UI);
+		InitMobile();
 
 		if (!PlayerPrefs.HasKey(PlayerPrefKeys.TTSToggleKey))
 		{
@@ -212,6 +239,30 @@ public class UIManager : MonoBehaviour
 
 		adminChatButtons.transform.parent.gameObject.SetActive(false);
 		SetVersionDisplay = $"Work In Progress {GameData.BuildNumber}";
+	}
+
+	private void InitMobile()
+	{
+		if (!Application.isMobilePlatform)
+		{
+			return;
+		}
+
+		if (!IsTablet) //tablets should be fine as is
+		{
+			Logger.Log("Looks like it's a phone, scaling UI", Category.UI);
+			var canvasScaler = GetComponent<CanvasScaler>();
+			if (!canvasScaler)
+			{
+				return;
+			}
+
+			canvasScaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+			canvasScaler.matchWidthOrHeight = 0f; //match width
+			canvasScaler.referenceResolution =
+				new Vector2(Screen.width/PhoneZoomFactor, canvasScaler.referenceResolution.y);
+
+		}
 	}
 
 	private void OnEnable()
@@ -279,6 +330,7 @@ public class UIManager : MonoBehaviour
 		}
 
 		StorageHandler.CloseStorageUI();
+		Hands.SetHand(true);
 		Camera2DFollow.followControl.ZeroStars();
 		IsOxygen = false;
 		GamePad.gameObject.SetActive(UseGamePad);

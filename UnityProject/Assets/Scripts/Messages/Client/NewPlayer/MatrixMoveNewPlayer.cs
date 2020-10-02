@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using Messages.Client;
 using Mirror;
 
 public class MatrixMoveNewPlayer: ClientMessage
@@ -7,9 +8,12 @@ public class MatrixMoveNewPlayer: ClientMessage
 
 	public override void Process()
 	{
-		LoadNetworkObject(MatrixMove);
-		NetworkObject.GetComponent<MatrixMove>().UpdateNewPlayer(
-			SentByPlayer.Connection);
+		// LoadNetworkObject returns bool, so it can be used to check if object is loaded correctly
+		if (LoadNetworkObject(MatrixMove))
+		{
+			NetworkObject.GetComponent<MatrixMove>()?.UpdateNewPlayer(
+				SentByPlayer.Connection);
+		}
 	}
 
 	public static MatrixMoveNewPlayer Send(uint matrixMoveNetId)
