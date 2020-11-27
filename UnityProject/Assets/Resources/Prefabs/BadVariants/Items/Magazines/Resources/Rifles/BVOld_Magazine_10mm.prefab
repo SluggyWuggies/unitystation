@@ -71,7 +71,7 @@ PrefabInstance:
     - target: {fileID: 3097138933977987719, guid: 2c406df2572ceba47af8a9de4f9a50ba,
         type: 3}
       propertyPath: m_Name
-      value: Magazine_10mm
+      value: BVOld_Magazine_10mm
       objectReference: {fileID: 0}
     - target: {fileID: 3129732272286336819, guid: 2c406df2572ceba47af8a9de4f9a50ba,
         type: 3}
@@ -114,6 +114,12 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 11400000, guid: 85a90a4e0aadf0fedb21ebc836bc40d2,
         type: 2}
+    - target: {fileID: 4510796165884908902, guid: 2c406df2572ceba47af8a9de4f9a50ba,
+        type: 3}
+      propertyPath: replacementePrefab
+      value: 
+      objectReference: {fileID: 7128447074449515994, guid: b207c10b72e178346bee8cf182f264eb,
+        type: 3}
     - target: {fileID: 9204548693471559936, guid: 2c406df2572ceba47af8a9de4f9a50ba,
         type: 3}
       propertyPath: PresentSpriteSet

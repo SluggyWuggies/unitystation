@@ -17,14 +17,14 @@ GameObject:
   - component: {fileID: 114383668046188982}
   - component: {fileID: 114026169455906660}
   - component: {fileID: 114536480436588622}
-  - component: {fileID: 6622438585055889099}
   - component: {fileID: 6583254002094982938}
   - component: {fileID: -5562106454393771720}
   - component: {fileID: -2029180449850996923}
   - component: {fileID: 5354952563464335}
   - component: {fileID: -2127529729460597781}
+  - component: {fileID: 8447599224312222320}
   m_Layer: 11
-  m_Name: FuelTank
+  m_Name: BVOld_FuelTank
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -129,6 +129,8 @@ MonoBehaviour:
   objectType: 1
   AtmosPassable: 1
   Passable: 0
+  ReachableThrough: 1
+  passableExclusionsToThis: []
 --- !u!114 &114077234577922880
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -155,6 +157,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f68d36ed5e334f99b82dc3801757e89, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isMeleeable: 1
   butcherTime: 2
   butcherSound: BladeSlice
 --- !u!114 &114026169455906660
@@ -171,7 +174,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
+  initialIntegrity: 300
   soundOnHit: 
+  damageDeflection: 0
   Armor:
     Melee: 0
     Bullet: 0
@@ -192,7 +197,6 @@ MonoBehaviour:
     Indestructable: 0
     FreezeProof: 0
   HeatResistance: 100
-  initialIntegrity: 300
 --- !u!114 &114536480436588622
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -209,22 +213,6 @@ MonoBehaviour:
   sceneId: 0
   serverOnly: 0
   m_AssetId: 
---- !u!114 &6622438585055889099
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1677789019931390}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d54c3d183673c904882b6d1e8484ca73, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  nameOverride: 
-  backgroundColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
-  iconOverride: {fileID: 0}
-  backgroundSprite: {fileID: 0}
 --- !u!114 &6583254002094982938
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -313,6 +301,22 @@ MonoBehaviour:
   exportCost: 0
   exportName: 
   exportMessage: 
+--- !u!114 &8447599224312222320
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1677789019931390}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ac8d86173f4dcf49a20af7bc27d3e1d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  HITALL: 0
+  onlyPrintDebugLogs: 1
+  replacementePrefab: {fileID: 3385388350690225477, guid: f223683e503b6d14e8ada71a7bab7247,
+    type: 3}
 --- !u!1 &1754091207019976
 GameObject:
   m_ObjectHideFlags: 0
@@ -359,6 +363,7 @@ SpriteRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -381,9 +386,10 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 142874271
-  m_SortingLayer: 10
+  m_SortingLayer: 8
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 185b88f5493eb6943be06789294c387f, type: 3}
+  m_Sprite: {fileID: -7320027284739528206, guid: 185b88f5493eb6943be06789294c387f,
+    type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0

@@ -87,6 +87,12 @@ PrefabInstance:
       propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3809108981937397978, guid: d059b46ee78dde84b963769ba89d24cc,
+        type: 3}
+      propertyPath: replacementePrefab
+      value: 
+      objectReference: {fileID: 4227563891675702361, guid: e9f5c9b81c30b4742b7859c8d2b045c3,
+        type: 3}
     - target: {fileID: 4427201325505430292, guid: d059b46ee78dde84b963769ba89d24cc,
         type: 3}
       propertyPath: spriteUnlocked
@@ -131,5 +137,6 @@ PrefabInstance:
       propertyPath: exportName
       value: Secure Crate
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 0}
   m_SourcePrefab: {fileID: 100100000, guid: d059b46ee78dde84b963769ba89d24cc, type: 3}

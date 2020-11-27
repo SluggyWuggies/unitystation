@@ -39,6 +39,12 @@ PrefabInstance:
       propertyPath: m_WasSpriteAssigned
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 5614616759820270132, guid: 44071f490693c439896528fb8aca8917,
+        type: 3}
+      propertyPath: replacementePrefab
+      value: 
+      objectReference: {fileID: 8693146518599563198, guid: 0999f92f1fc5fad4d906e4ef962d90fe,
+        type: 3}
     - target: {fileID: 6972391878964200388, guid: 44071f490693c439896528fb8aca8917,
         type: 3}
       propertyPath: m_WasSpriteAssigned

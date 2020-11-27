@@ -9,7 +9,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1797280918088156, guid: aec802ad975d3418d9b782880452b7bf, type: 3}
       propertyPath: m_Name
-      value: SecureWinDoor
+      value: BVOld_LeftSecureWinDoor
       objectReference: {fileID: 0}
     - target: {fileID: 4343317833518374, guid: aec802ad975d3418d9b782880452b7bf, type: 3}
       propertyPath: m_LocalPosition.x
@@ -70,6 +70,12 @@ PrefabInstance:
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 21300480, guid: f0f465f2e2128495683d9e4cb833c45a,
+        type: 3}
+    - target: {fileID: 4314881335538357381, guid: aec802ad975d3418d9b782880452b7bf,
+        type: 3}
+      propertyPath: replacementePrefab
+      value: 
+      objectReference: {fileID: 8806815997670421290, guid: 5516fc74bd367c64baa5a82dff0e929c,
         type: 3}
     - target: {fileID: 5741721080410768198, guid: aec802ad975d3418d9b782880452b7bf,
         type: 3}

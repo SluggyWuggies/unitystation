@@ -7,6 +7,12 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -7920500810047071723, guid: bcafad97f0ef7384793b303b782af31b,
+        type: 3}
+      propertyPath: replacementePrefab
+      value: 
+      objectReference: {fileID: 7305396868739561040, guid: 0ad13b012c2a2ef4aa66aa12b3a5060b,
+        type: 3}
     - target: {fileID: 544171576806319005, guid: bcafad97f0ef7384793b303b782af31b,
         type: 3}
       propertyPath: reagentMix.reagents.m_keys.Array.data[0]

@@ -63,6 +63,12 @@ PrefabInstance:
       propertyPath: m_LocalPosition.x
       value: 0.1875
       objectReference: {fileID: 0}
+    - target: {fileID: 5036703830837648163, guid: 66e26e048c0ee0448878c27b37dc685f,
+        type: 3}
+      propertyPath: replacementePrefab
+      value: 
+      objectReference: {fileID: 5455523409350956656, guid: 3143fb61b71aa7c44a9a4adf2d68287f,
+        type: 3}
     - target: {fileID: 5488766431312090020, guid: 66e26e048c0ee0448878c27b37dc685f,
         type: 3}
       propertyPath: PresentSpriteSet
@@ -84,7 +90,7 @@ PrefabInstance:
     - target: {fileID: 6507000735928756314, guid: 66e26e048c0ee0448878c27b37dc685f,
         type: 3}
       propertyPath: m_Name
-      value: TacticalEnergyGun
+      value: BVOldTacticalEnergyGun
       objectReference: {fileID: 0}
     - target: {fileID: 6511642736210826542, guid: 66e26e048c0ee0448878c27b37dc685f,
         type: 3}

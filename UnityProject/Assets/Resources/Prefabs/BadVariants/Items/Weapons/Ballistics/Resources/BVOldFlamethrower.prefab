@@ -188,7 +188,7 @@ PrefabInstance:
     - target: {fileID: 7425590482768185424, guid: f46dc50d35397f04f8f6be3fb49668ca,
         type: 3}
       propertyPath: m_Name
-      value: Flamethrower
+      value: BVOldFlamethrower
       objectReference: {fileID: 0}
     - target: {fileID: 7430795432937076004, guid: f46dc50d35397f04f8f6be3fb49668ca,
         type: 3}

@@ -7,6 +7,12 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -6315894312253646459, guid: e062be43b6f3a44d8be77756383e6bc8,
+        type: 3}
+      propertyPath: replacementePrefab
+      value: 
+      objectReference: {fileID: 5166255132727493076, guid: 8cd302b41c85dbe42a5218cd00d3957b,
+        type: 3}
     - target: {fileID: 1615565101381030, guid: e062be43b6f3a44d8be77756383e6bc8, type: 3}
       propertyPath: m_Name
       value: BVOld_Closet_Bomb_White

@@ -71,7 +71,7 @@ PrefabInstance:
     - target: {fileID: 3097138933977987719, guid: 2c406df2572ceba47af8a9de4f9a50ba,
         type: 3}
       propertyPath: m_Name
-      value: Magazine_DrumMag
+      value: BVOld_Magazine_DrumMag
       objectReference: {fileID: 0}
     - target: {fileID: 3129732272286336819, guid: 2c406df2572ceba47af8a9de4f9a50ba,
         type: 3}
@@ -109,6 +109,12 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 11400000, guid: ee3c13405dec6bd11b66dd9bac9aa3a5,
         type: 2}
+    - target: {fileID: 4510796165884908902, guid: 2c406df2572ceba47af8a9de4f9a50ba,
+        type: 3}
+      propertyPath: replacementePrefab
+      value: 
+      objectReference: {fileID: 2552515844273667362, guid: 9505db5c84437ce4692422e1ef11cef2,
+        type: 3}
     - target: {fileID: 9204548693471559936, guid: 2c406df2572ceba47af8a9de4f9a50ba,
         type: 3}
       propertyPath: PresentSpriteSet

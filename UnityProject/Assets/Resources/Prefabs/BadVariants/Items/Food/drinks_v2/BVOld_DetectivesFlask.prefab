@@ -7,6 +7,12 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -4724954783318187882, guid: e5194eace4d5b754b8671dee0aa516b0,
+        type: 3}
+      propertyPath: replacementePrefab
+      value: 
+      objectReference: {fileID: 7116736864254828308, guid: 823ad5b6a9d0dc94d8b6cf26ab12e175,
+        type: 3}
     - target: {fileID: 2164972540663452851, guid: e5194eace4d5b754b8671dee0aa516b0,
         type: 3}
       propertyPath: PresentSpriteSet

@@ -87,6 +87,12 @@ PrefabInstance:
       propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3809108981937397978, guid: d059b46ee78dde84b963769ba89d24cc,
+        type: 3}
+      propertyPath: replacementePrefab
+      value: 
+      objectReference: {fileID: 1093323554511079941, guid: 1097e4a203591844dafabde1b6a63ffd,
+        type: 3}
     - target: {fileID: 4011814927229616220, guid: d059b46ee78dde84b963769ba89d24cc,
         type: 3}
       propertyPath: m_IsActive
@@ -141,5 +147,6 @@ PrefabInstance:
       propertyPath: exportName
       value: Secure Engineering Crate
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 0}
   m_SourcePrefab: {fileID: 100100000, guid: d059b46ee78dde84b963769ba89d24cc, type: 3}

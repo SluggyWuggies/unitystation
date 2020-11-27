@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Mirror;
-using Objects.GasContainer;
+using Objects.Atmospherics;
 
 /// <summary>
 /// Component which manages all the equipment on a player.
@@ -134,30 +134,6 @@ public class Equipment : NetworkBehaviour
 	public bool IsSlotObscured(NamedSlot namedSlot)
 	{
 		return obscuredSlots.HasFlag(ItemSlot.GetFlaggedSlot(namedSlot));
-	}
-
-	/// <summary>
-	/// Gets name and jobtype from ID card worn in ID slot if any.
-	/// </summary>
-	/// <param name="namedSlot"></param>
-	/// <returns></returns>
-	public String GetIdentityFromID()
-	{
-		IDCard card = null;
-		var tryGetItem = ItemSlot.GetNamed(ItemStorage, NamedSlot.id).Item;
-		if (tryGetItem != null)
-		{
-			card = tryGetItem.GetComponent<IDCard>();
-		}
-		//Logger.Log("ID Card: " + (card != null ? card.ToString() : "null"));
-		if (card != null)
-		{
-			return card.RegisteredName + " " + (card.Occupation ? $" ({card.Occupation.DisplayName})" : "");
-		}
-		else
-		{
-			return "";
-		}
 	}
 
 	#region Examination

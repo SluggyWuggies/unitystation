@@ -39,6 +39,12 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 21300000, guid: 36fb624edb23f3b419410cbdfe502a42,
         type: 3}
+    - target: {fileID: 5614616759820270132, guid: 44071f490693c439896528fb8aca8917,
+        type: 3}
+      propertyPath: replacementePrefab
+      value: 
+      objectReference: {fileID: 8104041507987092398, guid: f586bbb3df568ba4ba5af8e73c1da64d,
+        type: 3}
     - target: {fileID: 6397259684137020512, guid: 44071f490693c439896528fb8aca8917,
         type: 3}
       propertyPath: m_LocalRotation.x

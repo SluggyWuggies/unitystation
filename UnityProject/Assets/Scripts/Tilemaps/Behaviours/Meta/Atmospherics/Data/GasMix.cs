@@ -5,12 +5,12 @@ using NaughtyAttributes;
 using Pipes;
 using UnityEngine;
 
-namespace Atmospherics
+namespace Systems.Atmospherics
 {
 	/// <summary>
 	/// Represents a mix of gases
 	/// </summary>
-	[System.Serializable]
+	[Serializable]
 	public struct GasMix
 	{
 		[InfoBox("Plasma, oxygen, nitrogen, carbon dioxide", EInfoBoxType.Normal)]
@@ -53,7 +53,16 @@ namespace Atmospherics
 		{
 			get { return (WholeHeatCapacity * Temperature); }
 
-			set { Temperature = (value / WholeHeatCapacity); }
+			set {
+				if (WholeHeatCapacity == 0)
+				{
+					Temperature = 0;
+				}
+				else
+				{
+					Temperature = (value / WholeHeatCapacity);
+				}
+			}
 		}
 
 		private GasMix(float[] gases, float pressure, float volume = AtmosConstants.TileVolume)
@@ -235,7 +244,7 @@ namespace Atmospherics
 		{
 			float totalInternalEnergy = InternalEnergy + otherGas.InternalEnergy;
 			float totalWholeHeatCapacity = WholeHeatCapacity + otherGas.WholeHeatCapacity;
-			float Newtemperature = totalInternalEnergy / totalWholeHeatCapacity;
+			float newTemperature = totalWholeHeatCapacity > 0 ? totalInternalEnergy / totalWholeHeatCapacity : 0;
 			float totalVolume = Volume + otherGas.Volume;
 			for (int i = 0; i < Gas.Count; i++)
 			{
@@ -249,8 +258,8 @@ namespace Atmospherics
 				otherGas.Gases[i] = gas * otherGas.Volume;
 			}
 
-			SetTemperature(Newtemperature);
-			otherGas.SetTemperature(Newtemperature);
+			SetTemperature(newTemperature);
+			otherGas.SetTemperature(newTemperature);
 			return otherGas;
 		}
 

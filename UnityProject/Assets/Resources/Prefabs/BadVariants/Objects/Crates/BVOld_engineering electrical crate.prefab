@@ -89,5 +89,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: BVOld_engineering electrical crate
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 8580736989358631515, guid: 4ff388f72fc794b1fab838a88a5d115e,
+        type: 3}
+      propertyPath: replacementePrefab
+      value: 
+      objectReference: {fileID: 3543534227968557944, guid: 517c48fc4fc1cba48908d11ec58451ce,
+        type: 3}
+    m_RemovedComponents:
+    - {fileID: 0}
   m_SourcePrefab: {fileID: 100100000, guid: 4ff388f72fc794b1fab838a88a5d115e, type: 3}

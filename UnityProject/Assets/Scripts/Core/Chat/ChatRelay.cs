@@ -4,6 +4,7 @@ using System.Linq;
 using Mirror;
 using UnityEngine;
 using UnityEngine.UI;
+using Systems.MobAIs;
 using System.Text.RegularExpressions;
 
 /// <summary>
@@ -33,7 +34,7 @@ public class ChatRelay : NetworkBehaviour
 		if (Instance == null)
 		{
 			Instance = this;
-			Chat.RegisterChatRelay(Instance, AddToChatLogServer, AddToChatLogClient, AddPrivMessageToClient);
+			Chat.RegisterChatRelay(Instance, PropagateChatToClients, AddToChatLogClient, AddPrivMessageToClient);
 		}
 		else
 		{
@@ -45,16 +46,10 @@ public class ChatRelay : NetworkBehaviour
 	{
 		namelessChannels = ChatChannel.Examine | ChatChannel.Local | ChatChannel.None | ChatChannel.System |
 						   ChatChannel.Combat;
-		layerMask = LayerMask.GetMask("Walls", "Door Closed");
+		layerMask = LayerMask.GetMask( "Door Closed");
 		npcMask = LayerMask.GetMask("NPC");
 
 		rconManager = RconManager.Instance;
-	}
-
-	[Server]
-	private void AddToChatLogServer(ChatEvent chatEvent)
-	{
-		PropagateChatToClients(chatEvent);
 	}
 
 	[Server]
@@ -88,8 +83,8 @@ public class ChatRelay : NetworkBehaviour
 					continue;
 				}
 
-				if (Vector2.Distance(chatEvent.position,
-						(Vector3)players[i].Script.WorldPos) > 14f)
+				var playerPosition = players[i].GameObject.AssumedWorldPosServer();
+				if (Vector2.Distance(chatEvent.position, playerPosition) > 14f)
 				{
 					//Player in the list is too far away for local chat, remove them:
 					players.RemoveAt(i);
@@ -97,8 +92,8 @@ public class ChatRelay : NetworkBehaviour
 				else
 				{
 					//within range, but check if they are in another room or hiding behind a wall
-					if (Physics2D.Linecast(chatEvent.position,
-						(Vector3)players[i].Script.WorldPos, layerMask))
+					if (MatrixManager.Linecast(chatEvent.position, LayerTypeSelection.Walls
+						 , layerMask,playerPosition).ItHit)
 					{
 						//if it hit a wall remove that player
 						players.RemoveAt(i);
@@ -110,8 +105,9 @@ public class ChatRelay : NetworkBehaviour
 			var npcs = Physics2D.OverlapCircleAll(chatEvent.position, 14f, npcMask);
 			foreach (Collider2D coll in npcs)
 			{
-				if (!Physics2D.Linecast(chatEvent.position,
-					coll.transform.position, layerMask))
+				var npcPosition = coll.gameObject.AssumedWorldPosServer();
+				if (MatrixManager.Linecast(chatEvent.position,LayerTypeSelection.Walls,
+					 layerMask,npcPosition).ItHit ==false)
 				{
 					//NPC is in hearing range, pass the message on:
 					var mobAi = coll.GetComponent<MobAI>();
@@ -197,6 +193,17 @@ public class ChatRelay : NetworkBehaviour
 
 		if (channels != ChatChannel.None)
 		{
+			// replace action messages with chat bubble
+			if(channels.HasFlag(ChatChannel.Combat) || channels.HasFlag(ChatChannel.Action) || channels.HasFlag(ChatChannel.Examine))
+			{
+				string cleanMessage = Regex.Replace(message, "<.*?>", string.Empty);
+				if(cleanMessage.StartsWith("You"))
+				{
+					ChatBubbleManager.ShowAction(Regex.Replace(message, "<.*?>", string.Empty));
+					return;
+				}
+			}
+
 			ChatUI.Instance.AddChatEntry(message);
 		}
 	}

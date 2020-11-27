@@ -4,7 +4,9 @@ using System.Globalization;
 using System.Linq;
 using Mirror;
 using UnityEngine;
+using Objects;
 using Random = UnityEngine.Random;
+using System.Text;
 
 public static class SweetExtensions
 {
@@ -59,9 +61,9 @@ public static class SweetExtensions
 		}
 
 		var player = go.Player();
-		if (player != null && !String.IsNullOrWhiteSpace(player.Name))
+		if (player != null && !String.IsNullOrWhiteSpace(player.Script.visibleName))
 		{
-			return player.Name;
+			return player.Script.visibleName;
 		}
 
 		return go.name.Replace("NPC_", "").Replace("_", " ").Replace("(Clone)","");
@@ -367,5 +369,17 @@ public static class SweetExtensions
 			? v
 			: defaultValue;
 
+	}
+
+	/// <summary>
+	/// Removes the last instance of the given string from the given StringBuilder.
+	/// </summary>
+	/// <returns>the final StringBuilder</returns>
+	public static StringBuilder RemoveLast(this StringBuilder sb, string str)
+	{
+		if (sb.Length < 1) return sb;
+
+		sb.Remove(sb.ToString().LastIndexOf(str), str.Length);
+		return sb;
 	}
 }

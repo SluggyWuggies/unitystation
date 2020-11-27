@@ -129,6 +129,12 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 11400000, guid: ef9ed56250b41426baa5a3e5b16b8f34,
         type: 2}
+    - target: {fileID: 4510796165884908902, guid: 2c406df2572ceba47af8a9de4f9a50ba,
+        type: 3}
+      propertyPath: replacementePrefab
+      value: 
+      objectReference: {fileID: 3421280542771565670, guid: 4262f7c3dbc59a8499d9f780d06bd0ad,
+        type: 3}
     - target: {fileID: 9204548693471559936, guid: 2c406df2572ceba47af8a9de4f9a50ba,
         type: 3}
       propertyPath: PresentSpriteSet

@@ -15,8 +15,29 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0.1
   isClip: 0
+  isCell: 0
+  initalProjectile: {fileID: 0}
+  ProjectilesFired: 1
+  containedProjectilesFired: 
+  containedBullets: []
   ammoType: 5
   magazineSize: 35
+--- !u!114 &4510796165884908902
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3097138933977987719}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ac8d86173f4dcf49a20af7bc27d3e1d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  HITALL: 0
+  onlyPrintDebugLogs: 1
+  replacementePrefab: {fileID: 6235254427324400780, guid: 7bf36ad773bdc1f49b1d7b0b3314f2e4,
+    type: 3}
 --- !u!1001 &3096410113277871677
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -26,7 +47,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1011433845357754, guid: a7abba22164ce49f0bf9b9b219f39298, type: 3}
       propertyPath: m_Name
-      value: Generic Magazine
+      value: BVOld_Generic Magazine
       objectReference: {fileID: 0}
     - target: {fileID: 4527534762131918, guid: a7abba22164ce49f0bf9b9b219f39298, type: 3}
       propertyPath: m_LocalPosition.x

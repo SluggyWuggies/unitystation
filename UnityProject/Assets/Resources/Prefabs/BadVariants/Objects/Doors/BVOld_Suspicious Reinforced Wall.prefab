@@ -86,13 +86,19 @@ PrefabInstance:
     - target: {fileID: 1395021743432191680, guid: 6758ee1e3731dd6419af3471a3e3db4c,
         type: 3}
       propertyPath: m_Name
-      value: Suspicious Reinforced Wall
+      value: BVOld_Suspicious Reinforced Wall
       objectReference: {fileID: 0}
     - target: {fileID: 1405402336542020058, guid: 6758ee1e3731dd6419af3471a3e3db4c,
         type: 3}
       propertyPath: initialName
       value: reinforced wall
       objectReference: {fileID: 0}
+    - target: {fileID: 4318512446359757272, guid: 6758ee1e3731dd6419af3471a3e3db4c,
+        type: 3}
+      propertyPath: replacementePrefab
+      value: 
+      objectReference: {fileID: 2057434539693897599, guid: ad3ad861919b88a479eacc3d06e05fd5,
+        type: 3}
     - target: {fileID: 6980610262621646763, guid: 6758ee1e3731dd6419af3471a3e3db4c,
         type: 3}
       propertyPath: spritePath

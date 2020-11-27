@@ -34,6 +34,12 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 11400000, guid: 77eb0538e22a14844bbd5c201c7e1b88,
         type: 2}
+    - target: {fileID: 4438619546122266027, guid: f46dc50d35397f04f8f6be3fb49668ca,
+        type: 3}
+      propertyPath: replacementePrefab
+      value: 
+      objectReference: {fileID: 7976047108222217108, guid: 630e95b6bf6f9e2439487630ee85cfaf,
+        type: 3}
     - target: {fileID: 7053030124553676594, guid: f46dc50d35397f04f8f6be3fb49668ca,
         type: 3}
       propertyPath: initialName

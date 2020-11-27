@@ -35,6 +35,8 @@ namespace Antagonists
 		/// </summary>
 		[NonSerialized] public List<GameObject> TargetedItems = new List<GameObject>();
 
+		public GameObject blobPlayerViewer = null;
+
 		private void Awake()
 		{
 			if ( Instance == null )
@@ -84,9 +86,8 @@ namespace Antagonists
 			ServerFinishAntag(chosenAntag, connectedPlayer, spawnedPlayer);
 		}
 
-		public void ServerRespawnAsAntag(ConnectedPlayer connectedPlayer, Antagonist antagonist)
+		public IEnumerator ServerRespawnAsAntag(ConnectedPlayer connectedPlayer, Antagonist antagonist)
 		{
-			SetAntagDetails(antagonist, connectedPlayer);
 			var antagOccupation = antagonist.AntagOccupation;
 
 			if (antagOccupation != null)
@@ -94,8 +95,20 @@ namespace Antagonists
 				connectedPlayer.Script.mind.occupation = antagonist.AntagOccupation;
 			}
 
-			ServerFinishAntag(antagonist, connectedPlayer, connectedPlayer.GameObject);
+			if (antagonist.AntagJobType == JobType.SYNDICATE)
+			{
+				yield return StartCoroutine(SubSceneManager.Instance.LoadSyndicate());
+				yield return WaitFor.EndOfFrame;
+			}
+
+			if (antagonist.AntagJobType == JobType.WIZARD)
+			{
+				yield return StartCoroutine(SubSceneManager.Instance.LoadWizard());
+				yield return WaitFor.EndOfFrame;
+			}
+
 			PlayerSpawn.ServerRespawnPlayer(connectedPlayer.Script.mind);
+			ServerFinishAntag(antagonist, connectedPlayer, connectedPlayer.GameObject);
 		}
 
 		private SpawnedAntag SetAntagDetails(Antagonist chosenAntag, ConnectedPlayer connectedPlayer)
@@ -108,7 +121,7 @@ namespace Antagonists
 			return spawnedAntag;
 		}
 
-		private void ServerFinishAntag(Antagonist chosenAntag, ConnectedPlayer connectedPlayer, GameObject spawnedPlayer)
+		public void ServerFinishAntag(Antagonist chosenAntag, ConnectedPlayer connectedPlayer, GameObject spawnedPlayer)
 		{
 			var spawnedAntag = SetAntagDetails(chosenAntag, connectedPlayer);
 			ActiveAntags.Add(spawnedAntag);
@@ -153,7 +166,7 @@ namespace Antagonists
 		/// </summary>
 		public void ShowAntagStatusReport()
 		{
-			StringBuilder statusSB = new StringBuilder($"<color=white><size=30><b>End of Round Report</b></size></color>\n\n", 200);
+			StringBuilder statusSB = new StringBuilder($"<color=white><size=60><b>End of Round Report</b></size></color>\n\n", 200);
 
 			var message = $"End of Round Report on {ServerData.ServerConfig.ServerName}\n";
 
@@ -162,8 +175,8 @@ namespace Antagonists
 				// Group all the antags by type and list them together
 				foreach (var antagType in ActiveAntags.GroupBy(t => t.GetType()))
 				{
-					statusSB.AppendLine($"<size=24>The <b>{antagType.Key.Name}s</b> were:\n</size>");
-					message += $"The {antagType.Key.Name}s were:\n";
+					statusSB.AppendLine($"<size=48>The <b>{antagType.First().Antagonist.AntagName}s</b> were:\n</size>");
+					message += $"The {antagType.First().Antagonist.AntagName}s were:\n";
 					foreach (var antag in antagType)
 					{
 						message += $"\n{antag.GetObjectiveStatusNonRich()}\n";
@@ -174,7 +187,7 @@ namespace Antagonists
 			else
 			{
 				message += $"\nThere were no antagonists!\n";
-				statusSB.AppendLine("<size=24>There were no antagonists!</size>");
+				statusSB.AppendLine("<size=48>There were no antagonists!</size>");
 			}
 
 			if (PlayerList.Instance.ConnectionCount == 1)

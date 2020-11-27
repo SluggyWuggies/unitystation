@@ -65,7 +65,7 @@ PrefabInstance:
     - target: {fileID: 3097138933977987719, guid: 2c406df2572ceba47af8a9de4f9a50ba,
         type: 3}
       propertyPath: m_Name
-      value: Magazine_50mm
+      value: BVOld_Magazine_50mm
       objectReference: {fileID: 0}
     - target: {fileID: 3129732272286336819, guid: 2c406df2572ceba47af8a9de4f9a50ba,
         type: 3}
@@ -108,5 +108,11 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 11400000, guid: 11fdd80d232c34c3c9f74a96e3c0b0e3,
         type: 2}
+    - target: {fileID: 4510796165884908902, guid: 2c406df2572ceba47af8a9de4f9a50ba,
+        type: 3}
+      propertyPath: replacementePrefab
+      value: 
+      objectReference: {fileID: 6235254427324400780, guid: 7bf36ad773bdc1f49b1d7b0b3314f2e4,
+        type: 3}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2c406df2572ceba47af8a9de4f9a50ba, type: 3}

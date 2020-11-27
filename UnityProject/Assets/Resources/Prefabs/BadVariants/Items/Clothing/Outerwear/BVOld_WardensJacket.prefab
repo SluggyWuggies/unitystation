@@ -60,7 +60,7 @@ PrefabInstance:
     - target: {fileID: 3921521694364753778, guid: 012d5b9e077cf4eda9c65f01d1ff5b57,
         type: 3}
       propertyPath: m_Name
-      value: WardensJacket
+      value: BVOld_WardensJacket
       objectReference: {fileID: 0}
     - target: {fileID: 3927008119850082822, guid: 012d5b9e077cf4eda9c65f01d1ff5b57,
         type: 3}

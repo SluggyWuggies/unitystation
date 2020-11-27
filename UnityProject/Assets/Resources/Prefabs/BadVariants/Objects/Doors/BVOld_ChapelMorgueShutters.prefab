@@ -22,8 +22,9 @@ GameObject:
   - component: {fileID: 6040070739731804246}
   - component: {fileID: -6421333424056825435}
   - component: {fileID: -3883608070024241106}
+  - component: {fileID: -7528507584530924022}
   m_Layer: 17
-  m_Name: ChapelMorgueShutters
+  m_Name: BVOld_ChapelMorgueShutters
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -247,12 +248,14 @@ MonoBehaviour:
   DoorSpriteOffset: 0
   weldOverlay: {fileID: 0}
   weldSprite: {fileID: 0}
+  isEmagged: 0
   doorType: 16
   damageOnClose: 1
   damageClosed: 90
   ignorePassableChecks: 0
   IsAutomatic: 1
   conType: 7
+  connectedDoorSwitch: {fileID: 0}
   isPerformingAction: 0
   isWindowedDoor: 0
   useSimpleLightAnimation: 0
@@ -263,6 +266,7 @@ MonoBehaviour:
   pressureLevel: 0
   openingDirection: 1
   spriteRenderer: {fileID: 0}
+  BlockAutoClose: 0
 --- !u!114 &6040070739731804246
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -308,6 +312,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62cc3ef7cd9082443aaf3c255851d15a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &-7528507584530924022
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000010316053548}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ac8d86173f4dcf49a20af7bc27d3e1d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  HITALL: 0
+  onlyPrintDebugLogs: 1
+  replacementePrefab: {fileID: 41902110774710384, guid: 8876bdda47d19634eb59dcd4d99c3dd4,
+    type: 3}
 --- !u!1 &1000014037698914
 GameObject:
   m_ObjectHideFlags: 0
@@ -354,6 +374,7 @@ SpriteRenderer:
   m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 0
   m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
@@ -376,7 +397,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: -1825689229
-  m_SortingLayer: 18
+  m_SortingLayer: 21
   m_SortingOrder: 0
   m_Sprite: {fileID: -3768459764970815540, guid: c3269973bbcda6348ba60ebf7cba6c27,
     type: 3}

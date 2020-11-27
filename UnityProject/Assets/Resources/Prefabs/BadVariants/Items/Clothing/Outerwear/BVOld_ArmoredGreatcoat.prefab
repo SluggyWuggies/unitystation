@@ -7,6 +7,12 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -6788172538329306226, guid: cc01ce86e44f441a0a39be6164acd40e,
+        type: 3}
+      propertyPath: replacementePrefab
+      value: 
+      objectReference: {fileID: 1818651785742919846, guid: f7b1874a6ebd85a439111098540d72d7,
+        type: 3}
     - target: {fileID: 3495234765619245072, guid: cc01ce86e44f441a0a39be6164acd40e,
         type: 3}
       propertyPath: initialDescription
@@ -27,7 +33,7 @@ PrefabInstance:
     - target: {fileID: 3921521694364753778, guid: cc01ce86e44f441a0a39be6164acd40e,
         type: 3}
       propertyPath: m_Name
-      value: ArmoredGreatcoat
+      value: BVOld_ArmoredGreatcoat
       objectReference: {fileID: 0}
     - target: {fileID: 3927008119850082822, guid: cc01ce86e44f441a0a39be6164acd40e,
         type: 3}

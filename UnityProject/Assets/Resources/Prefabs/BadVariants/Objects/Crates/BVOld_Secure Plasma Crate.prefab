@@ -77,6 +77,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: BVOld_Secure Plasma Crate
       objectReference: {fileID: 0}
+    - target: {fileID: 3809108981937397978, guid: d059b46ee78dde84b963769ba89d24cc,
+        type: 3}
+      propertyPath: replacementePrefab
+      value: 
+      objectReference: {fileID: 2819479303022313000, guid: 01adbe4ed95aba04298d331662f28dcd,
+        type: 3}
     - target: {fileID: 4298676972133845906, guid: d059b46ee78dde84b963769ba89d24cc,
         type: 3}
       propertyPath: restriction
@@ -114,5 +120,6 @@ PrefabInstance:
       propertyPath: exportName
       value: Secure Plasma Crate
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 0}
   m_SourcePrefab: {fileID: 100100000, guid: d059b46ee78dde84b963769ba89d24cc, type: 3}

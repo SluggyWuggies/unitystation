@@ -46,6 +46,7 @@ SpriteRenderer:
   m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 0
   m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
@@ -68,9 +69,10 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 142874271
-  m_SortingLayer: 10
+  m_SortingLayer: 8
   m_SortingOrder: 1
-  m_Sprite: {fileID: 21300000, guid: 654cd3e1224e8454f8700a3e5b455232, type: 3}
+  m_Sprite: {fileID: -7811954950964234238, guid: 654cd3e1224e8454f8700a3e5b455232,
+    type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -99,8 +101,9 @@ GameObject:
   - component: {fileID: 114876689548865824}
   - component: {fileID: 8501056774758602355}
   - component: {fileID: 8705481116926788787}
+  - component: {fileID: -2055559517117370984}
   m_Layer: 11
-  m_Name: ArcadeMachine
+  m_Name: BVOld_ArcadeMachine
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -165,6 +168,8 @@ MonoBehaviour:
   objectType: 1
   AtmosPassable: 1
   Passable: 0
+  ReachableThrough: 1
+  passableExclusionsToThis: []
 --- !u!114 &7478891196200289026
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -299,3 +304,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62cc3ef7cd9082443aaf3c255851d15a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &-2055559517117370984
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7376449702682419346}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ac8d86173f4dcf49a20af7bc27d3e1d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  HITALL: 0
+  onlyPrintDebugLogs: 1
+  replacementePrefab: {fileID: 8542251921053179188, guid: 488f4dab2d11be646a78f9864e5c1d4e,
+    type: 3}

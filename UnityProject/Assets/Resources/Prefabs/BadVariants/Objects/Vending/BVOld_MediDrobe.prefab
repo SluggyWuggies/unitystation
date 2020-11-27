@@ -22,6 +22,7 @@ GameObject:
   - component: {fileID: -6086739156095187934}
   - component: {fileID: 7594331227309748916}
   - component: {fileID: -232477747850587932}
+  - component: {fileID: -410522049478677313}
   m_Layer: 11
   m_Name: BVOld_MediDrobe
   m_TagString: Untagged
@@ -99,7 +100,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   InitialVendorContent:
   - ItemName: Medical Belt
-    Item: {fileID: 6700281191928912403, guid: 0ad6b406825f747548ae2f66be19e5bd, type: 3}
+    Item: {fileID: 7594254446053789778, guid: 5322af238fc4d5747a67640c8e4a400b, type: 3}
     Stock: 4
   - ItemName: Stehoscope
     Item: {fileID: 3961673132676458627, guid: c57257234670e0e44a8b4f2b83801b45, type: 3}
@@ -264,6 +265,8 @@ MonoBehaviour:
   objectType: 1
   AtmosPassable: 1
   Passable: 0
+  ReachableThrough: 1
+  passableExclusionsToThis: []
 --- !u!114 &114947365864617716
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -420,19 +423,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
-  MinimumWorkingVoltage: 190
-  ExpectedRunningVoltage: 240
-  MaximumWorkingVoltage: 300
+  minimumWorkingVoltage: 190
+  expectedRunningVoltage: 240
+  maximumWorkingVoltage: 300
   deviceType: 3
   isSelfPowered: 0
   wattusage: 0.01
-  Resistance: 100000000
+  resistance: 100000000
   RelatedAPC: {fileID: 0}
   AdvancedControlToScript: 0
   StateUpdateOnClient: 1
-  SelfPowered: 0
-  State: 0
   conType: 1
+--- !u!114 &-410522049478677313
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1093139424532032}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ac8d86173f4dcf49a20af7bc27d3e1d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  HITALL: 0
+  onlyPrintDebugLogs: 1
+  replacementePrefab: {fileID: 6210777537579942558, guid: 03b219e90d0fc84459987c15b444d17c,
+    type: 3}
 --- !u!1 &1905444731887362
 GameObject:
   m_ObjectHideFlags: 0
@@ -480,6 +497,7 @@ SpriteRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
@@ -502,7 +520,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 142874271
-  m_SortingLayer: 10
+  m_SortingLayer: 8
   m_SortingOrder: 1
   m_Sprite: {fileID: 21300004, guid: 091a2a95a2699c94d92b84b0a903dfb7, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}

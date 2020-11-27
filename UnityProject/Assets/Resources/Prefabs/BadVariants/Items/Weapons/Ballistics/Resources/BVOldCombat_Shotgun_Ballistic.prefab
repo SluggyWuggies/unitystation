@@ -16,6 +16,7 @@ MonoBehaviour:
   syncInterval: 0.1
   clothData: {fileID: 11400000, guid: fab86e3523e77e64a92d71c0fc8a9c96, type: 2}
   variantType: 0
+  hidesSlots: 0
   hideClothingFlags: 0
   SpriteDataSO: []
 --- !u!1001 &1159535383240640759
@@ -106,6 +107,12 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 11400000, guid: 6951d1acf1f988f4caa092597d21f0ef,
         type: 2}
+    - target: {fileID: 4438619546122266027, guid: f46dc50d35397f04f8f6be3fb49668ca,
+        type: 3}
+      propertyPath: replacementePrefab
+      value: 
+      objectReference: {fileID: 8059468518805232750, guid: 8976db5cf8f59bc4cb85f61e8737b468,
+        type: 3}
     - target: {fileID: 7053030124553676594, guid: f46dc50d35397f04f8f6be3fb49668ca,
         type: 3}
       propertyPath: initialTraits.Array.size

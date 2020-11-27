@@ -24,7 +24,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a4ad9570c5ec4b1e995fad54bc897280, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  meatSteakPrefab: {fileID: 6532193109441330816, guid: f5b3ac01c1928bf4ab03433000e00ca2,
+  meatSteakPrefab: {fileID: 2786145059108661523, guid: 9914f83c172606747877a09872724398,
     type: 3}
 --- !u!1001 &6128081887975217483
 PrefabInstance:

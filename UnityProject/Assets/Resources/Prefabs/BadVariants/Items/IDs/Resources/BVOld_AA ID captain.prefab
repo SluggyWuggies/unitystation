@@ -336,7 +336,7 @@ PrefabInstance:
     - target: {fileID: 2462507587837783305, guid: dd36cfd4f55a00d4ab4190d869297198,
         type: 3}
       propertyPath: m_Name
-      value: AA ID captain
+      value: BVOld_AA ID captain
       objectReference: {fileID: 0}
     - target: {fileID: 2467717211471614077, guid: dd36cfd4f55a00d4ab4190d869297198,
         type: 3}
@@ -410,6 +410,12 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 11400000, guid: 7bd446a263971f646931da98f793fdc1,
         type: 2}
+    - target: {fileID: 7748874420982731322, guid: dd36cfd4f55a00d4ab4190d869297198,
+        type: 3}
+      propertyPath: replacementePrefab
+      value: 
+      objectReference: {fileID: 6071750789763624616, guid: 72e9a61271099da41b6bbb328707815f,
+        type: 3}
     - target: {fileID: 8604842513916024462, guid: dd36cfd4f55a00d4ab4190d869297198,
         type: 3}
       propertyPath: PresentSpriteSet

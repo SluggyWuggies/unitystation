@@ -46,6 +46,7 @@ SpriteRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -68,7 +69,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: -932335445
-  m_SortingLayer: 17
+  m_SortingLayer: 19
   m_SortingOrder: 0
   m_Sprite: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -127,6 +128,7 @@ SpriteRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -149,7 +151,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 142874271
-  m_SortingLayer: 10
+  m_SortingLayer: 8
   m_SortingOrder: 1
   m_Sprite: {fileID: 21300000, guid: 4076652198f1e1940865e22f2bde2354, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -185,8 +187,9 @@ GameObject:
   - component: {fileID: -2934526323519094174}
   - component: {fileID: 8386195029513753312}
   - component: {fileID: -5886089061326209906}
+  - component: {fileID: -1206752160885769520}
   m_Layer: 23
-  m_Name: chairs_bar
+  m_Name: BVOld_chairs_bar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -283,6 +286,8 @@ MonoBehaviour:
   objectType: 0
   AtmosPassable: 1
   Passable: 1
+  ReachableThrough: 1
+  passableExclusionsToThis: []
 --- !u!114 &909463862082034201
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -458,7 +463,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc1f386f82014aa4ba117d2289c3d540, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  prefabVariant: {fileID: 1011433845357754, guid: d4ab748b91c63c446a3b30a6eebe9598,
+  prefabVariant: {fileID: 3097773884827705643, guid: 2c9ad226992c1e7499c818c96b03e6dd,
     type: 3}
 --- !u!114 &-5886089061326209906
 MonoBehaviour:
@@ -472,3 +477,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62cc3ef7cd9082443aaf3c255851d15a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &-1206752160885769520
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8325475169279047993}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ac8d86173f4dcf49a20af7bc27d3e1d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  HITALL: 0
+  onlyPrintDebugLogs: 1
+  replacementePrefab: {fileID: 8667645117007165039, guid: 9203bf917337c3e4db0a64a10ef0e50b,
+    type: 3}

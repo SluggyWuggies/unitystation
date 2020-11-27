@@ -2,6 +2,7 @@
 using UnityEngine;
 using Utility = UnityEngine.Networking.Utility;
 using Mirror;
+using TileManagement;
 using Weapons;
 
 public class WeaponNetworkActions : ManagedNetworkBehaviour
@@ -33,36 +34,6 @@ public class WeaponNetworkActions : ManagedNetworkBehaviour
 		playerMove = GetComponent<PlayerMove>();
 		playerScript = GetComponent<PlayerScript>();
 		spriteRendererSource = null;
-	}
-
-	[Command]
-	public void CmdLoadMagazine(GameObject gunObject, GameObject magazine, NamedSlot hand)
-	{
-		if (!Validations.CanInteract(playerScript, NetworkSide.Server)) return;
-		if (!Cooldowns.TryStartServer(playerScript, CommonCooldowns.Instance.Interaction)) return;
-
-		Gun gun = gunObject.GetComponent<Gun>();
-		uint networkID = magazine.GetComponent<NetworkIdentity>().netId;
-		gun.ServerHandleReloadRequest(networkID);
-	}
-
-	[Command]
-	public void CmdUnloadWeapon(GameObject gunObject)
-	{
-		if (!Validations.CanInteract(playerScript, NetworkSide.Server)) return;
-		if (!Cooldowns.TryStartServer(playerScript, CommonCooldowns.Instance.Interaction)) return;
-
-		Gun gun = gunObject.GetComponent<Gun>();
-
-		var cnt = gun.CurrentMagazine?.GetComponent<CustomNetTransform>();
-		if (cnt != null)
-		{
-			cnt.InertiaDrop(transform.position, playerScript.PlayerSync.SpeedServer, playerScript.PlayerSync.ServerState.WorldImpulse);
-		} else {
-			Logger.Log("Magazine not found for unload weapon", Category.Firearms);
-		}
-
-		gun.ServerHandleUnloadRequest();
 	}
 
 	/// <summary>

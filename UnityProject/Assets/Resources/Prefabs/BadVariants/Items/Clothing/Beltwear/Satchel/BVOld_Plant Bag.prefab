@@ -7,6 +7,12 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -5212588488486696214, guid: 51db727353f37334c9bfdbb512f2d530,
+        type: 3}
+      propertyPath: replacementePrefab
+      value: 
+      objectReference: {fileID: 3544980290922763715, guid: c9970b39137b47b4e8e1f06443af3ca7,
+        type: 3}
     - target: {fileID: 700926607669715348, guid: 51db727353f37334c9bfdbb512f2d530,
         type: 3}
       propertyPath: PresentSpriteSet
@@ -92,7 +98,7 @@ PrefabInstance:
     - target: {fileID: 6700281191928912403, guid: 51db727353f37334c9bfdbb512f2d530,
         type: 3}
       propertyPath: m_Name
-      value: Plant Bag
+      value: BVOld_Plant Bag
       objectReference: {fileID: 0}
     - target: {fileID: 6730660045104179111, guid: 51db727353f37334c9bfdbb512f2d530,
         type: 3}

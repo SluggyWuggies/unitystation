@@ -9,7 +9,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1797280918088156, guid: aec802ad975d3418d9b782880452b7bf, type: 3}
       propertyPath: m_Name
-      value: RightWindoor
+      value: BVOld_RightWinDoor
       objectReference: {fileID: 0}
     - target: {fileID: 4343317833518374, guid: aec802ad975d3418d9b782880452b7bf, type: 3}
       propertyPath: m_LocalPosition.x
@@ -65,6 +65,12 @@ PrefabInstance:
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 21300376, guid: f0f465f2e2128495683d9e4cb833c45a,
+        type: 3}
+    - target: {fileID: 4314881335538357381, guid: aec802ad975d3418d9b782880452b7bf,
+        type: 3}
+      propertyPath: replacementePrefab
+      value: 
+      objectReference: {fileID: 5458783346195246523, guid: cf93667e32e15bc43b0347cd102fef98,
         type: 3}
     - target: {fileID: 5741721080410768198, guid: aec802ad975d3418d9b782880452b7bf,
         type: 3}

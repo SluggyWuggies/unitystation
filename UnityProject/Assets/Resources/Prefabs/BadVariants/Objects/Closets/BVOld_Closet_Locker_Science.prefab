@@ -48,6 +48,7 @@ SpriteRenderer:
   m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 0
   m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
@@ -70,7 +71,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: -391668011
-  m_SortingLayer: 9
+  m_SortingLayer: 7
   m_SortingOrder: 1
   m_Sprite: {fileID: 21300000, guid: 99d9234af6ab5b848ae95abd4b3f778f, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -104,6 +105,7 @@ GameObject:
   - component: {fileID: -2730215589733734698}
   - component: {fileID: 2568218481979452215}
   - component: {fileID: 5513538954011599813}
+  - component: {fileID: -6372333573909829515}
   m_Layer: 11
   m_Name: BVOld_Closet_Locker_Science
   m_TagString: Untagged
@@ -202,13 +204,18 @@ MonoBehaviour:
   lockLight: {fileID: 2217615429648888296}
   IsLockable: 1
   playerLimit: 3
+  breakoutTime: 120
   matsOnDestroy: {fileID: 0}
   matsDroppedOnDestroy: 2
   soundOnOpenOrClose: OpenClose
   soundOnEmag: grillehit
+  soundOnEscape: Rustle 1
   doorOpened: {fileID: 21300000, guid: 5f5cc0c5667e65a4883d6ccfa46e8c07, type: 3}
   spriteRenderer: {fileID: 212255976647380646}
+  lockOverlay: {fileID: 0}
   isEmagged: 0
+  weldOverlay: {fileID: 0}
+  weldSprite: {fileID: 0}
 --- !u!114 &7485403622017351907
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -251,6 +258,8 @@ MonoBehaviour:
   objectType: 1
   AtmosPassable: 1
   Passable: 0
+  ReachableThrough: 1
+  passableExclusionsToThis: []
   closetType: 0
 --- !u!114 &114570445175126256
 MonoBehaviour:
@@ -364,6 +373,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62cc3ef7cd9082443aaf3c255851d15a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &-6372333573909829515
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1615565101381030}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ac8d86173f4dcf49a20af7bc27d3e1d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  HITALL: 0
+  onlyPrintDebugLogs: 1
+  replacementePrefab: {fileID: 9190669824918335703, guid: 46256bd32d78e6244ae8cf416751c9a3,
+    type: 3}
 --- !u!1 &1660108514398418
 GameObject:
   m_ObjectHideFlags: 0
@@ -411,6 +436,7 @@ SpriteRenderer:
   m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 0
   m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
@@ -433,7 +459,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: -391668011
-  m_SortingLayer: 9
+  m_SortingLayer: 7
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: ea39bc05451f43640b72c819d3b9725b, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -522,6 +548,7 @@ SpriteRenderer:
   m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 0
   m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
@@ -544,7 +571,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: -932335445
-  m_SortingLayer: 17
+  m_SortingLayer: 19
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: a385f70907236ba4ca8b0fc6012a222b, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -604,6 +631,7 @@ SpriteRenderer:
   m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 0
   m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
@@ -626,7 +654,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 142874271
-  m_SortingLayer: 10
+  m_SortingLayer: 8
   m_SortingOrder: 2
   m_Sprite: {fileID: 21300000, guid: a2e321bbe2c781840807b3fb756c9728, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
