@@ -133,7 +133,7 @@ public partial class PlayerNetworkActions : NetworkBehaviour
 			{
 				// Throw the player down to the floor for 15 seconds.
 				playerScript.registerTile.ServerStun(15);
-				SoundManager.PlayNetworkedAtPos("Bodyfall", transform.position, sourceObj: gameObject);
+				SoundManager.PlayNetworkedAtPos(SingletonSOSounds.Instance.Bodyfall, transform.position, sourceObj: gameObject);
 			}
 			else
 			{
@@ -443,7 +443,7 @@ public partial class PlayerNetworkActions : NetworkBehaviour
 				if (oldState == ConsciousState.CONSCIOUS)
 				{
 					//only play the sound if we are falling
-					SoundManager.PlayNetworkedAtPos("Bodyfall", transform.position, sourceObj: gameObject);
+					SoundManager.PlayNetworkedAtPos(SingletonSOSounds.Instance.Bodyfall, transform.position, sourceObj: gameObject);
 				}
 
 				break;
@@ -455,7 +455,7 @@ public partial class PlayerNetworkActions : NetworkBehaviour
 				if (oldState == ConsciousState.CONSCIOUS)
 				{
 					//only play the sound if we are falling
-					SoundManager.PlayNetworkedAtPos("Bodyfall", transform.position, sourceObj: gameObject);
+					SoundManager.PlayNetworkedAtPos(SingletonSOSounds.Instance.Bodyfall, transform.position, sourceObj: gameObject);
 				}
 
 				break;
@@ -557,8 +557,10 @@ public partial class PlayerNetworkActions : NetworkBehaviour
 			}
 
 			StartCoroutine(AntagManager.Instance.ServerRespawnAsAntag(playerToRespawn, antag));
-			break;
+			return;
 		}
+
+		Logger.LogWarning($"Antagonist string \"{antagonist}\" not found in {nameof(SOAdminJobsList)}!");
 	}
 
 
@@ -808,11 +810,11 @@ public partial class PlayerNetworkActions : NetworkBehaviour
 		var reactionManager = onObject.GetComponentInParent<ReactionManager>();
 		if (reactionManager == null) return;
 
-		reactionManager.ExposeHotspotWorldPosition(onObject.TileWorldPosition(), 700, .5f);
-		reactionManager.ExposeHotspotWorldPosition(onObject.TileWorldPosition() + Vector2Int.down, 700, .05f);
-		reactionManager.ExposeHotspotWorldPosition(onObject.TileWorldPosition() + Vector2Int.left, 700, .05f);
-		reactionManager.ExposeHotspotWorldPosition(onObject.TileWorldPosition() + Vector2Int.up, 700, .05f);
-		reactionManager.ExposeHotspotWorldPosition(onObject.TileWorldPosition() + Vector2Int.right, 700, .05f);
+		reactionManager.ExposeHotspotWorldPosition(onObject.TileWorldPosition());
+		reactionManager.ExposeHotspotWorldPosition(onObject.TileWorldPosition() + Vector2Int.down);
+		reactionManager.ExposeHotspotWorldPosition(onObject.TileWorldPosition() + Vector2Int.left);
+		reactionManager.ExposeHotspotWorldPosition(onObject.TileWorldPosition() + Vector2Int.up);
+		reactionManager.ExposeHotspotWorldPosition(onObject.TileWorldPosition() + Vector2Int.right);
 	}
 
 	[Command]
