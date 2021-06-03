@@ -44,7 +44,6 @@ MonoBehaviour:
         reagents:
           m_keys: []
           m_values: []
-        reagentKeys: []
       gasMix:
         Gases:
         - 0
