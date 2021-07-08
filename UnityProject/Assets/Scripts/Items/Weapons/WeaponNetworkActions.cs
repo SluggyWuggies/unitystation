@@ -17,6 +17,9 @@ public class WeaponNetworkActions : NetworkBehaviour
 	private readonly float speed = 7f;
 	private readonly float fistDamage = 5;
 
+	private float traumaDamageChance = 0;
+	private BodyPart.TramuticDamageTypes tramuticDamageType;
+
 	private bool isForLerpBack;
 	private Vector3 lerpFrom;
 	public bool lerping { get; private set; } // needs to be read by Camera2DFollow
@@ -89,6 +92,8 @@ public class WeaponNetworkActions : NetworkBehaviour
 			damage = weaponAttributes.ServerHitDamage;
 			damageType = weaponAttributes.ServerDamageType;
 			weaponSound = weaponAttributes.hitSoundSettings == SoundItemSettings.OnlyObject ? null : weaponAttributes.ServerHitSound;
+			tramuticDamageType = weaponAttributes.TraumaticDamageType;
+			traumaDamageChance = weaponAttributes.TraumaDamageChance;
 		}
 
 		LayerTile attackedTile = null;
@@ -135,6 +140,10 @@ public class WeaponNetworkActions : NetworkBehaviour
 				if (victim.TryGetComponent<LivingHealthMasterBase>(out var victimHealth))
 				{
 					victimHealth.ApplyDamageToBodyPart(gameObject, damage, AttackType.Melee, damageType, damageZone);
+					if(DMMath.Prob(traumaDamageChance))
+					{
+						victimHealth.ApplyTraumaDamage(damageZone, damage, tramuticDamageType);
+					}
 					didHit = true;
 				}
 				else if (victim.TryGetComponent<LivingHealthBehaviour>(out var victimHealthOld))
@@ -189,7 +198,9 @@ public class WeaponNetworkActions : NetworkBehaviour
 
 		if (spriteRendererSource != null)
 		{
-			playerScript.hitIcon.ShowHitIcon(stabDir, spriteRendererSource);
+			var projectile = Spawn.ClientPrefab("hitIcon", playerScript.transform.position, playerScript.transform.parent).GameObject;
+			var hitIcon = projectile.GetComponent<HitIcon>();
+			hitIcon.ShowHitIcon(stabDir, spriteRendererSource, playerScript);
 		}
 
 		Vector3 lerpFromWorld = spritesObj.transform.position;

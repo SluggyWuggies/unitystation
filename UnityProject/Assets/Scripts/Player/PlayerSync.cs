@@ -387,16 +387,12 @@ public partial class PlayerSync : NetworkBehaviour, IPushable, IPlayerControllab
 	{
 		onTileReached.AddListener(Cross);
 		EventManager.AddHandler(Event.PlayerRejoined, setLocalPlayer);
-
-		if (CustomNetworkManager.IsHeadless) return;
 		UpdateManager.Add(CallbackType.UPDATE, UpdateMe);
 	}
 	private void OnDisable()
 	{
 		onTileReached.RemoveListener(Cross);
 		EventManager.RemoveHandler(Event.PlayerRejoined, setLocalPlayer);
-
-		if (CustomNetworkManager.IsHeadless) return;
 		UpdateManager.Remove(CallbackType.UPDATE, UpdateMe);
 	}
 
@@ -641,7 +637,7 @@ public partial class PlayerSync : NetworkBehaviour, IPushable, IPlayerControllab
 	}
 #endif
 
-	public void RecievePlayerMoveAction(PlayerAction moveActions)
+	public void ReceivePlayerMoveAction(PlayerAction moveActions)
 	{
 		if (moveActions.moveActions.Length != 0 && !MoveCooldown
 		                                        && isLocalPlayer && playerMove != null

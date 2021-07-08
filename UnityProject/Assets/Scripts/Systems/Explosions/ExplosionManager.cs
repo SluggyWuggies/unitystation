@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Mirror;
 using UnityEngine;
 
@@ -13,14 +14,14 @@ namespace Systems.Explosions
 
 		private void OnEnable()
 		{
-			if(NetworkServer.active == false) return;
+			if(Application.isEditor == false && NetworkServer.active == false) return;
 
 			UpdateManager.Add(Step, 0.25f);
 		}
 
 		private void OnDisable()
 		{
-			if(NetworkServer.active == false) return;
+			if(Application.isEditor == false && NetworkServer.active == false) return;
 
 			UpdateManager.Remove(CallbackType.PERIODIC_UPDATE, Step);
 		}
@@ -35,11 +36,11 @@ namespace Systems.Explosions
 			}
 			SubCheckLines.Clear();
 
-			foreach (var CheckLoc in CheckLocations)
+			foreach (var explosionNode in CheckLocations.ToArray())
 			{
-				CheckLoc.Process();
+				CheckLocations.Remove(explosionNode); //lets not create infinite explosions in the case of a runtime
+				explosionNode.Process();
 			}
-			CheckLocations.Clear();
 		}
 	}
 }
