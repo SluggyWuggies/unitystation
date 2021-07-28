@@ -13,7 +13,9 @@ public class MetaDataView : BasicView
 		localChecks.Add(new RoomCheck());
 		localChecks.Add(new PressureCheck());
 		localChecks.Add(new TemperatureCheck());
+		localChecks.Add(new SolidTemperatureCheck());
 		localChecks.Add(new MolesCheck());
+		localChecks.Add(new VolumeCheck());
 		localChecks.Add(new ExistCheck());
 		localChecks.Add(new OccupiedCheck());
 		localChecks.Add(new SpaceCheck());
@@ -21,7 +23,6 @@ public class MetaDataView : BasicView
 		localChecks.Add(new SpaceConnectCheck());
 		localChecks.Add(new HotspotCheck());
 		localChecks.Add(new WindCheck());
-		localChecks.Add(new TotalMolesCheck());
 		localChecks.Add(new NumberOfGasesCheck());
 		localChecks.Add(new PlasmaCheck());
 		localChecks.Add(new OxygenCheck());
@@ -31,6 +32,8 @@ public class MetaDataView : BasicView
 		localChecks.Add(new AirlockCheck());
 		localChecks.Add(new SlipperyCheck());
 		localChecks.Add(new AtmosUpdateCheck());
+		localChecks.Add(new ThermalConductivity());
+		localChecks.Add(new HeatCapacity());
 	}
 
 	public override void DrawContent()
@@ -170,7 +173,7 @@ public class MetaDataView : BasicView
 
 	private class TemperatureCheck : Check<MetaDataLayer>
 	{
-		public override string Label { get; } = "Temperature";
+		public override string Label { get; } = "Gas Temperature";
 
 		public override void DrawLabel(MetaDataLayer source, Vector3Int position)
 		{
@@ -179,14 +182,32 @@ public class MetaDataView : BasicView
 			if (node.Exists)
 			{
 				Vector3 p = LocalToWorld(source, position);
-				GizmoUtils.DrawText($"{node.GasMix.Temperature:0.###}", p, false);
+				GizmoUtils.DrawText($"{(node.GasMix.Temperature):0.##}", p, false);
+			}
+		}
+	}
+
+	private class SolidTemperatureCheck : Check<MetaDataLayer>
+	{
+		public override string Label { get; } = "Solid Temperature";
+
+		public override void DrawLabel(MetaDataLayer source, Vector3Int position)
+		{
+			MetaDataNode node = source.Get(position, false);
+
+			if (node.Exists)
+			{
+				Vector3 p = LocalToWorld(source, position);
+
+				p.y -= 0.2f;
+				GizmoUtils.DrawText($"{(node.ConductivityTemperature):0.##}", p, false);
 			}
 		}
 	}
 
 	private class MolesCheck : Check<MetaDataLayer>
 	{
-		public override string Label { get; } = "Moles";
+		public override string Label { get; } = "Total Moles";
 
 		public override void DrawLabel(MetaDataLayer source, Vector3Int position)
 		{
@@ -196,6 +217,22 @@ public class MetaDataView : BasicView
 			{
 				Vector3 p = LocalToWorld(source, position);
 				GizmoUtils.DrawText($"{node.GasMix.Moles:0.###}", p, false);
+			}
+		}
+	}
+
+	private class VolumeCheck : Check<MetaDataLayer>
+	{
+		public override string Label { get; } = "Volume";
+
+		public override void DrawLabel(MetaDataLayer source, Vector3Int position)
+		{
+			MetaDataNode node = source.Get(position, false);
+
+			if (node.Exists)
+			{
+				Vector3 p = LocalToWorld(source, position);
+				GizmoUtils.DrawText($"{node.GasMix.Volume:0.###}", p, false);
 			}
 		}
 	}
@@ -248,6 +285,38 @@ public class MetaDataView : BasicView
 		}
 	}
 
+	private class ThermalConductivity : Check<MetaDataLayer>
+	{
+		public override string Label { get; } = "Thermal Conductivity";
+
+		public override void DrawGizmo(MetaDataLayer source, Vector3Int position)
+		{
+			MetaDataNode node = source.Get(position, false);
+
+			if (node.Exists)
+			{
+				Vector3 p = LocalToWorld(source, position);
+				GizmoUtils.DrawText($"{node.ThermalConductivity:0.###}", p, false);
+			}
+		}
+	}
+
+	private class HeatCapacity : Check<MetaDataLayer>
+	{
+		public override string Label { get; } = "Heat Capacity";
+
+		public override void DrawGizmo(MetaDataLayer source, Vector3Int position)
+		{
+			MetaDataNode node = source.Get(position, false);
+
+			if (node.Exists)
+			{
+				Vector3 p = LocalToWorld(source, position);
+				GizmoUtils.DrawText($"{node.HeatCapacity:0.###}", p, false);
+			}
+		}
+	}
+
 	private class AirlockCheck : Check<MetaDataLayer>
 	{
 		public override string Label { get; } = "Closed Airlock";
@@ -255,7 +324,7 @@ public class MetaDataView : BasicView
 		public override void DrawGizmo(MetaDataLayer source, Vector3Int position)
 		{
 			MetaDataNode node = source.Get(position, false);
-			if (node.IsClosedAirlock)
+			if (node.IsIsolatedNode)
 			{
 				GizmoUtils.DrawCube( position, Color.blue, true );
 			}
@@ -335,22 +404,6 @@ public class MetaDataView : BasicView
 			{
 				Vector3 p = LocalToWorld(source, position);
 				GizmoUtils.DrawText($"{node.GasMix.GetMoles(Gas.CarbonDioxide):0.###}", p, false);
-			}
-		}
-	}
-
-	private class TotalMolesCheck : Check<MetaDataLayer>
-	{
-		public override string Label { get; } = "Total Moles";
-
-		public override void DrawLabel(MetaDataLayer source, Vector3Int position)
-		{
-			MetaDataNode node = source.Get(position, false);
-
-			if (node.Exists)
-			{
-				Vector3 p = LocalToWorld(source, position);
-				GizmoUtils.DrawText($"{node.GasMix.Moles:0.###}", p, false);
 			}
 		}
 	}

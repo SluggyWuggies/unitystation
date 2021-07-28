@@ -474,7 +474,7 @@ public class DynamicItemStorage : NetworkBehaviour
 			}
 		}
 
-		if (ServerObjectToSlots[bodyPartUISlots.GameObject].Count == 0)
+		if (ServerObjectToSlots.ContainsKey(bodyPartUISlots.GameObject) && ServerObjectToSlots[bodyPartUISlots.GameObject].Count == 0)
 		{
 			ServerObjectToSlots.Remove(bodyPartUISlots.GameObject);
 		}
@@ -578,6 +578,7 @@ public class DynamicItemStorage : NetworkBehaviour
 
 			if (PlayerManager.LocalPlayer == this.gameObject && storageCharacteristicse.NotPresentOnUI == false)
 			{
+				UIManager.Instance.UI_SlotManager.SetActive(true);
 				UIManager.Instance.UI_SlotManager.AddIndividual(bodyPartUISlots, storageCharacteristicse);
 			}
 		}
@@ -695,7 +696,7 @@ public class DynamicItemStorage : NetworkBehaviour
 		{
 			if (NetworkIdentity.spawned.TryGetValue(addInt, out var spawned) == false)
 			{
-				Logger.LogError($"Failed to find object in spawned objects, might have not spawned yet?");
+				Logger.LogError($"Failed to find object in spawned objects, might have not spawned yet? netId: {addInt}");
 				continue;
 			}
 
@@ -706,7 +707,7 @@ public class DynamicItemStorage : NetworkBehaviour
 		{
 			if (NetworkIdentity.spawned.TryGetValue(addInt, out var spawned) == false)
 			{
-				Logger.LogError($"Failed to find object in spawned objects, might have not spawned yet?");
+				Logger.LogError($"Failed to find object in spawned objects, might have not spawned yet? netId: {addInt}");
 				continue;
 			}
 
