@@ -1,21 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Systems.Atmospherics;
-using Systems.Radiation;
-using HealthV2;
-using Light2D;
-using Mirror;
-using Objects.Engineering;
-using ScriptableObjects.Gun;
 using UnityEngine;
+using Mirror;
+using Light2D;
+using HealthV2;
+using Systems.Pipes;
+using Systems.Radiation;
+using Objects.Engineering;
 using Weapons.Projectiles.Behaviours;
-using Random = UnityEngine.Random;
+
 
 namespace Objects
 {
 	public class Singularity : NetworkBehaviour, IOnHitDetect, IExaminable
 	{
+
+		[SyncVar(hook = nameof(SyncCurrentStage))]
 		private SingularityStages currentStage = SingularityStages.Stage0;
 
 		private readonly float updateFrequency = 0.5f;
@@ -59,7 +60,13 @@ namespace Objects
 		private float maxRadiation = 5000f;
 
 		[SerializeField]
-		private LightSprite light = null;
+		private GameObject WarpEffectFront;
+
+		[SerializeField]
+		private GameObject WarpEffectBack;
+
+		[SerializeField]
+		private new LightSprite light = null;
 
 		[SerializeField]
 		[Tooltip("Allows singularity to be stage 6")]
@@ -84,10 +91,13 @@ namespace Objects
 		private CustomNetTransform customNetTransform;
 		private int objectId;
 
+		private Material WarpEffectFrontMat;
+		private Material WarpEffectBackMat;
+
 		private int lockTimer;
 		private bool pointLock;
 
-		private List<Pipes.PipeNode> SavedPipes = new List<Pipes.PipeNode>();
+		private List<PipeNode> SavedPipes = new List<PipeNode>();
 
 		private HashSet<GameObject> pushRecently = new HashSet<GameObject>();
 		private int pushTimer;
@@ -119,6 +129,10 @@ namespace Objects
 			spriteHandler = GetComponentInChildren<SpriteHandler>();
 			lightTransform = light.transform;
 			objectId = GetInstanceID();
+
+			WarpEffectFrontMat = WarpEffectFront.GetComponent<MeshRenderer>().materials[0];
+			WarpEffectBackMat = WarpEffectBack.GetComponent<MeshRenderer>().materials[0];
+
 		}
 
 		private void Start()
@@ -154,6 +168,13 @@ namespace Objects
 			}
 
 			gameObject.transform.LeanScale(newScale, updateFrequency);
+			
+		}
+
+		private void SyncCurrentStage(SingularityStages oldStage, SingularityStages newStage)
+		{
+			currentStage = newStage;
+			UpdateWarpFX(currentStage);
 		}
 
 		#endregion
@@ -186,7 +207,7 @@ namespace Objects
 			if (singularityPoints <= 0 && zeroPointDeath)
 			{
 				Chat.AddLocalMsgToChat("The singularity implodes", gameObject);
-				RadiationManager.Instance.RequestPulse(registerTile.Matrix, registerTile.LocalPositionServer, maxRadiation, objectId);
+				RadiationManager.Instance.RequestPulse( registerTile.WorldPositionServer, maxRadiation, objectId);
 				_ = Despawn.ServerSingle(gameObject);
 				return;
 			}
@@ -213,7 +234,7 @@ namespace Objects
 			//Radiation Pulse
 			var strength = Mathf.Max(((float) CurrentStage + 1) / 6 * maxRadiation, 0);
 
-			RadiationManager.Instance.RequestPulse(registerTile.Matrix, registerTile.LocalPositionServer, strength, objectId);
+			RadiationManager.Instance.RequestPulse(registerTile.WorldPositionServer, strength, objectId);
 		}
 
 		#region Throw/Push
@@ -382,12 +403,12 @@ namespace Objects
 						    health.RegisterPlayer.PlayerScript.mind.occupation != null &&
 						    health.RegisterPlayer.PlayerScript.mind.occupation == OccupationList.Instance.Get(JobType.CLOWN))
 						{
-							health.ServerGibPlayer();
+							health.Gib();
 							ChangePoints(DMMath.Prob(50) ? -1000 : 1000);
 							return;
 						}
 
-						health.ServerGibPlayer();
+						health.Gib();
 						ChangePoints(100);
 					}
 					else if (objectToMove.TryGetComponent<Integrity>(out var integrity) && integrity != null)
@@ -425,7 +446,7 @@ namespace Objects
 			{
 				var matrixInfo = MatrixManager.AtPoint(coord, true);
 
-				var cellPos = MatrixManager.Instance.WorldToLocalInt(coord, matrixInfo.Matrix);
+				var cellPos = MatrixManager.WorldToLocalInt(coord, matrixInfo.Matrix);
 
 				var layerTile = matrixInfo.TileChangeManager.MetaTileMap
 					.GetTile(MatrixManager.WorldToLocalInt(coord, matrixInfo), LayerType.Walls);
@@ -615,6 +636,50 @@ namespace Objects
 				UpdateVectors();
 				dynamicScale = Vector3.zero; // keyed value: don't tween; set it to 1x scale immediately
 			}
+
+		}
+		/// <summary>
+		/// Sets the warp effects in accordance with the correct sprite
+		/// </summary>
+		private void UpdateWarpFX(SingularityStages stage)
+		{
+			float scaledRadius = 0f;
+			float scaledEffect = 0f;
+
+			switch (stage)
+			{
+				case SingularityStages.Stage0: 
+					scaledRadius = Mathf.Clamp(0.08f * gameObject.transform.localScale.x, 0.08f,0.15f);
+					scaledEffect = 7f;
+					break;
+				case SingularityStages.Stage1:
+					scaledRadius = Mathf.Clamp(0.26f * gameObject.transform.localScale.x, 0.26f,0.35f);
+					scaledEffect = 9f;
+					break;
+				case SingularityStages.Stage2:
+					scaledRadius = Mathf.Clamp(0.35f * gameObject.transform.localScale.x, 0.35f, 0.6f);
+					scaledEffect = 10f;
+					break;
+				case SingularityStages.Stage3:
+					scaledRadius = Mathf.Clamp(0.55f * gameObject.transform.localScale.x, 0.55f, 0.75f);
+					scaledEffect = 12f;
+					break;
+				case SingularityStages.Stage4:
+					scaledRadius = Mathf.Clamp(0.75f * gameObject.transform.localScale.x, 0.75f, 0.8f);
+					scaledEffect = 15f;
+					break;
+				case SingularityStages.Stage5:
+					scaledRadius = Mathf.Clamp(0.8f * gameObject.transform.localScale.x, 0.8f, 1f);
+					scaledEffect = 20f;
+					break;
+				default:
+					break;
+			}
+
+			WarpEffectFrontMat.SetFloat("_EffectRadius", scaledRadius);
+			WarpEffectBackMat.SetFloat("_EffectRadius", scaledRadius);
+			WarpEffectFrontMat.SetFloat("_EffectAngle", scaledEffect);
+			WarpEffectBackMat.SetFloat("_EffectAngle", scaledEffect);
 		}
 
 		private void UpdateVectors()

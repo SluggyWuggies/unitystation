@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,25 +7,24 @@ using Systems;
 using Systems.Construction;
 using Systems.Electricity;
 using Systems.MobAIs;
+using Systems.ObjectConnection;
 using AddressableReferences;
-using Core.Input_System.InteractionV2.Interactions;
 using Messages.Server;
 using Mirror;
 using Objects.Security;
-using Objects.Wallmounts;
 using Objects.Wallmounts.Switches;
 using UI.Core.Net;
 using UnityEngine;
 using Weapons;
 using Weapons.Projectiles;
-using Random = UnityEngine.Random;
+
 
 namespace Objects.Other
 {
 	[RequireComponent(typeof(ItemStorage))]
 	[RequireComponent(typeof(APCPoweredDevice))]
 	[RequireComponent(typeof(AccessRestrictions))]
-	public class Turret : NetworkBehaviour, ICheckedInteractable<HandApply>, ISetMultitoolSlave, IExaminable, IServerSpawn, ICanOpenNetTab
+	public class Turret : NetworkBehaviour, ICheckedInteractable<HandApply>, IMultitoolSlaveable, IExaminable, IServerSpawn, ICanOpenNetTab
 	{
 		[SerializeField]
 		[Tooltip("Used to get the lethal bullet and spawn the gun when deconstructed")]
@@ -158,35 +157,12 @@ namespace Objects.Other
 		[SyncVar(hook = nameof(SyncRotation))]
 		private Vector2 rotationAngle;
 
-		[SerializeField]
-		private MultitoolConnectionType conType = MultitoolConnectionType.Turret;
-		public MultitoolConnectionType ConType => conType;
-
 		private TurretSwitch connectedSwitch;
-
-		public void SetMaster(ISetMultitoolMaster iMaster)
-		{
-			if (unlocked == false)
-			{
-				//TODO how do you tell player you need to unlock??
-				return;
-			}
-
-			if (iMaster is TurretSwitch turretSwitch)
-			{
-				//Already connected so disconnect
-				if (connectedSwitch != null)
-				{
-					connectedSwitch.RemoveTurretFromSwitch(this);
-				}
-
-				connectedSwitch = turretSwitch;
-				turretSwitch.AddTurretToSwitch(this);
-			}
-		}
 
 		private string bulletName;
 		private AddressableAudioSource bulletSound;
+
+		#region Lifecycle
 
 		private void Awake()
 		{
@@ -242,6 +218,8 @@ namespace Objects.Other
 				generalSwitch.RemoveTurretFromSwitch(this);
 			}
 		}
+
+		#endregion
 
 		private void SyncRotation(Vector2 oldValue, Vector2 newValue)
 		{
@@ -652,8 +630,13 @@ namespace Objects.Other
 					return;
 				}
 
+				//If unlocked then quick to lock, if locked then if unconnected to switch quick to unlock
+				//Else locked and connected so take long to stop rush unlocking to switch turrets off
+				var time = unlocked ? 1f :
+					connectedSwitch != null ? 10f : 1f;
+
 				var bar = StandardProgressAction.Create(new StandardProgressActionConfig(StandardProgressActionType.Construction, false, false, true), Perform);
-				bar.ServerStartProgress(interaction.Performer.RegisterTile(), unlocked ? 5f : 15f, interaction.Performer);
+				bar.ServerStartProgress(interaction.Performer.RegisterTile(), time, interaction.Performer);
 
 				void Perform()
 				{
@@ -760,5 +743,44 @@ namespace Objects.Other
 			//Only allow changing settings on non Ai turrets, as the settings only work on those
 			return turretType != TurretType.Ai;
 		}
+
+		#region Multitool Interaction
+
+		MultitoolConnectionType IMultitoolLinkable.ConType => MultitoolConnectionType.Turret;
+		IMultitoolMasterable IMultitoolSlaveable.Master => connectedSwitch;
+		bool IMultitoolSlaveable.RequireLink => false; // TODO: set to false to ignore false positive; currently links are serialized on the switch
+		bool IMultitoolSlaveable.TrySetMaster(PositionalHandApply interaction, IMultitoolMasterable master)
+		{
+			if (unlocked == false)
+			{
+				Chat.AddExamineMsgFromServer(interaction.Performer, "You try to link the controller but the turret interface is locked!");
+				return false;
+			}
+
+			SetMaster(master);
+			return true;
+		}
+		void IMultitoolSlaveable.SetMasterEditor(IMultitoolMasterable master)
+		{
+			SetMaster(master);
+		}
+
+		private void SetMaster(IMultitoolMasterable master)
+		{
+			// Already connected so disconnect
+			if (connectedSwitch != null)
+			{
+				connectedSwitch.RemoveTurretFromSwitch(this);
+				connectedSwitch = null;
+			}
+
+			if (master is TurretSwitch turretSwitch)
+			{
+				connectedSwitch = turretSwitch;
+				turretSwitch.AddTurretToSwitch(this);
+			}
+		}
+
+		#endregion
 	}
 }

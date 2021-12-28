@@ -301,7 +301,7 @@ namespace Systems.Atmospherics
 		/// <returns>The mean gas mix.</returns>
 		private void CalcMeanGasMix()
 		{
-			meanGasMix.Copy(GasMixes.BaseEmptyMix);
+			meanGasMix.Clear();
 
 			var targetCount = 0;
 
@@ -318,7 +318,7 @@ namespace Systems.Atmospherics
 				if (node.IsOccupied == false && node.IsIsolatedNode == false)
 				{
 					meanGasMix.Volume += node.GasMix.Volume;
-					GasMix.TransferGas(meanGasMix, node.GasMix, node.GasMix.Moles);
+					GasMix.TransferGas(meanGasMix, node.GasMix, node.GasMix.Moles, true);
 					targetCount++;
 				}
 				else if(node.IsIsolatedNode == false)
@@ -334,9 +334,15 @@ namespace Systems.Atmospherics
 			if (targetCount == 0) return;
 
 			meanGasMix.Volume /= targetCount; //Note: this assumes the volume of all tiles are the same
-			foreach (var gasData in meanGasMix.GasesArray)
+
+
+			lock (meanGasMix.GasesArray) //no Double lock
 			{
-				meanGasMix.GasData.SetMoles(gasData.GasSO, meanGasMix.GasData.GetGasMoles(gasData.GasSO) / targetCount);
+				for (int i = meanGasMix.GasesArray.Count - 1; i >= 0; i--)
+				{
+					var gasData = meanGasMix.GasesArray[i];
+					meanGasMix.GasData.SetMoles(gasData.GasSO, meanGasMix.GasData.GetGasMoles(gasData.GasSO) / targetCount);
+				}
 			}
 		}
 
@@ -351,7 +357,7 @@ namespace Systems.Atmospherics
 				return;
 			}
 
-			foreach (var gasData in node.GasMix.GasesArray)
+			foreach (var gasData in node.GasMix.GasesArray) //doesn't appear to modify list while iterating
 			{
 				var gas = gasData.GasSO;
 				if(!gas.HasOverlay) continue;
@@ -364,7 +370,7 @@ namespace Systems.Atmospherics
 
 					node.AddGasOverlay(gas);
 
-					node.ReactionManager.TileChangeManager.AddOverlay(node.Position, TileManager.GetTile(TileType.Effects, gas.TileName) as OverlayTile);
+					node.PositionMatrix.MetaTileMap.AddOverlay(node.Position, TileManager.GetTile(TileType.Effects, gas.TileName) as OverlayTile);
 				}
 				else
 				{
@@ -372,7 +378,7 @@ namespace Systems.Atmospherics
 
 					node.RemoveGasOverlay(gas);
 
-					node.ReactionManager.TileChangeManager.RemoveOverlaysOfType(node.Position, LayerType.Effects, gas.OverlayType);
+					node.PositionMatrix.MetaTileMap.RemoveOverlaysOfType(node.Position, LayerType.Effects, gas.OverlayType);
 				}
 			}
 		}
@@ -383,7 +389,7 @@ namespace Systems.Atmospherics
 
 			foreach (var gas in node.GasOverlayData)
 			{
-				node.ReactionManager.TileChangeManager.RemoveOverlaysOfType(node.Position, LayerType.Effects, gas.OverlayType);
+				node.PositionMatrix.MetaTileMap.RemoveOverlaysOfType(node.Position, LayerType.Effects, gas.OverlayType);
 			}
 
 			node.GasOverlayData.Clear();
@@ -411,8 +417,6 @@ namespace Systems.Atmospherics
 				if (gasMix.Pressure < gasReaction.MinimumPressure || gasMix.Pressure > gasReaction.MaximumPressure) continue;
 
 				if (gasMix.Moles < gasReaction.MinimumMoles || gasMix.Moles > gasReaction.MaximumMoles) continue;
-
-				if (node.ReactionManager.reactions.TryGetValue(node.Position, out var gasHashSet) && gasHashSet.Contains(gasReaction)) continue;
 
 				//If too much Hyper-Noblium theres no reactions!!!
 				if(gasMix.GetMoles(Gas.HyperNoblium) >= AtmosDefines.REACTION_OPPRESSION_THRESHOLD) break;

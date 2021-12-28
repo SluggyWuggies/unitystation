@@ -1,7 +1,6 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 using Mirror;
-using Systems.Disposals;
+using Objects.Atmospherics;
 
 namespace Objects.Disposals
 {
@@ -20,7 +19,7 @@ namespace Objects.Disposals
 		Secured = 2
 	}
 
-	public abstract class DisposalMachine : NetworkBehaviour, IExaminable, ICheckedInteractable<PositionalHandApply> // Must it be positional?
+	public abstract class DisposalMachine : NetworkBehaviour, IServerSpawn, IExaminable, ICheckedInteractable<PositionalHandApply> // Must it be positional?
 	{
 		private const float WELD_TIME = 2f;
 		private const string PIPE_TERMINAL_NAME = "disposal pipe terminal";
@@ -28,10 +27,13 @@ namespace Objects.Disposals
 		protected RegisterObject registerObject;
 		protected ObjectAttributes objectAttributes;
 		protected ObjectBehaviour objectBehaviour;
+		protected ObjectContainer objectContainer;
+		protected GasContainer gasContainer;
 		protected SpriteHandler baseSpriteHandler;
 
 		protected PositionalHandApply currentInteraction;
 
+		[SyncVar]
 		private InstallState installState = InstallState.Unattached;
 		public bool MachineUnattached => installState == InstallState.Unattached;
 		public bool MachineAnchored => installState == InstallState.Anchored;
@@ -47,22 +49,14 @@ namespace Objects.Disposals
 			registerObject = GetComponent<RegisterObject>();
 			objectAttributes = GetComponent<ObjectAttributes>();
 			objectBehaviour = GetComponent<ObjectBehaviour>();
+			objectContainer = GetComponent<ObjectContainer>();
+			gasContainer = GetComponent<GasContainer>();
 
 			baseSpriteHandler = transform.GetChild(0).GetComponent<SpriteHandler>();
 		}
 
-		public override void OnStartServer()
+		public virtual void OnSpawnServer(SpawnInfo info)
 		{
-			StartCoroutine(WaitForUnderfloorUtilities());
-		}
-
-		IEnumerator WaitForUnderfloorUtilities()
-		{
-			while (registerObject.Matrix.UnderFloorLayer.UnderFloorUtilitiesInitialised == false)
-			{
-				yield return WaitFor.EndOfFrame;
-			}
-
 			if (PipeTerminalExists())
 			{
 				SpawnMachineAsInstalled();
@@ -142,13 +136,6 @@ namespace Objects.Disposals
 
 		#endregion Interactions
 
-		protected DisposalVirtualContainer SpawnNewContainer()
-		{
-			GameObject containerObject = DisposalsManager.SpawnVirtualContainer(registerObject.WorldPositionServer);
-			containerObject.GetComponent<ObjectBehaviour>().parentContainer = objectBehaviour;
-			return containerObject.GetComponent<DisposalVirtualContainer>();
-		}
-
 		#region Construction
 
 		protected bool FloorPlatingExposed()
@@ -168,7 +155,7 @@ namespace Objects.Disposals
 
 		private bool VerboseFloorExists()
 		{
-			if (MatrixManager.IsSpaceAt(registerObject.WorldPositionServer, true) == false) return true;
+			if (MatrixManager.IsSpaceAt(registerObject.WorldPositionServer, true, registerObject.Matrix.MatrixInfo) == false) return true;
 
 			Chat.AddExamineMsg(currentInteraction.Performer, $"A floor must be present to secure the {objectAttributes.InitialName}!");
 			return false;

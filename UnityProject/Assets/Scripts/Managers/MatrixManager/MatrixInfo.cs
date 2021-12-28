@@ -28,9 +28,10 @@ public class MatrixInfo : IEquatable<MatrixInfo>
 	private Vector3Int initialOffset;
 	private uint netId;
 
-	public BoundsInt Bounds => MetaTileMap.GetBounds();
+	public BetterBoundsInt LocalBounds => MetaTileMap.GetLocalBounds();
 
-	public BoundsInt WorldBounds => MetaTileMap.GetWorldBounds();
+	//Warning slow
+	public BetterBounds WorldBounds => MetaTileMap.GetWorldBounds();
 
 	public Transform ObjectParent => MetaTileMap.ObjectLayer.transform;
 
@@ -41,7 +42,7 @@ public class MatrixInfo : IEquatable<MatrixInfo>
 	public string Name => Matrix.gameObject.name;
 
 	//todo: placeholder, should depend on solid tiles count instead (and use caching)
-	public float Mass => Bounds.size.sqrMagnitude/1000f;
+	public float Mass => LocalBounds.size.sqrMagnitude/1000f;
 
 	public bool IsMovable => MatrixMove != null;
 
@@ -126,7 +127,7 @@ public class MatrixInfo : IEquatable<MatrixInfo>
 		}
 	}
 
-	public bool Equals(MatrixInfo other) => Id == other?.Id;
+	public bool Equals(MatrixInfo other) => other is null == false && Id == other.Id;
 
 	public override bool Equals(object obj) => obj is MatrixInfo other && Equals(other);
 
@@ -173,9 +174,15 @@ public class MatrixInfo : IEquatable<MatrixInfo>
 
 	public static IEqualityComparer<MatrixInfo> IdComparer { get; } = new IdEqualityComparer();
 
-	public static bool operator ==(MatrixInfo left, MatrixInfo right) =>
-		ReferenceEquals(left, null) == false && left.Equals(right);
+	public static bool operator ==(MatrixInfo left, MatrixInfo right)
+	{
+		if (left is null)
+		{
+			return right is null;
+		}
 
-	public static bool operator !=(MatrixInfo left, MatrixInfo right) =>
-		ReferenceEquals(left, null) == false && left.Equals(right) == false;
+		return left.Equals(right);
+	}
+
+	public static bool operator !=(MatrixInfo left, MatrixInfo right) => left == right == false;
 }

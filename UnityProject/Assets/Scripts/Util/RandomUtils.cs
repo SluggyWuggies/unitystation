@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public static class RandomUtils
 {
@@ -28,14 +29,15 @@ public static class RandomUtils
 	/// </summary>
 	public static Vector3Int GetRandomPointOnStation(bool avoidSpace = false, bool avoidImpassable = false)
 	{
-		var stationBounds = MatrixManager.MainStationMatrix.Bounds;
+		var stationMatrix = MatrixManager.MainStationMatrix;
+		var stationBounds = stationMatrix.LocalBounds;
 
 		Vector3Int point = default;
 		for (int i = 0; i < 10; i++)
 		{
-			point = stationBounds.GetRandomPoint().CutToInt();
+			point = stationBounds.allPositionsWithin().PickRandom();
 
-			if (avoidSpace && MatrixManager.IsSpaceAt(point, CustomNetworkManager.IsServer))
+			if (avoidSpace && MatrixManager.IsSpaceAt(point, CustomNetworkManager.IsServer, stationMatrix))
 			{
 				continue;
 			}
@@ -53,7 +55,7 @@ public static class RandomUtils
 
 	public static SpinMode RandomSpin()
 	{
-		var num = UnityEngine.Random.Range(0, 3);
+		var num = Random.Range(0, 3);
 
 		switch (num)
 		{
@@ -66,5 +68,19 @@ public static class RandomUtils
 			default:
 				return SpinMode.Clockwise;
 		}
+	}
+
+	public static string CreateRandomBrightColorString()
+	{
+		return ColorUtility.ToHtmlStringRGBA(CreateRandomBrightColor());
+	}
+
+	public static Color CreateRandomBrightColor()
+	{
+		float h = Random.Range(0f, 1f);
+		float s = 1f;
+		float v = 0.8f + ((1f - 0.8f) * Random.Range(0f, 1f));
+		Color c = Color.HSVToRGB(h, s, v);
+		return c;
 	}
 }

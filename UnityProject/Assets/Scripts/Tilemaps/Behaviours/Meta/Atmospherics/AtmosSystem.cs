@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using ScriptableObjects.Atmospherics;
 using UnityEngine;
+using Mirror;
 
 namespace Systems.Atmospherics
 {
@@ -13,11 +14,9 @@ namespace Systems.Atmospherics
 
 		private Dictionary<int, RoomGasSetter> toSet = new Dictionary<int, RoomGasSetter>();
 
+		[Server]
 		public override void Initialize()
 		{
-			if (!CustomNetworkManager.IsServer)
-				return;
-
 			//We have bool to stop null checks on every pos
 			var hasCustomMix = defaultRoomGasMixOverride != null;
 
@@ -26,9 +25,9 @@ namespace Systems.Atmospherics
 				gasSetter.SetUp();
 			}
 
-			BoundsInt bounds = metaTileMap.GetBounds();
+			var bounds = metaTileMap.GetLocalBounds();
 
-			foreach (Vector3Int position in bounds.allPositionsWithin)
+			foreach (Vector3Int position in bounds.allPositionsWithin())
 			{
 				//Get top tile at pos to check if it should spawn with no air
 				bool spawnWithNoAir = false;
@@ -97,9 +96,9 @@ namespace Systems.Atmospherics
 		/// <param name="gasMixToUse">GasMix to fill room with</param>
 		public void SetRoomGas(int roomNumber, GasMix gasMixToUse)
 		{
-			BoundsInt bounds = metaTileMap.GetBounds();
+			var bounds = metaTileMap.GetLocalBounds();
 
-			foreach (Vector3Int position in bounds.allPositionsWithin)
+			foreach (Vector3Int position in bounds.allPositionsWithin())
 			{
 				MetaDataNode node = metaDataLayer.Get(position, false);
 				if (node.IsRoom && node.RoomNumber == roomNumber)

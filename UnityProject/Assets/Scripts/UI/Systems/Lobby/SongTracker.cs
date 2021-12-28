@@ -38,27 +38,37 @@ namespace Audio.Containers
 				PlayerPrefs.SetInt(PlayerPrefKeys.MuteMusic, 1);
 				PlayerPrefs.Save();
 			}
-
-			if (PlayerPrefs.HasKey(PlayerPrefKeys.MusicVolume))
-			{
-				volumeSlider.value = PlayerPrefs.GetFloat(PlayerPrefKeys.MusicVolume);
-			}
-			else
-			{
-				volumeSlider.value = 0.5f;
-			}
 		}
 
 		private void Start()
 		{
 			DetermineMuteState();
+
+			if (PlayerPrefs.HasKey(PlayerPrefKeys.MusicVolumeKey))
+			{
+				volumeSlider.value = PlayerPrefs.GetFloat(PlayerPrefKeys.MusicVolumeKey);
+			}
+			else
+			{
+				volumeSlider.value = 0.8f;
+			}
 		}
 
-		private void Update()
+		private void OnEnable()
+		{
+			UpdateManager.Add(CallbackType.UPDATE, UpdateMe);
+		}
+
+		private void OnDisable()
+		{
+			UpdateManager.Remove(CallbackType.UPDATE, UpdateMe);
+		}
+
+		private void UpdateMe()
 		{
 			if (PlayingRandomPlayList == false || CustomNetworkManager.IsHeadless) return;
 
-			if (MusicManager.isLobbyMusicPlaying()) return;
+			if (MusicManager.isMusicPlaying()) return;
 
 			currentWaitTime += Time.deltaTime;
 			if (currentWaitTime >= timeBetweenSongs)

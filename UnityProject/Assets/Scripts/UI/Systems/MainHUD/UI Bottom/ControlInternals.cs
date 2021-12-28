@@ -83,12 +83,14 @@ public class ControlInternals : TooltipMonoBehaviour
 	{
 		EventManager.AddHandler(Event.EnableInternals, OnEnableInternals);
 		EventManager.AddHandler(Event.DisableInternals, OnDisableInternals);
+		UpdateManager.Add(CallbackType.UPDATE, UpdateMe);
 	}
 
 	void OnDisable()
 	{
 		EventManager.RemoveHandler(Event.EnableInternals, OnEnableInternals);
 		EventManager.RemoveHandler(Event.DisableInternals, OnDisableInternals);
+		UpdateManager.Remove(CallbackType.UPDATE, UpdateMe);
 	}
 
 	/// <summary>
@@ -105,7 +107,7 @@ public class ControlInternals : TooltipMonoBehaviour
 		if (PlayerManager.LocalPlayerScript.playerHealth.IsCrit)
 			return;
 
-		SoundManager.Play(SingletonSOSounds.Instance.Click01);
+		SoundManager.Play(CommonSounds.Instance.Click01);
 
 		if (isAirflowEnabled)
 			EventManager.Broadcast(Event.DisableInternals);
@@ -191,7 +193,7 @@ public class ControlInternals : TooltipMonoBehaviour
 	}
 
 
-	private void Update()
+	private void UpdateMe()
 	{
 		if (gasContainer != null && airTankFillImage != null)
 		{

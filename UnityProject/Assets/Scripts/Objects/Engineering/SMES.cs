@@ -1,11 +1,11 @@
 using System;
-using System.Collections;
+using UnityEngine;
+using Mirror;
 using Systems.Electricity.NodeModules;
 using Systems.Explosions;
-using Core.Input_System.InteractionV2.Interactions;
-using Mirror;
-using UnityEngine;
-using ScriptableObjects;
+using Systems.Interaction;
+using Objects.Machines;
+
 
 namespace Objects.Engineering
 {
@@ -22,7 +22,7 @@ namespace Objects.Engineering
 
 		private ElectricalNodeControl electricalNodeControl;
 		private BatterySupplyingModule batterySupplyingModule;
-		private GameObject currentSparkEffect;
+		private Machine machine;
 
 
 		private SpriteHandler baseSpriteHandler;
@@ -67,6 +67,7 @@ namespace Objects.Engineering
 			chargeLevelIndicator = transform.GetChild(3).GetComponent<SpriteHandler>();
 			registerTile = GetComponent<RegisterTile>();
 			objectBehaviour = GetComponent<ObjectBehaviour>();
+			machine = GetComponent<Machine>();
 
 			electricalNodeControl = GetComponent<ElectricalNodeControl>();
 			batterySupplyingModule = GetComponent<BatterySupplyingModule>();
@@ -127,7 +128,10 @@ namespace Objects.Engineering
 		{
 			if (!DefaultWillInteract.Default(interaction, side)) return false;
 			if (interaction.TargetObject != gameObject) return false;
-			if (Validations.HasItemTrait(interaction.HandObject, CommonTraits.Instance.Crowbar)) return true;
+			if (Validations.HasItemTrait(interaction.HandObject, CommonTraits.Instance.Crowbar))
+			{
+				return !machine.GetPanelOpen();
+			}
 			if (Validations.HasItemTrait(interaction.HandObject, CommonTraits.Instance.Wrench)) return true;
 			if (interaction.HandObject != null) return false;
 
@@ -189,7 +193,7 @@ namespace Objects.Engineering
 			if (!outputEnabled)
 			{
 				var worldPos = registerTile.WorldPositionServer;
-				SoundManager.PlayNetworkedAtPos(SingletonSOSounds.Instance.Tick, worldPos, sourceObj: gameObject);
+				SoundManager.PlayNetworkedAtPos(CommonSounds.Instance.Tick, worldPos, sourceObj: gameObject);
 				if (batterySupplyingModule.InputLevel < 100)
 				{
 					batterySupplyingModule.InputLevel++;
@@ -205,13 +209,12 @@ namespace Objects.Engineering
 			}
 		}
 
-
 		private void ServerToggleOutputLevel(HandApply interaction)
 		{
 			if (!outputEnabled)
 			{
 				var worldPos = registerTile.WorldPositionServer;
-				SoundManager.PlayNetworkedAtPos(SingletonSOSounds.Instance.Tick, worldPos, sourceObj: gameObject);
+				SoundManager.PlayNetworkedAtPos(CommonSounds.Instance.Tick, worldPos, sourceObj: gameObject);
 				if (batterySupplyingModule.OutputLevel < 100)
 				{
 					batterySupplyingModule.OutputLevel++;
@@ -246,10 +249,7 @@ namespace Objects.Engineering
 
 		private void TrySpark()
 		{
-			//Not already doing an effect
-			if (currentSparkEffect != null) return;
-
-			currentSparkEffect = SparkUtil.TrySpark(objectBehaviour);
+			SparkUtil.TrySpark(gameObject);
 		}
 	}
 }

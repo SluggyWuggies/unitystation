@@ -504,7 +504,7 @@ public static class SweetExtensions
 	{
 		if (string.IsNullOrEmpty(value)) return value;
 		return value.Length <= maxLength ? value : value.Substring(0, maxLength);
-  }
+	}
 
 	/// <summary>
 	/// <para>Get specific type from a list.</para>
@@ -535,5 +535,13 @@ public static class SweetExtensions
 		}
 
 		return Mathf.CeilToInt(source);
+	}
+
+	/// <summary>
+	/// Gets the message and stacktrace of the exception
+	/// </summary>
+	public static string GetStack(this Exception source)
+	{
+		return $"{source.Message}\n{source.StackTrace}";
 	}
 }

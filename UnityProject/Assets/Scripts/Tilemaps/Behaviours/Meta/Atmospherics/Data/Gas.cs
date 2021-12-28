@@ -37,19 +37,34 @@ namespace Systems.Atmospherics
 	public class GasData
 	{
 		//Used for quick iteration
-		public GasValues[] GasesArray = new GasValues[0];
+		public List<GasValues> GasesArray = new List<GasValues>();
 
 		//Used for fast look up for specific gases
 		public Dictionary<int, GasValues> GasesDict = new Dictionary<int, GasValues>();
 
 		public void RegenerateDict()
 		{
-			GasesDict.Clear();
-
-			for (int i = 0; i < GasesArray.Length; i++)
+			lock (GasesArray)
 			{
-				var value = GasesArray[i];
-				GasesDict.Add(value.GasSO, value);
+				GasesDict.Clear();
+				for (int i = 0; i < GasesArray.Count; i++)
+				{
+					var value = GasesArray[i];
+					GasesDict.Add(value.GasSO, value);
+				}
+			}
+		}
+
+		public void Clear()
+		{
+			lock (GasesArray)
+			{
+				for (int i = 0; i < GasesArray.Count; i++)
+				{
+					GasesArray[i].Pool();
+				}
+				GasesArray.Clear();
+				GasesDict.Clear();
 			}
 		}
 	}
@@ -61,5 +76,15 @@ namespace Systems.Atmospherics
 
 		//Moles of this gas type
 		public float Moles;
+
+		public void Pool()
+		{
+			GasSO = null;
+			Moles = 0;
+			lock (AtmosUtils.PooledGasValues)
+			{
+				AtmosUtils.PooledGasValues.Add(this);
+			}
+		}
 	}
 }

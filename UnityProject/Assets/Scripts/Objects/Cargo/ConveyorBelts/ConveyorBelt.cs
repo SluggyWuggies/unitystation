@@ -1,15 +1,16 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Mirror;
 using ScriptableObjects;
+using Systems.ObjectConnection;
+
 
 namespace Construction.Conveyors
 {
 	[SelectionBase]
 	[ExecuteInEditMode]
-	public class ConveyorBelt : NetworkBehaviour, ICheckedInteractable<HandApply>, ISetMultitoolMaster
+	public class ConveyorBelt : MonoBehaviour, ICheckedInteractable<HandApply>, IMultitoolMasterable
 	{
 		private readonly Vector2Int[] searchDirs =
 		{
@@ -46,12 +47,6 @@ namespace Construction.Conveyors
 		private void OnValidate()
 		{
 			if (Application.isPlaying) return;
-			RefreshSprites();
-		}
-
-		public override void OnStartServer()
-		{
-			base.OnStartServer();
 			RefreshSprites();
 		}
 
@@ -141,6 +136,7 @@ namespace Construction.Conveyors
 		public void SetSwitchRef(ConveyorBeltSwitch switchRef)
 		{
 			AssignedSwitch = switchRef;
+			UpdateState();
 		}
 
 		/// <summary>
@@ -177,21 +173,6 @@ namespace Construction.Conveyors
 			if (this == null) return;
 			spriteHandler.ChangeSprite((int)CurrentStatus);
 			var variant = (int)CurrentDirection;
-			switch (variant)
-			{
-				case 8:
-					variant = 4;
-					break;
-				case 9:
-					variant = 5;
-					break;
-				case 10:
-					variant = 6;
-					break;
-				case 11:
-					variant = 7;
-					break;
-			}
 
 			spriteHandler.ChangeSpriteVariant(variant);
 		}
@@ -221,17 +202,17 @@ namespace Construction.Conveyors
 
 		public enum ConveyorDirection
 		{
-			Up = 0,
-			Down = 1,
-			Left = 2,
-			Right = 3,
+			Down = 0,
+			Up = 1,
+			Right = 2,
+			Left = 3,
 			LeftDown = 4,
-			LeftUp = 5,
-			RightDown = 6,
+			UpLeft = 5,
+			DownRight = 6,
 			RightUp = 7,
 			DownLeft = 8,
-			UpLeft = 9,
-			DownRight = 10,
+			LeftUp = 9,
+			RightDown = 10,
 			UpRight = 11
 		}
 
@@ -296,16 +277,9 @@ namespace Construction.Conveyors
 
 		#region Multitool Interaction
 
-		[SerializeField]
-		private MultitoolConnectionType conType = MultitoolConnectionType.Conveyor;
-		public MultitoolConnectionType ConType => conType;
-
-		private bool multiMaster = true;
-		public bool MultiMaster => multiMaster;
-
-		public void AddSlave(object SlaveObject)
-		{
-		}
+		public MultitoolConnectionType ConType => MultitoolConnectionType.Conveyor;
+		public bool MultiMaster => true;
+		int IMultitoolMasterable.MaxDistance => int.MaxValue;
 
 		#endregion Multitool Interaction
 	}

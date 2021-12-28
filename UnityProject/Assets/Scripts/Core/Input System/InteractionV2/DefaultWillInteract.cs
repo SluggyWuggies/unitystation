@@ -1,5 +1,7 @@
-using Core.Input_System.InteractionV2.Interactions;
+using Systems.Interaction;
 
+
+// TODO: namespace me to Systems.Interaction (have fun)
 public static class DefaultWillInteract
 {
 	/// <summary>
@@ -13,7 +15,7 @@ public static class DefaultWillInteract
 		if (typeof(T) == typeof(PositionalHandApply))
 		{
 			var positionalHandApply = interaction as PositionalHandApply;
-			return Validations.CanApply(positionalHandApply.PerformerPlayerScript, positionalHandApply.TargetObject, side, targetVector: positionalHandApply.TargetVector);
+			return Validations.CanApply(positionalHandApply.PerformerPlayerScript, positionalHandApply.TargetObject, side, TargetPosition: positionalHandApply.TargetPosition);
 		}
 		if (typeof(T) == typeof(HandApply))
 		{
@@ -39,12 +41,12 @@ public static class DefaultWillInteract
 		if (typeof(T) == typeof(TileApply))
 		{
 			var tileApply = interaction as TileApply;
-			return Validations.CanApply(tileApply.PerformerPlayerScript, tileApply.TargetInteractableTiles.gameObject, side, targetVector: tileApply.TargetVector);
+			return Validations.CanApply(tileApply.PerformerPlayerScript, tileApply.TargetInteractableTiles.gameObject, side, TargetPosition: tileApply.TargetPosition);
 		}
 		if (typeof(T) == typeof(ConnectionApply))
 		{
 			var connectionApply = interaction as ConnectionApply;
-			return Validations.CanApply(connectionApply.PerformerPlayerScript, connectionApply.TargetObject, side, targetVector: connectionApply.TargetVector);
+			return Validations.CanApply(connectionApply.PerformerPlayerScript, connectionApply.TargetObject, side, TargetPosition: connectionApply.TargetPosition);
 		}
 		if (typeof(T) == typeof(ContextMenuApply))
 		{

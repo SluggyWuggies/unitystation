@@ -69,9 +69,21 @@ namespace UI.Systems.MainHUD.UI_Bottom
 
 		private bool focusCheck;
 
-		#region focus Check
+		private void OnEnable()
+		{
+			teleportWindow.onTeleportRequested += OnTeleportButtonPress;
+			UpdateManager.Add(CallbackType.UPDATE, UpdateMe);
+		}
 
-		void Update()
+		private void OnDisable()
+		{
+			teleportWindow.onTeleportRequested += OnTeleportButtonPress;
+			UpdateManager.Remove(CallbackType.UPDATE, UpdateMe);
+
+		}
+
+		#region focus Check
+		void UpdateMe()
 		{
 			if (callReasonInputField.isFocused && focusCheck == false)
 			{
@@ -97,16 +109,6 @@ namespace UI.Systems.MainHUD.UI_Bottom
 		}
 
 		#endregion
-
-		private void OnEnable()
-		{
-			teleportWindow.onTeleportRequested += OnTeleportButtonPress;
-		}
-
-		private void OnDisable()
-		{
-			teleportWindow.onTeleportRequested += OnTeleportButtonPress;
-		}
 
 		public void SetUp(AiPlayer player)
 		{
@@ -229,7 +231,7 @@ namespace UI.Systems.MainHUD.UI_Bottom
 
 		private IEnumerator StateLawsRoutine()
 		{
-			PostToChatMessage.Send("Current active laws: ", ChatChannel.Local | ChatChannel.Common);
+			PostToChatMessage.Send("Current active laws: ", ChatChannel.Local | ChatChannel.Common, Loudness.NORMAL);
 
 			yield return WaitFor.Seconds(1.5f);
 
@@ -242,7 +244,7 @@ namespace UI.Systems.MainHUD.UI_Bottom
 				var toggle = child.GetComponentInChildren<Toggle>();
 				if(toggle == null || toggle.isOn == false) continue;
 
-				PostToChatMessage.Send(text.text, ChatChannel.Local | ChatChannel.Common);
+				PostToChatMessage.Send(text.text, ChatChannel.Local | ChatChannel.Common, Loudness.NORMAL);
 
 				yield return WaitFor.Seconds(1.5f);
 			}

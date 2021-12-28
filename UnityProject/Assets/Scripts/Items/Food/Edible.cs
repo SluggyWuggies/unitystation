@@ -7,6 +7,8 @@ using Chemistry;
 using Chemistry.Components;
 using UnityEngine;
 using UnityEngine.Serialization;
+using Random = UnityEngine.Random;
+using Messages.Server.SoundMessages;
 
 namespace Items.Food
 {
@@ -20,17 +22,12 @@ namespace Items.Food
 	{
 		public GameObject leavings;
 
-		[SerializeField]
-		private AddressableAudioSource sound = null;
+		[SerializeField] private AddressableAudioSource sound = null;
+
+		private float RandomPitch => Random.Range(0.7f, 1.3f);
 
 		private static readonly StandardProgressActionConfig ProgressConfig
 			= new StandardProgressActionConfig(StandardProgressActionType.Restrain);
-
-		[FormerlySerializedAs("NutrientsHealAmount")]
-		[FormerlySerializedAs("NutritionLevel")]
-		public int StartingNutrients = 10;
-
-		public Reagent Nutriment;
 
 		protected ItemAttributesV2 itemAttributes;
 		private Stackable stackable;
@@ -45,8 +42,6 @@ namespace Items.Food
 			item = GetComponent<RegisterItem>();
 			itemAttributes = GetComponent<ItemAttributesV2>();
 			stackable = GetComponent<Stackable>();
-
-			FoodContents.Add(new ReagentMix(Nutriment, StartingNutrients, TemperatureUtils.ToKelvin(20f, TemeratureUnits.C)));
 
 			if (itemAttributes != null)
 			{
@@ -78,7 +73,8 @@ namespace Items.Food
 			if (eater == null)
 			{
 				// todo: implement non-player eating
-				SoundManager.PlayNetworkedAtPos(sound, item.WorldPosition);
+				AudioSourceParameters eatSoundParameters = new AudioSourceParameters(pitch: RandomPitch);
+				SoundManager.PlayNetworkedAtPos(sound, item.WorldPosition, eatSoundParameters);
 				if (leavings != null)
 				{
 					Spawn.ServerPrefab(leavings, item.WorldPosition, transform.parent);
@@ -117,7 +113,8 @@ namespace Items.Food
 		public virtual void Eat(PlayerScript eater, PlayerScript feeder)
 		{
 			//TODO: Reimplement metabolism.
-			SoundManager.PlayNetworkedAtPos(sound, eater.WorldPos, sourceObj: eater.gameObject);
+			AudioSourceParameters eatSoundParameters = new AudioSourceParameters(pitch: RandomPitch);
+			SoundManager.PlayNetworkedAtPos(sound, eater.WorldPos, eatSoundParameters, sourceObj: eater.gameObject);
 
 			var Stomachs = eater.playerHealth.GetStomachs();
 			if (Stomachs.Count == 0)
@@ -126,18 +123,39 @@ namespace Items.Food
 				return;
 			}
 
-			ReagentMix incomingFood = new ReagentMix();
-			FoodContents.CurrentReagentMix.TransferTo(incomingFood, FoodContents.CurrentReagentMix.Total);
+			float SpareSpace = 0;
 
-			ReagentContainer[] childContainers = GetComponentsInChildren<ReagentContainer>();
-
-			if (childContainers.Length > 0)
+			foreach (var Stomach in Stomachs)
 			{
-				for (int i = childContainers.Length - 1; i >= 0; i--)
-				{
-					childContainers[i].CurrentReagentMix.TransferTo(incomingFood, childContainers[i].ReagentMixTotal);
-				}
+				SpareSpace += Stomach.StomachContents.SpareCapacity;
 			}
+
+			if (SpareSpace < 0.5f)
+			{
+				if (eater == feeder)
+				{
+					Chat.AddActionMsgToChat(feeder.gameObject,
+						"you try the stuff The food into your mouth but your stomach has no more room",
+						"{performer} Tries to stuff food into the mouth but is unable to");
+				}
+				else
+				{
+					Chat.AddActionMsgToChat(feeder.gameObject,
+						"You try and stuff more food into your targets mouth but no more seems to go in",
+						"{performer} Tries to stuff food into Their targets mouth but no more food is going in");
+				}
+
+				return;
+			}
+
+			if (SpareSpace < FoodContents.CurrentReagentMix.Total)
+			{
+				Chat.AddActionMsgToChat(feeder.gameObject, "You unwillingly eat the food",
+					"{performer} Unwillingly force themselves to eat the food");
+			}
+
+			ReagentMix incomingFood = FoodContents.CurrentReagentMix.Clone();
+
 
 			incomingFood.Divide(Stomachs.Count);
 			foreach (var Stomach in Stomachs)

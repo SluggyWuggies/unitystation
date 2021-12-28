@@ -6,6 +6,7 @@ using System.Net;
 using System.Text.RegularExpressions;
 using DatabaseAPI;
 using System.Collections;
+using Managers;
 using Newtonsoft.Json;
 
 namespace DiscordWebhook
@@ -13,11 +14,8 @@ namespace DiscordWebhook
 	/// <summary>
 	/// Used to send messages to a discord webhook URLs, URLs need to be set up in the config.json file. Supports OOC, Ahelp, Announcements and All chat.
 	/// </summary>
-	public class DiscordWebhookMessage : MonoBehaviour
+	public class DiscordWebhookMessage : SingletonManager<DiscordWebhookMessage>
 	{
-		private static DiscordWebhookMessage instance;
-		public static DiscordWebhookMessage Instance => instance;
-
 		private Queue<string> OOCMessageQueue = new Queue<string>();
 		private Queue<string> AdminAhelpMessageQueue = new Queue<string>();
 		private Queue<string> AnnouncementMessageQueue = new Queue<string>();
@@ -39,19 +37,7 @@ namespace DiscordWebhook
 
 		private bool loggedWebKookError = false;
 
-		private void Awake()
-		{
-			if (instance == null)
-			{
-				instance = this;
-			}
-			else
-			{
-				Destroy(this);
-			}
-		}
-
-		private void Update()
+		private void UpdateMe()
 		{
 			if (!CustomNetworkManager.IsServer) return;
 
@@ -88,12 +74,14 @@ namespace DiscordWebhook
 		{
 			Application.logMessageReceived += HandleLog;
 			EventManager.AddHandler(Event.PreRoundStarted, ResetHashSet);
+			UpdateManager.Add(CallbackType.UPDATE, UpdateMe);
 		}
 
 		void OnDisable()
 		{
 			Application.logMessageReceived -= HandleLog;
 			EventManager.RemoveHandler(Event.PreRoundStarted, ResetHashSet);
+			UpdateManager.Remove(CallbackType.UPDATE, UpdateMe);
 		}
 
 		void ResetHashSet()
@@ -264,8 +252,13 @@ namespace DiscordWebhook
 
 		void HandleLog(string logString, string stackTrace, LogType type)
 		{
-			if ((type == LogType.Exception || type == LogType.Error) && !ErrorMessageHashSet.Contains(stackTrace))
+			if (type == LogType.Exception || type == LogType.Error)
 			{
+				GameManager.Instance.errorCounter++;
+				if (ErrorMessageHashSet.Contains(stackTrace))
+					return;
+				GameManager.Instance.uniqueErrorCounter++;
+
 				ErrorMessageHashSet.Add(stackTrace);
 
 				if (logString.Contains("Can't get home directory!")) return;

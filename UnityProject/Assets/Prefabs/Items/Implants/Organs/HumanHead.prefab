@@ -43,7 +43,7 @@ MonoBehaviour:
     SlotArea: 4
     namedSlot: 2
     hoverName: Head
-    DropContents: 0
+    DropContents: 1
     placeholderSprite: {fileID: 21300000, guid: 34683ea18e1b2454098abd09e1350e43,
       type: 3}
     Conditional: 0
@@ -55,7 +55,7 @@ MonoBehaviour:
     SlotArea: 4
     namedSlot: 5
     hoverName: Face
-    DropContents: 0
+    DropContents: 1
     placeholderSprite: {fileID: 21300000, guid: 1c1ac90fc09e53840872cd8e8ca2f033,
       type: 3}
     Conditional: 0
@@ -67,7 +67,7 @@ MonoBehaviour:
     SlotArea: 4
     namedSlot: 9
     hoverName: Eyes
-    DropContents: 0
+    DropContents: 1
     placeholderSprite: {fileID: 21300000, guid: 243d4e00733e954498fef699d7573a9c,
       type: 3}
     Conditional: 0
@@ -79,7 +79,7 @@ MonoBehaviour:
     SlotArea: 4
     namedSlot: 12
     hoverName: Ears
-    DropContents: 0
+    DropContents: 1
     placeholderSprite: {fileID: 21300000, guid: 739f0fe41a143f447b50c175b7b0f789,
       type: 3}
     Conditional: 0
@@ -210,7 +210,7 @@ PrefabInstance:
     - target: {fileID: 1673759363237950006, guid: e241039a7933eb347bd1a9bb67a9078a,
         type: 3}
       propertyPath: bloodThroughput
-      value: 2.5
+      value: 0.89285713
       objectReference: {fileID: 0}
     - target: {fileID: 1673759363237950006, guid: e241039a7933eb347bd1a9bb67a9078a,
         type: 3}
@@ -251,7 +251,7 @@ PrefabInstance:
     - target: {fileID: 1673759363237950006, guid: e241039a7933eb347bd1a9bb67a9078a,
         type: 3}
       propertyPath: baseTraumaDamageMultiplier
-      value: 1
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 1673759363237950006, guid: e241039a7933eb347bd1a9bb67a9078a,
         type: 3}
@@ -337,7 +337,7 @@ PrefabInstance:
     - target: {fileID: 1673759363237950006, guid: e241039a7933eb347bd1a9bb67a9078a,
         type: 3}
       propertyPath: SubOrganBodyPartArmour.DismembermentProtectionChance
-      value: 0.15
+      value: 15
       objectReference: {fileID: 0}
     - target: {fileID: 1673759363237950006, guid: e241039a7933eb347bd1a9bb67a9078a,
         type: 3}
@@ -406,7 +406,7 @@ PrefabInstance:
     - target: {fileID: 2780246240171570206, guid: e241039a7933eb347bd1a9bb67a9078a,
         type: 3}
       propertyPath: m_AssetId
-      value: 
+      value: 78253771c2047f94c9ae40161a6be7ee
       objectReference: {fileID: 0}
     - target: {fileID: 2810631690420259242, guid: e241039a7933eb347bd1a9bb67a9078a,
         type: 3}
@@ -474,6 +474,11 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 11400000, guid: f84a1624ec0edd640992da46c6e6adc3,
         type: 2}
+    - target: {fileID: 9204204549946934727, guid: e241039a7933eb347bd1a9bb67a9078a,
+        type: 3}
+      propertyPath: foreverID
+      value: 78253771c2047f94c9ae40161a6be7ee
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e241039a7933eb347bd1a9bb67a9078a, type: 3}
 --- !u!1 &7761316997644922781 stripped

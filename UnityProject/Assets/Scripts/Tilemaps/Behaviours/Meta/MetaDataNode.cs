@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using Systems.Atmospherics;
-using Systems.Explosions;
-using Systems.Radiation;
-using Tilemaps.Behaviours.Meta;
 using UnityEngine;
-using Systems.Electricity;
 using ScriptableObjects.Atmospherics;
+using Tilemaps.Behaviours.Meta;
+using Systems.Atmospherics;
+using Systems.Electricity;
+using Systems.Explosions;
+using Systems.Pipes;
+using Systems.Radiation;
+using Systems.DisposalPipes;
+
 
 /// <summary>
 /// Holds all of the metadata associated with an individual tile, such as for atmospherics simulation, damage.
@@ -39,7 +42,12 @@ public class MetaDataNode : IGasMixContainer
 	/// <summary>
 	/// This contains all the pipe data needed On the tile
 	/// </summary>
-	public List<Pipes.PipeNode> PipeData = new List<Pipes.PipeNode>();
+	public List<PipeNode> PipeData = new List<PipeNode>();
+
+	/// <summary>
+	/// This contains all the disposal pipe data needed On the tile
+	/// </summary>
+	public List<DisposalPipeNode> DisposalPipeData = new List<DisposalPipeNode>();
 
 	/// <summary>
 	/// Local position of this tile in its parent matrix.

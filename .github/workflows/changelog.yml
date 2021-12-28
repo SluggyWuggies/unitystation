@@ -1,6 +1,8 @@
 name: pr2changelog
 on:
     pull_request_target:
+        paths-ignore:
+            - 'CHANGELOG.md'
         branches:
             - develop
         types:
@@ -56,4 +58,5 @@ jobs:
                 if: ${{ steps.pr2changelog.outputs.generated_changelog == 1}}
                 uses: ad-m/github-push-action@master
                 with:
-                    github_token: ${{ secrets.GITHUB_TOKEN }}
+                    force: true
+                    github_token: ${{ secrets.PR2CHANGELOG_TOKEN }}

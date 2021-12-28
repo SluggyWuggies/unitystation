@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
-using Core.Input_System.InteractionV2.Interactions;
-using Messages.Server;
-using Mirror;
 using UnityEngine;
+using Mirror;
+using Messages.Server;
+using Systems.Interaction;
+
 
 namespace Messages.Client
 {
@@ -51,8 +53,16 @@ namespace Messages.Client
 			}
 			else
 			{
-				validate = Validations.CanApply(player.Script, tabProvider, NetworkSide.Server)
-				           || playerScript.DynamicItemStorage.GetActiveHandSlot().ItemObject == tabProvider;
+				try
+				{
+					validate = Validations.CanApply(player.Script, tabProvider, NetworkSide.Server)
+					           || playerScript.DynamicItemStorage.GetActiveHandSlot().ItemObject == tabProvider;
+				}
+				catch (NullReferenceException exception)
+				{
+					Logger.LogError($"Caught NRE in TabInteractMessage.Process: {exception.Message} \n {exception.StackTrace}", Category.Interaction);
+					return;
+				}
 			}
 
 			if (!validate)

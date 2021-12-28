@@ -5,6 +5,7 @@ using UnityEngine;
 using UI.Core.Radial;
 using UI.Core.Animations;
 using UnityEngine.EventSystems;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace UI.Core.RightClick
@@ -17,14 +18,60 @@ namespace UI.Core.RightClick
 		[SerializeField]
 		private ReversibleObjectScale nextArrow = default;
 
-		[SerializeField]
-		private RectTransform background = default;
+		[SerializeField, FormerlySerializedAs("background")]
+		private RectTransform _background;
+
+
+		private RectTransform Background
+		{
+			get
+			{
+				if (_background == null)
+				{
+					Logger.LogError($"RadialItemInnerRing Had to use  GameObject.Find ", Category.UI);
+					_background = GameObject.Find("RadialItemInnerRing").GetComponent<RectTransform>();
+				}
+
+				return _background;
+			}
+		}
+
+		[SerializeField, FormerlySerializedAs("itemRing")]
+		private Graphic _itemRing;
 
 		[SerializeField]
-		private Graphic itemRing = default;
+		private Graphic ItemRing
+		{
+			get {
+				if (_itemRing == null)
+				{
+					Logger.LogError($"RadialItemRing Had to use  GameObject.Find ", Category.UI);
+					_itemRing = GameObject.Find("RadialItemRing").GetComponent<Graphic>();
+				}
+
+				return _itemRing;
+			}
+		}
 
 		[SerializeField]
-		private TMP_Text itemLabel = default;
+		private TMP_Text _itemLabel = default;
+
+		[SerializeField]
+		private TMP_Text itemLabel
+		{
+			get {
+				if (_itemLabel == null)
+				{
+					Logger.LogError($"itemLabel Had to use  GameObject.Find ", Category.UI);
+					_itemLabel = GameObject.Find("ItemLabel").GetComponent<TMP_Text>();
+				}
+
+				return _itemLabel;
+			}
+		}
+
+
+
 
 		private float raycastableArcMeasure;
 
@@ -97,10 +144,17 @@ namespace UI.Core.RightClick
 
 		private void SetRadialScrollable(bool value)
 		{
-			Drag.enabled = value;
-			Scroll.enabled = value;
-			itemRing.raycastTarget = value;
-			itemLabel.raycastTarget = value;
+			try
+			{
+				Drag.enabled = value;
+				Scroll.enabled = value;
+				ItemRing.raycastTarget = value;
+				itemLabel.raycastTarget = value;
+			}
+			catch (NullReferenceException exception)
+			{
+				Logger.LogError($"Caught a NRE in ItemRadial.SetRadialScrollable() {exception.Message} \n {exception.StackTrace}", Category.UI);
+			}
 		}
 
 		public void UpdateArrows()
@@ -112,8 +166,19 @@ namespace UI.Core.RightClick
 
 		public void LateUpdate()
 		{
-			background.rotation = Quaternion.identity;
-			itemLabel.transform.rotation = Quaternion.identity;
+			try
+			{
+				Background.rotation = Quaternion.identity;
+				itemLabel.transform.rotation = Quaternion.identity;
+			}
+			catch (NullReferenceException exception)
+			{
+				Logger.LogError($"Caught a NRE in ItemRadial.LateUpdate() {exception.Message} \n {exception.StackTrace}", Category.UI);
+			}
+			catch (UnassignedReferenceException exception)
+			{
+				Logger.LogError($"Caught an Unassigned Reference Exception in ItemRadial.LateUpdate() {exception.Message} \n {exception.StackTrace}", Category.UI);
+			}
 		}
 
 		public override void RotateRadial(float rotation)

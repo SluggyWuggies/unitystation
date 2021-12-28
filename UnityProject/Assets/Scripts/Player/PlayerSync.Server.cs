@@ -25,7 +25,7 @@ public partial class PlayerSync
 	public CollisionEvent OnHighSpeedCollision() => onHighSpeedCollision;
 
 	public Vector3Int ServerPosition => serverState.WorldPosition.RoundToInt();
-	public Vector3Int ServerLocalPosition => serverState.Position.RoundToInt();
+	public Vector3Int ServerLocalPosition => serverState.LocalPosition.RoundToInt();
 
 	public Vector3Int LastNonHiddenPosition => serverState.LastNonHiddenPosition.RoundToInt();
 
@@ -77,7 +77,7 @@ public partial class PlayerSync
 				return false;
 			}
 			GameObject[] context = pushPull.IsPullingSomethingServer ? new[] { gameObject, pushPull.PulledObjectServer.gameObject } : new[] { gameObject };
-			return MatrixManager.IsFloatingAt(context, Vector3Int.RoundToInt(serverState.WorldPosition), isServer: true);
+			return MatrixManager.IsFloatingAt(context, Vector3Int.RoundToInt(serverState.WorldPosition), isServer: true, registerPlayer.Matrix.MatrixInfo);
 		}
 	}
 
@@ -90,10 +90,10 @@ public partial class PlayerSync
 		{
 			if (registerPlayer.IsSlippingServer)
 			{
-				return MatrixManager.IsNoGravityAt(serverState.WorldPosition.RoundToInt(), true)
-					|| MatrixManager.IsSlipperyAt(serverState.WorldPosition.RoundToInt());
+				return Matrix.IsNoGravityAt(serverState.LocalPosition.RoundToInt(), true)
+					|| Matrix.MetaDataLayer.IsSlipperyAt(serverState.LocalPosition.RoundToInt());
 			}
-			return !playerScript.IsGhost && MatrixManager.IsNonStickyAt(serverState.WorldPosition.RoundToInt(), true);
+			return !playerScript.IsGhost && MatrixManager.IsNonStickyAt(Vector3Int.RoundToInt(serverState.WorldPosition), true, registerPlayer.Matrix.MatrixInfo);
 		}
 	}
 
@@ -239,7 +239,7 @@ public partial class PlayerSync
 
 		if (isNewtonian)
 		{
-			if (!MatrixManager.IsSlipperyOrNoGravityAt(pushGoal))
+			if (!MatrixManager.IsSlipperyOrNoGravityAt(pushGoal, registerPlayer.Matrix.MatrixInfo))
 			{
 				return false;
 			}
@@ -432,7 +432,7 @@ public partial class PlayerSync
 	/// Clear all queues and
 	/// inform players of true serverState
 	[Server]
-	private void RollbackPosition()
+	public void RollbackPosition()
 	{
 		foreach (var questionablePushable in questionablePushables)
 		{
@@ -458,9 +458,8 @@ public partial class PlayerSync
 		if (consideredFloatingServer || !serverState.Active || CanNotSpaceMoveServer || (pushPull && pushPull.IsBeingPulled))
 		{
 			Logger.LogWarning("Server ignored queued move while player isn't supposed to move", Category.Movement);
-			serverPendingActions.Dequeue();
-
-			TryUpdateServerTarget();
+			ClearQueueServer();
+			RollbackPosition();
 			return;
 		}
 
@@ -533,10 +532,10 @@ public partial class PlayerSync
 			if (serverBump == BumpType.Push || serverBump == BumpType.Blocked)
 			{
 				var worldTarget = state.WorldPosition.RoundToInt() + (Vector3Int)action.Direction();
-				var swapee = MatrixManager.GetAt<PlayerSync>(worldTarget, true);
+				var swapee = MatrixManager.GetAs<RegisterPlayer>(worldTarget, true);
 				if (swapee != null && swapee.Count > 0)
 				{
-					swapee[0].RollbackPosition();
+					swapee[0].PlayerScript.PlayerSync.RollbackPosition();
 				}
 			}
 		}
@@ -793,10 +792,10 @@ public partial class PlayerSync
 	/// <param name="targetPos">The entered position</param>
 	private void InteractEnterable(Vector3Int targetPos)
 	{
-		List<Enterable> enterables = MatrixManager.GetAt<Enterable>(targetPos, isServer);
-		foreach (Enterable enterable in enterables)
+		List<IEnterable> enterables = MatrixManager.GetAt<IEnterable>(targetPos, isServer);
+		foreach (IEnterable enterable in enterables)
 		{
-			enterable.TriggerEnterEvent(gameObject);
+			if(enterable.WillStep(gameObject)) enterable.OnStep(gameObject);
 		}
 	}
 
@@ -840,7 +839,7 @@ public partial class PlayerSync
 					//Extending prediction by one tile if player's transform reaches previously set goal
 					//note: since this is a local position, the impulse needs to be converted to a local rotation,
 					//hence the multiplication
-					Vector3Int newGoal = Vector3Int.RoundToInt(serverState.Position + (Vector3)serverState.LocalImpulse(this));
+					Vector3Int newGoal = Vector3Int.RoundToInt(serverState.LocalPosition + (Vector3)serverState.LocalImpulse(this));
 					Vector3Int intOrigin = Vector3Int.RoundToInt(registerPlayer.WorldPosition + (Vector3)serverState.LocalImpulse(this));
 
 					if (intOrigin.x > 18000 || intOrigin.x < -18000 || intOrigin.y > 18000 || intOrigin.y < -18000)
@@ -849,7 +848,7 @@ public partial class PlayerSync
 						Logger.Log($"Player {transform.name} was forced to stop at {intOrigin}", Category.Movement);
 						return;
 					}
-					serverState.Position = newGoal;
+					serverState.LocalPosition = newGoal;
 					ClearQueueServer();
 
 					var newPos = serverState.WorldPosition;

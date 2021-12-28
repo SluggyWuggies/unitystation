@@ -1,12 +1,11 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using DatabaseAPI;
-using Items;
-using Messages.Client.DevSpawner;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using Items;
+using Messages.Client.DevSpawner;
+
 
 /// <summary>
 /// Main logic for the UI for cloning objects
@@ -50,6 +49,11 @@ public class GUI_DevCloner : MonoBehaviour
 		escapeKeyTarget = GetComponent<EscapeKeyTarget>();
 		lightingSystem = Camera.main.GetComponent<LightingSystem>();
 		ToState(State.SELECTING);
+	}
+
+	private void OnEnable()
+	{
+		UpdateManager.Add(CallbackType.UPDATE, UpdateMe);
 	}
 
 	private void CheckAndApplyPalette(ref SpriteRenderer renderer)
@@ -140,6 +144,7 @@ public class GUI_DevCloner : MonoBehaviour
 	private void OnDisable()
 	{
 		ToState(State.INACTIVE);
+		UpdateManager.Remove(CallbackType.UPDATE, UpdateMe);
 	}
 
 	public void Open()
@@ -147,7 +152,7 @@ public class GUI_DevCloner : MonoBehaviour
 		ToState(State.SELECTING);
 	}
 
-	private void Update()
+	private void UpdateMe()
 	{
 		if (state == State.SELECTING)
 		{
@@ -202,7 +207,7 @@ public class GUI_DevCloner : MonoBehaviour
 					}
 					else
 					{
-						DevCloneMessage.Send(toClone, (Vector3) position, ServerData.UserID, PlayerList.Instance.AdminToken);
+						DevCloneMessage.Send(toClone, (Vector3) position);
 					}
 				}
 			}

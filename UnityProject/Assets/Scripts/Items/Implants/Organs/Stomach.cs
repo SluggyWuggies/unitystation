@@ -7,9 +7,9 @@ using Chemistry.Components;
 
 namespace HealthV2
 {
-	public class Stomach : BodyPartModification
+	public class Stomach : BodyPartFunctionality
 	{
-		[NonSerialized] public ReagentContainer StomachContents;
+		public ReagentContainer StomachContents;
 
 		public float DigesterAmountPerSecond = 1;
 
@@ -17,11 +17,11 @@ namespace HealthV2
 
 		public BodyFat BodyFatToInstantiate;
 
+		public bool InitialFatSpawned = false;
+
 		public override void ImplantPeriodicUpdate()
 		{
 			base.ImplantPeriodicUpdate();
-
-			StomachContents = GetComponentInChildren<ReagentContainer>();
 
 			//BloodContainer
 			if (StomachContents.ReagentMixTotal > 0)
@@ -33,7 +33,16 @@ namespace HealthV2
 				}
 				var Digesting = StomachContents.TakeReagents(ToDigest);
 
-				RelatedPart.BloodContainer.Add(Digesting);
+				RelatedPart.HealthMaster.CirculatorySystem.BloodPool.Add(Digesting);
+			}
+
+			if (StomachContents.SpareCapacity < 15f) //Magic number
+			{
+				RelatedPart.HungerState = HungerState.Full;
+			}
+			else
+			{
+				RelatedPart.HungerState = HungerState.Normal;
 			}
 
 			bool AllFat = true;
@@ -49,24 +58,29 @@ namespace HealthV2
 
 			if (AllFat)
 			{
-				StartCoroutine(DelayAddFat());
+				var Added = Spawn.ServerPrefab(BodyFatToInstantiate.gameObject).GameObject.GetComponent<BodyFat>();
+				Added.SetAbsorbedAmount(0);
+				Added.RelatedStomach = this;
+				BodyFats.Add(Added);
+				RelatedPart.OrganStorage.ServerTryAdd(Added.gameObject);
 			}
 		}
 
-		private IEnumerator DelayAddFat()
+		public override void HealthMasterSet(LivingHealthMasterBase livingHealth)
 		{
-			yield return null;
-			var Parent = RelatedPart.GetParent();
-			var Added = Spawn.ServerPrefab(BodyFatToInstantiate.gameObject).GameObject.GetComponent<BodyFat>();
-			BodyFats.Add(Added);
-			Parent.Storage.ServerTryAdd(Added.gameObject);
+			if (InitialFatSpawned == false)
+			{
+				var Added = Spawn.ServerPrefab(BodyFatToInstantiate.gameObject).GameObject.GetComponent<BodyFat>();
+				BodyFats.Add(Added);
+				Added.RelatedStomach = this;
+				RelatedPart.OrganStorage.ServerTryAdd(Added.gameObject);
+			}
 		}
 
-		public override void RemovedFromBody(LivingHealthMasterBase livingHealthMasterBase)
+		public override void RemovedFromBody(LivingHealthMasterBase livingHealth)
 		{
-			base.RemovedFromBody(livingHealthMasterBase);
+			base.RemovedFromBody(livingHealth);
 			BodyFats.Clear();
-
 		}
 	}
 }

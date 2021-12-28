@@ -10,7 +10,7 @@ PrefabInstance:
     - target: {fileID: 552305384801587101, guid: 6af0a221ec6985a46956ac77fab1f771,
         type: 3}
       propertyPath: m_AssetId
-      value: 
+      value: faeb065acf677894a9699942fdc1b49c
       objectReference: {fileID: 0}
     - target: {fileID: 1644380039084729807, guid: 6af0a221ec6985a46956ac77fab1f771,
         type: 3}
@@ -22,6 +22,12 @@ PrefabInstance:
       propertyPath: isWindowedDoor
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 2423441889713074305, guid: 6af0a221ec6985a46956ac77fab1f771,
+        type: 3}
+      propertyPath: airlockAssemblyPrefab
+      value: 
+      objectReference: {fileID: 6522342449639528788, guid: 305141e81e4aa6b4181a9406dab303c1,
+        type: 3}
     - target: {fileID: 2928157364170990969, guid: 6af0a221ec6985a46956ac77fab1f771,
         type: 3}
       propertyPath: restriction
@@ -57,6 +63,11 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 11400000, guid: 052206481d4961741bdc6b744fafa2eb,
         type: 2}
+    - target: {fileID: 4973688389494506678, guid: 6af0a221ec6985a46956ac77fab1f771,
+        type: 3}
+      propertyPath: foreverID
+      value: faeb065acf677894a9699942fdc1b49c
+      objectReference: {fileID: 0}
     - target: {fileID: 8149197489328545512, guid: 6af0a221ec6985a46956ac77fab1f771,
         type: 3}
       propertyPath: m_Sprite

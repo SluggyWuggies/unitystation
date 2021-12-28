@@ -86,7 +86,17 @@ namespace UI.Core
 			muteSounds = GetComponentInParent<NetTab>().IsServer;
 		}
 
-		private void Update()
+		private void OnEnable()
+		{
+			UpdateManager.Add(CallbackType.UPDATE, UpdateMe);
+		}
+
+		private void OnDisable()
+		{
+			UpdateManager.Remove(CallbackType.UPDATE, UpdateMe);
+		}
+
+		private void UpdateMe()
 		{
 			if (tickCooldown > 0)
 			{
@@ -131,7 +141,7 @@ namespace UI.Core
 			targetValue = newValue;
 			if (muteSounds == false && tickCooldown <= 0)
 			{
-				_ = SoundManager.Play(SingletonSOSounds.Instance.Tick); //0.15f, pan: -0.3f
+				_ = SoundManager.Play(CommonSounds.Instance.Tick); //0.15f, pan: -0.3f
 				tickCooldown = MIN_SECONDS_PER_TICK;
 			}
 

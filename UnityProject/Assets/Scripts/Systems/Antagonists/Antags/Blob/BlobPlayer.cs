@@ -163,8 +163,8 @@ namespace Blob
 		[SyncVar(hook = nameof(SyncTurnOnClientLight))]
 		private bool clientLight;
 
-		[HideInInspector]
-		public BlobStrain clientCurrentStrain;
+		private BlobStrain clientCurrentStrain;
+		public BlobStrain ClientCurrentStrain => clientCurrentStrain;
 
 		private int numOfBlobTiles = 1;
 
@@ -201,7 +201,7 @@ namespace Blob
 
 			playerScript.SetPermanentName(overmindName);
 
-			var result = Spawn.ServerPrefab(blobCorePrefab, playerSync.ServerPosition, gameObject.transform);
+			var result = Spawn.ServerPrefab(blobCorePrefab, registerPlayer.WorldPositionServer, gameObject.transform.parent);
 
 			if (!result.Successful)
 			{
@@ -303,7 +303,7 @@ namespace Blob
 					string.Format(ReportTemplates.BioHazard,
 						"Caution! Biohazard expanding rapidly. Station structural integrity failing."),
 					MatrixManager.MainStationMatrix);
-				_ = SoundManager.PlayNetworked(SingletonSOSounds.Instance.Notice1);
+				_ = SoundManager.PlayNetworked(CommonSounds.Instance.Notice1);
 			}
 
 			if (isBlobGamemode && !nearlyWon && numOfNonSpaceBlobTiles >= numOfTilesForVictory / 1.25)
@@ -314,7 +314,7 @@ namespace Blob
 					string.Format(ReportTemplates.BioHazard,
 						"Alert! Station integrity near critical. Biomass sensor levels are off the charts."),
 					MatrixManager.MainStationMatrix);
-				_ = SoundManager.PlayNetworked(SingletonSOSounds.Instance.Notice1);
+				_ = SoundManager.PlayNetworked(CommonSounds.Instance.Notice1);
 			}
 
 			// Blob wins after number of blob tiles reached
@@ -333,7 +333,7 @@ namespace Blob
 					string.Format(ReportTemplates.BioHazard,
 						"Confirmed outbreak of level 5 biohazard aboard the station. All personnel must contain the outbreak."),
 					MatrixManager.MainStationMatrix);
-				_ = SoundManager.PlayNetworked(SingletonSOSounds.Instance.Outbreak5Announcement);
+				_ = SoundManager.PlayNetworked(CommonSounds.Instance.Outbreak5Announcement);
 			}
 
 			if (rerollTimer > 300f)
@@ -550,6 +550,7 @@ namespace Blob
 		private void TargetRpcTurnOffLight(NetworkConnection target)
 		{
 			overmindLightObject.SetActive(false);
+			overmindSprite.layer = 31;
 		}
 
 		#endregion
@@ -586,10 +587,10 @@ namespace Blob
 		{
 			if (!ValidateAction(worldPos)) return false;
 
-			if (!autoExpanding && resources < attackCost)
+			if (!autoExpanding && (resources < attackCost || resources < normalBlobCost))
 			{
 				Chat.AddExamineMsgFromServer(gameObject,
-					$"Not enough biomass to attack, you need {attackCost} biomass");
+					$"Not enough biomass to attack or grow, you need {attackCost} biomass to attack and {normalBlobCost} biomass to grow");
 				return false;
 			}
 
@@ -662,7 +663,7 @@ namespace Blob
 		{
 			if (!autoExpanding && !ValidateCost(normalBlobCost, blobNormalPrefab)) return;
 
-			var result = Spawn.ServerPrefab(blobNormalPrefab, worldPos, gameObject.transform);
+			var result = Spawn.ServerPrefab(blobNormalPrefab, worldPos, gameObject.transform.parent);
 
 			if (!result.Successful) return;
 
@@ -715,7 +716,7 @@ namespace Blob
 
 					foreach (var playerDamage in currentStrain.playerDamages)
 					{
-						npcPlayerComponent.ApplyDamageToRandom(gameObject, playerDamage.damageDone, AttackType.Melee, playerDamage.damageType);
+						npcPlayerComponent.ApplyDamageToBodyPart(gameObject, playerDamage.damageDone, AttackType.Melee, playerDamage.damageType);
 					}
 
 					PlayAttackEffect(pos);
@@ -927,7 +928,7 @@ namespace Blob
 
 		private void PlayAttackEffect(Vector3 worldPos)
 		{
-			Spawn.ServerPrefab(attackEffect, worldPos, gameObject.transform);
+			Spawn.ServerPrefab(attackEffect, worldPos, gameObject.transform.parent);
 		}
 
 		#endregion
@@ -964,7 +965,7 @@ namespace Blob
 		{
 			if (ValidateCost(cost, prefab) == false) return;
 
-			var result = Spawn.ServerPrefab(prefab, worldPos, gameObject.transform);
+			var result = Spawn.ServerPrefab(prefab, worldPos, gameObject.transform.parent);
 
 			if (result.Successful == false) return;
 
@@ -993,7 +994,7 @@ namespace Blob
 		{
 			if (!ValidateAction(worldPos)) return;
 
-			if (MatrixManager.IsSpaceAt(worldPos, true))
+			if (MatrixManager.IsSpaceAt(worldPos, true, registerPlayer.Matrix.MatrixInfo))
 			{
 				Chat.AddExamineMsgFromServer(gameObject, "Cannot place structures on space blob, find a sturdier location");
 				return;
@@ -1042,7 +1043,7 @@ namespace Blob
 
 					if (!ValidateCost(cost, prefab)) return;
 
-					var result = Spawn.ServerPrefab(prefab, worldPos, gameObject.transform);
+					var result = Spawn.ServerPrefab(prefab, worldPos, gameObject.transform.parent);
 
 					if (!result.Successful) return;
 
@@ -1537,7 +1538,7 @@ namespace Blob
 
 		private void AddNonSpaceBlob(GameObject newBlob)
 		{
-			if(MatrixManager.IsSpaceAt(newBlob.GetComponent<RegisterObject>().WorldPositionServer, true)) return;
+			if(MatrixManager.IsSpaceAt(newBlob.GetComponent<RegisterObject>().WorldPositionServer, true, registerPlayer.Matrix.MatrixInfo)) return;
 
 			nonSpaceBlobTiles.Remove(null);
 			nonSpaceBlobTiles.Add(newBlob);
@@ -1718,7 +1719,7 @@ namespace Blob
 
 		private void AttackAllSides(DamageInfo info)
 		{
-			var pos = info.AttackedIntegrity.gameObject.WorldPosServer();
+			var pos = info.AttackedIntegrity.RegisterTile.WorldPositionServer;
 
 			foreach (var offset in coords)
 			{

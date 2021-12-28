@@ -1,20 +1,21 @@
 using System;
-using System.Collections;
-using Light2D;
+using UnityEngine;
+using Random = UnityEngine.Random;
 using Mirror;
 using ScriptableObjects;
-using UnityEngine;
+using Light2D;
 using Systems.Electricity;
 using Systems.Explosions;
-using Random = UnityEngine.Random;
+using Systems.ObjectConnection;
 using Objects.Construction;
+
 
 namespace Objects.Lighting
 {
 	/// <summary>
 	/// Component responsible for the behaviour of light tubes / bulbs in particular.
 	/// </summary>
-	public class LightSource : ObjectTrigger, ICheckedInteractable<HandApply>, IAPCPowerable, IServerLifecycle, ISetMultitoolSlave
+	public class LightSource : ObjectTrigger, ICheckedInteractable<HandApply>, IAPCPowerable, IServerLifecycle, IMultitoolSlaveable
 	{
 		public Color ONColour;
 		public Color EmergencyColour;
@@ -49,6 +50,7 @@ namespace Objects.Lighting
 		[SerializeField] private Vector4 collLeftSetting = Vector4.zero;
 		[SerializeField] private SpritesDirectional spritesStateOnEffect = null;
 		[SerializeField] private SOLightMountStatesMachine mountStatesMachine = null;
+		[SerializeField, Range(0,100f)] private float maximumDamageOnTouch = 3f;
 		private SOLightMountState currentState;
 		private ObjectBehaviour objectBehaviour;
 		private LightFixtureConstruction construction;
@@ -56,13 +58,7 @@ namespace Objects.Lighting
 		private ItemTrait traitRequired;
 		private GameObject itemInMount;
 
-		private GameObject currentSparkEffect;
-
 		public float integrityThreshBar { get; private set; }
-
-		[SerializeField]
-		private MultitoolConnectionType conType = MultitoolConnectionType.LightSwitch;
-		public MultitoolConnectionType ConType => conType;
 
 		#region Lifecycle
 
@@ -114,14 +110,34 @@ namespace Objects.Lighting
 
 		#endregion
 
-		public void SetMaster(ISetMultitoolMaster Imaster)
+		#region Multitool Interaction
+
+		MultitoolConnectionType IMultitoolLinkable.ConType => MultitoolConnectionType.LightSwitch;
+		IMultitoolMasterable IMultitoolSlaveable.Master => relatedLightSwitch;
+		bool IMultitoolSlaveable.RequireLink => false;
+		bool IMultitoolSlaveable.TrySetMaster(PositionalHandApply interaction, IMultitoolMasterable master)
 		{
-			var lightSwitch = (Imaster as Component)?.gameObject.GetComponent<LightSwitchV2>();
-			if (lightSwitch != relatedLightSwitch)
+			SetMaster(master);
+			return true;
+		}
+		void IMultitoolSlaveable.SetMasterEditor(IMultitoolMasterable master)
+		{
+			SetMaster(master);
+		}
+
+		private void SetMaster(IMultitoolMasterable master)
+		{
+			if (master is LightSwitchV2 lightSwitch && lightSwitch != relatedLightSwitch)
 			{
 				SubscribeToSwitchEvent(lightSwitch);
 			}
+			else if (relatedLightSwitch != null)
+			{
+				UnSubscribeFromSwitchEvent();
+			}
 		}
+
+		#endregion
 
 		private void OnDirectionChange(Orientation newDir)
 		{
@@ -152,6 +168,7 @@ namespace Objects.Lighting
 		{
 			mState = newState;
 			ChangeCurrentState(newState);
+			SetSprites();
 			SetAnimation();
 		}
 
@@ -161,7 +178,6 @@ namespace Objects.Lighting
 			{
 				currentState = mountStatesMachine.LightMountStates[newState];
 			}
-			SetSprites();
 		}
 
 		public void EditorDirectionChange()
@@ -288,28 +304,52 @@ namespace Objects.Lighting
 
 		private void TryRemoveBulb(HandApply interaction)
 		{
-			var handSlot = interaction.PerformerPlayerScript.DynamicItemStorage.GetActiveHandSlot();
-
-			if (mState == LightMountState.On && (handSlot.IsOccupied == false ||
-					!Validations.HasItemTrait(handSlot.ItemObject, CommonTraits.Instance.BlackGloves)))
+			try
 			{
-				var playerHealth = interaction.PerformerPlayerScript.playerHealth;
-				var burntBodyPart = interaction.HandSlot.NamedSlot == NamedSlot.leftHand ? BodyPartType.LeftArm : BodyPartType.RightArm;
-				playerHealth.ApplyDamageToBodyPart(gameObject, 10f, AttackType.Energy, DamageType.Burn, burntBodyPart);
+				//(Gilles)  : the hand that we use to interact and hold items isn't the same entity as the slot where you wear gloves.
+				//(MaxIsJoe): GetActiveHand() retrieves the slot you hold and use items with not the slot that you use to wear gloves.
+				//TODO : According to Gilles this is conceptually wrong and should be dealt with sometime in the future.
+				var handSlots = interaction.PerformerPlayerScript.DynamicItemStorage.GetNamedItemSlots(NamedSlot.hands);
 
-				Chat.AddExamineMsgFromServer(interaction.Performer,
+				bool HasGlove()
+				{
+					foreach (var slot in handSlots)
+					{
+						if(slot.IsEmpty) continue;
+						if (Validations.HasItemTrait(slot.ItemObject, CommonTraits.Instance.BlackGloves)) return true;
+					}
+
+					return false;
+				}
+
+				if (mState == LightMountState.On && HasGlove() == false)
+				{
+					float damage = Random.Range(0, maximumDamageOnTouch);
+					var playerHealth = interaction.PerformerPlayerScript.playerHealth;
+					var burntBodyPart = interaction.HandSlot.NamedSlot == NamedSlot.leftHand
+						? BodyPartType.LeftArm
+						: BodyPartType.RightArm;
+					playerHealth.ApplyDamageToBodyPart(gameObject, damage, AttackType.Energy, DamageType.Burn,
+						burntBodyPart);
+
+					Chat.AddExamineMsgFromServer(interaction.Performer,
 						"<color=red>You burn your hand on the bulb while attempting to remove it!</color>");
-				return;
-			}
+					return;
+				}
 
-			var spawnedItem = Spawn.ServerPrefab(itemInMount, interaction.Performer.WorldPosServer()).GameObject;
-			ItemSlot bestHand = interaction.PerformerPlayerScript.DynamicItemStorage.GetBestHand();
-			if (bestHand != null && spawnedItem != null)
+				var spawnedItem = Spawn.ServerPrefab(itemInMount, interaction.Performer.WorldPosServer()).GameObject;
+				ItemSlot bestHand = interaction.PerformerPlayerScript.DynamicItemStorage.GetBestHand();
+				if (bestHand != null && spawnedItem != null)
+				{
+					Inventory.ServerAdd(spawnedItem, bestHand);
+				}
+
+				ServerChangeLightState(LightMountState.MissingBulb);
+			}
+			catch (NullReferenceException exception)
 			{
-				Inventory.ServerAdd(spawnedItem, bestHand);
+				Logger.LogError($"A NRE was caught in LightSource.TryRemoveBulb(): {exception.Message} \n {exception.StackTrace}", Category.Lighting);
 			}
-
-			ServerChangeLightState(LightMountState.MissingBulb);
 		}
 
 		private void TryAddBulb(HandApply interaction)
@@ -405,10 +445,7 @@ namespace Objects.Lighting
 			//Has to be broken and have power to spark
 			if (mState != LightMountState.Broken || powerState == PowerState.Off) return;
 
-			//Not already doing an effect
-			if (currentSparkEffect != null) return;
-
-			currentSparkEffect = SparkUtil.TrySpark(objectBehaviour);
+			SparkUtil.TrySpark(gameObject, 50f);
 		}
 
 		#endregion
@@ -428,7 +465,7 @@ namespace Objects.Lighting
 			if (mState == LightMountState.Broken)
 			{
 				ServerChangeLightState(LightMountState.MissingBulb);
-				SoundManager.PlayNetworkedAtPos(SingletonSOSounds.Instance.GlassStep, pos, sourceObj: gameObject);
+				SoundManager.PlayNetworkedAtPos(CommonSounds.Instance.GlassStep, pos, sourceObj: gameObject);
 			}
 			else
 			{
@@ -441,24 +478,6 @@ namespace Objects.Lighting
 					TrySpark();
 				}
 			}
-		}
-
-		private void OnDrawGizmosSelected()
-		{
-			var sprite = GetComponentInChildren<SpriteRenderer>();
-			if (sprite == null)
-				return;
-			if (relatedLightSwitch == null)
-			{
-				if (isWithoutSwitch) return;
-				Gizmos.color = new Color(1, 0.5f, 1, 1);
-				Gizmos.DrawSphere(sprite.transform.position, 0.20f);
-				return;
-			}
-			//Highlighting all controlled lightSources
-			Gizmos.color = new Color(1, 1, 0, 1);
-			Gizmos.DrawLine(relatedLightSwitch.transform.position, gameObject.transform.position);
-			Gizmos.DrawSphere(relatedLightSwitch.transform.position, 0.25f);
 		}
 	}
 }

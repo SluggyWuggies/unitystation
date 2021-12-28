@@ -22,13 +22,17 @@ using UI;
 ///
 /// Refer to documentation at https://github.com/unitystation/unitystation/wiki/Right-Click-Menu
 /// </summary>
-public class RightClickManager : MonoBehaviour
+public class RightClickManager : MonoBehaviourSingleton<RightClickManager>
 {
 	public static readonly Color ButtonColor = new Color(0.3f, 0.55f, 0.72f, 0.7f);
 
 	private static readonly BranchWorldPosition BranchWorldPosition = new BranchWorldPosition();
 
 	private static readonly BranchScreenPosition BranchScreenPosition = new BranchScreenPosition();
+
+	[SerializeField]
+	private ScriptableObjects.RightClickOptionsList rightClickOptions = default;
+	public RightClickOption[] RightClickOptions => rightClickOptions.RightClickOptions;
 
 	[Tooltip("Ordering to use for right click options.")]
 	public RightClickOptionOrder rightClickOptionOrder;
@@ -69,8 +73,9 @@ public class RightClickManager : MonoBehaviour
 		}
 	}
 
-	private void Awake()
+	public override void Awake()
 	{
+		base.Awake();
 		// cache all known usages of the RightClickMethod annotation
 		if (attributedTypes.Count == 0)
 		{
@@ -84,6 +89,12 @@ public class RightClickManager : MonoBehaviour
 	private void OnEnable()
 	{
 		lightingSystem = Camera.main.GetComponent<LightingSystem>();
+		UpdateManager.Add(CallbackType.UPDATE, UpdateMe);
+	}
+
+	private void OnDisable()
+	{
+		UpdateManager.Remove(CallbackType.UPDATE, UpdateMe);
 	}
 
 	private void GetRightClickAttributedMethods()
@@ -112,7 +123,7 @@ public class RightClickManager : MonoBehaviour
 		attributedTypes = result;
 	}
 
-	void Update()
+	void UpdateMe()
 	{
 		// Get right mouse click
 		if (CommonInput.GetMouseButtonDown(1))
@@ -261,8 +272,18 @@ public class RightClickManager : MonoBehaviour
 
 				if (!string.IsNullOrEmpty(PlayerList.Instance.AdminToken))
 				{
-					Action VVAction = () => RequestBookshelfNetMessage.Send(curObject, ServerData.UserID, PlayerList.Instance.AdminToken);
-					subMenus.Add(VariableViewerOption.AsMenu(VVAction));
+					subMenus.Add(VariableViewerOption.AsMenu(() =>
+					{
+						if (UIManager.Instance.LibraryUI.Roots.Count == 0)
+						{
+							RequestBookshelfNetMessage.Send(curObject, true);
+						}
+						else
+						{
+							RequestBookshelfNetMessage.Send(curObject, false);
+						}
+
+					}));
 				}
 			}
 

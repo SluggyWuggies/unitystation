@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Mirror;
+using UnityEngine.Serialization;
 #if UNITY_EDITOR
 using Unity.EditorCoroutines.Editor;
 #endif
@@ -15,7 +16,7 @@ using UnityEngine.UI;
 [ExecuteInEditMode]
 public class SpriteHandler : MonoBehaviour
 {
-	[SerializeField] private bool NetworkThis = true;
+	[SerializeField] public bool NetworkThis = true;
 
 	[SerializeField] private List<SpriteDataSO> SubCatalogue = new List<SpriteDataSO>();
 
@@ -35,7 +36,9 @@ public class SpriteHandler : MonoBehaviour
 	[SerializeField]
 	private bool pushTextureOnStartUp = true;
 
-	[SerializeField, Range(0, 3)]
+	[FormerlySerializedAs("variantIndex"), SerializeField, Range(0, 3)]
+	private int initialVariantIndex = 0;
+
 	private int variantIndex = 0;
 
 	private int cataloguePage = -1;
@@ -61,8 +64,6 @@ public class SpriteHandler : MonoBehaviour
 	/// false if the palette has not been configured for the current spriteSO. true otherwise
 	/// </summary>
 	private bool isPaletteSet = false;
-
-	private bool initialised = false;
 
 	private NetworkIdentity networkIdentity;
 
@@ -289,13 +290,8 @@ public class SpriteHandler : MonoBehaviour
 
 	public void SetColor(Color value, bool networked = true)
 	{
-		if (initialised == false) TryInit();
 		if (setColour == value) return;
 		setColour = value;
-		if (HasImageComponent() == false)
-		{
-			GetImageComponent();
-		}
 
 		SetImageColor(value);
 		if (networked)
@@ -337,7 +333,6 @@ public class SpriteHandler : MonoBehaviour
 
 	public void PushClear(bool networked = true)
 	{
-		if (initialised == false) TryInit();
 		if (HasSpriteInImageComponent() == false) return;
 
 		SetImageSprite(null);
@@ -383,7 +378,6 @@ public class SpriteHandler : MonoBehaviour
 
 	public void PushTexture(bool networked = true)
 	{
-		if (initialised == false) TryInit();
 		if (PresentSpriteSet != null && PresentSpriteSet.Variance.Count > 0)
 		{
 			if (variantIndex < PresentSpriteSet.Variance.Count)
@@ -580,12 +574,35 @@ public class SpriteHandler : MonoBehaviour
 
 	void Awake()
 	{
-		TryInit();
-	}
+		if (Application.isPlaying)
+		{
+			spriteRenderer = GetComponent<SpriteRenderer>();
+			image = GetComponent<Image>();
+			if (image != null)
+			{
+				// unity doesn't support property blocks on ui renderers, so this is a workaround
+				image.material = Instantiate(image.material);
+			}
+			variantIndex = initialVariantIndex;
 
-	void Start()
-	{
-		TryInit();
+			if (NetworkThis)
+			{
+				networkIdentity = SpriteHandlerManager.GetRecursivelyANetworkBehaviour(gameObject);
+				SpriteHandlerManager.RegisterHandler(networkIdentity, this);
+			}
+
+			if (randomInitialSprite && CatalogueCount > 0)
+			{
+				ChangeSprite(UnityEngine.Random.Range(0, CatalogueCount), NetworkThis);
+			}
+			else if (PresentSpriteSet != null)
+			{
+				if (pushTextureOnStartUp)
+				{
+					PushTexture(false);
+				}
+			}
+		}
 	}
 
 	private void OnDestroy()
@@ -697,16 +714,8 @@ public class SpriteHandler : MonoBehaviour
 		OnSpriteChanged?.Invoke(value);
 	}
 
-	private bool HasImageComponent()
-	{
-		if (spriteRenderer != null) return (true);
-		if (image != null) return (true);
-		return (false);
-	}
-
 	public bool HasSpriteInImageComponent()
 	{
-		if (initialised == false) TryInit();
 		if (spriteRenderer != null)
 		{
 			if (spriteRenderer.sprite != null)
@@ -726,77 +735,12 @@ public class SpriteHandler : MonoBehaviour
 		return (false);
 	}
 
-	private void GetImageComponent()
-	{
-		spriteRenderer = GetComponent<SpriteRenderer>();
-		image = GetComponent<Image>();
-		if (image != null)
-		{
-			// unity doesn't support property blocks on ui renderers, so this is a workaround
-			image.material = Instantiate(image.material);
-		}
-	}
-
-	private void TryInit()
-	{
-		GetImageComponent();
-		bool Status = this.GetImageComponentStatus();
-		ImageComponentStatus(false);
-		initialised = true;
-
-		if (randomInitialSprite && CatalogueCount > 0)
-		{
-			ChangeSprite(UnityEngine.Random.Range(0, CatalogueCount), NetworkThis);
-		}
-		else if (PresentSpriteSet != null)
-		{
-			if (HasImageComponent() && pushTextureOnStartUp)
-			{
-				PushTexture(false);
-			}
-		}
-
-		ImageComponentStatus(Status);
-	}
-
-	private void ImageComponentStatus(bool newStatus)
-	{
-		if (spriteRenderer != null)
-		{
-			spriteRenderer.enabled = newStatus;
-		}
-		else if (image != null)
-		{
-			image.enabled = newStatus;
-		}
-	}
-
-	private bool GetImageComponentStatus()
-	{
-		if (spriteRenderer != null)
-		{
-			return spriteRenderer.enabled;
-		}
-		else if (image != null)
-		{
-			return image.enabled;
-		}
-
-		return false;
-	}
-
 	private void OnEnable()
 	{
-		if (Application.isPlaying && NetworkThis)
+		if (Application.isPlaying)
 		{
-			networkIdentity = SpriteHandlerManager.GetRecursivelyANetworkBehaviour(this.gameObject);
-			SpriteHandlerManager.RegisterHandler(this.networkIdentity, this);
+			PushTexture(false); // TODO: animations don't resume when sprite object is disabled and re-enabled, this is a workaround
 		}
-
-		GetImageComponent();
-		OnSpriteChanged?.Invoke(CurrentSprite);
-
-		PushTexture(false); // TODO: animations don't resume when sprite object is disabled and re-enabled, this is a workaround
 	}
 
 	private void OnDisable()
@@ -826,6 +770,11 @@ public class SpriteHandler : MonoBehaviour
 	public void UpdateMe()
 	{
 		timeElapsed += UpdateManager.CashedDeltaTime;
+		if (PresentFrame == null)
+		{
+			TryToggleAnimationState(false);
+		}
+
 		if (timeElapsed >= PresentFrame.secondDelay)
 		{
 			if (variantIndex < PresentSpriteSet.Variance.Count)
@@ -837,6 +786,8 @@ public class SpriteHandler : MonoBehaviour
 					if (animateOnce)
 					{
 						InternalChangeSprite(CataloguePage + 1 < SubCatalogue.Count ? CataloguePage + 1 : 0, false);
+						isAnimation = false;
+						UpdateManager.Remove(CallbackType.UPDATE, UpdateMe);
 						return;
 					}
 				}
@@ -932,8 +883,6 @@ public class SpriteHandler : MonoBehaviour
 		if (this.gameObject.scene.path != null && this.gameObject.scene.path.Contains("Scenes") == false &&
 		    editorAnimating == null)
 		{
-			initialised = true;
-			GetImageComponent();
 			PushTexture();
 		}
 	}

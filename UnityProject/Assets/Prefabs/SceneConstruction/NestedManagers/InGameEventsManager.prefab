@@ -118,7 +118,7 @@ MonoBehaviour:
   gunList: {fileID: 11400000, guid: b31575fc3fe98884fbac380727b6a5c5, type: 2}
   globalSound:
     SetLoadSetting: 0
-    AssetAddress: Assets/Prefabs/Magic/TeleportAppear.prefab
+    AssetAddress: Assets/Prefabs/Magic/SummonMagic.prefab
     AssetReference:
       m_AssetGUID: 
       m_SubObjectName: 
@@ -189,7 +189,7 @@ GameObject:
   - component: {fileID: 4748508647246467756}
   - component: {fileID: 8538565605628696324}
   m_Layer: 0
-  m_Name: Immovable Rod
+  m_Name: ScrubberSurge
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -218,23 +218,24 @@ MonoBehaviour:
   m_GameObject: {fileID: 1092207170390034217}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 42a1680a936ac544990d2d9061ebd7d7, type: 3}
+  m_Script: {fileID: 11500000, guid: 71eaa0e8f701f82478bc2e15b2690d8c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  EventName: Immovable Rod
+  EventName: Scrubber Surge
   StartTimer: 5
   EndTimer: 0
   EventType: 1
-  ChanceToHappen: 0.5
-  MinPlayersToTrigger: 25
+  ChanceToHappen: 30
+  MinPlayersToTrigger: 0
   parametersPageType: 0
   FakeEvent: 0
   AnnounceEvent: 1
-  immovableRodPrefab: {fileID: 7144248469089430455, guid: 92917100ffedb8446b152dfce67581f8,
+  reagentContainer: {fileID: 5188649654063371458, guid: 63a58edd1e5377040a9ea82e307c1f04,
     type: 3}
-  minStrength: 2500
-  maxStrength: 4500
-  timeBetweenExplosions: 0.25
+  dispersionAgents:
+  - {fileID: 0}
+  - {fileID: 0}
+  spawnDelayRange: {x: 3, y: 10}
 --- !u!1 &2176390301219290958
 GameObject:
   m_ObjectHideFlags: 0
@@ -318,7 +319,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 6277872687871681347}
-  m_RootOrder: 8
+  m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8688883408302241468
 MonoBehaviour:
@@ -392,7 +393,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 6277872687871681347}
-  m_RootOrder: 11
+  m_RootOrder: 12
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1444185421979299837
 MonoBehaviour:
@@ -475,7 +476,7 @@ MonoBehaviour:
   rareMobPrefabs:
   - {fileID: 50099211707262857, guid: e2968e11710cd1a49987d5b2715b6ca8, type: 3}
   spawnPointCategory: 39
-  spawnCount: {x: 5, y: 15}
+  spawnCount: {x: 7, y: 14}
   rareMobChance: 5
 --- !u!1 &2929328024764174348
 GameObject:
@@ -623,7 +624,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 6277872687871681347}
-  m_RootOrder: 9
+  m_RootOrder: 10
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2610571774784088097
 MonoBehaviour:
@@ -712,17 +713,80 @@ Transform:
   - {fileID: 2229250345173143171}
   - {fileID: 698688857389952623}
   - {fileID: 6740344816744190755}
+  - {fileID: 7841778169424424584}
+  - {fileID: 1368603534518432520}
   - {fileID: 1590283313530423313}
   - {fileID: 4130085576290714883}
-  - {fileID: 1368603534518432520}
   - {fileID: 6017755624213906674}
   - {fileID: 8107459317429369441}
   - {fileID: 2967834443619550631}
   - {fileID: 1614149104379286000}
-  - {fileID: 7644278449202499015}
+  - {fileID: 1809593919738534580}
   m_Father: {fileID: 8934140032923375002}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &3182805840338230512
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7841778169424424584}
+  - component: {fileID: 7198905062217266963}
+  m_Layer: 0
+  m_Name: SpiderInfestation
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7841778169424424584
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3182805840338230512}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 6277872687871681347}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7198905062217266963
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3182805840338230512}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55bc4a1673bff30469e9922bd4c98776, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  EventName: Spider Infestation
+  StartTimer: 0
+  EndTimer: 0
+  EventType: 1
+  ChanceToHappen: 30
+  MinPlayersToTrigger: 6
+  parametersPageType: 0
+  FakeEvent: 0
+  AnnounceEvent: 1
+  mobPrefabs:
+  - {fileID: 7729724215270615374, guid: 843edc78b2c231249a2c4936447b61fe, type: 3}
+  - {fileID: 4082601550872308833, guid: 9c078bd06d8a43943ab0e581a334abf4, type: 3}
+  - {fileID: 5899000675441068991, guid: 8aa3a22dde4a6f8459e92bae8ff7c6fe, type: 3}
+  rareMobPrefabs:
+  - {fileID: 6302797837577674976, guid: 6e984c817f1c68943bff5567373a6c9a, type: 3}
+  - {fileID: 6259407352254860176, guid: 8f91a231963bd354ea7ab5c9f9e87335, type: 3}
+  spawnPointCategory: 37
+  spawnCount: {x: 5, y: 10}
+  rareMobChance: 10
 --- !u!1 &4703966495968188789
 GameObject:
   m_ObjectHideFlags: 0
@@ -834,7 +898,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 6277872687871681347}
-  m_RootOrder: 6
+  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5844188118944054632
 MonoBehaviour:
@@ -972,7 +1036,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 6277872687871681347}
-  m_RootOrder: 7
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2934142359551454669
 MonoBehaviour:
@@ -1000,10 +1064,10 @@ MonoBehaviour:
   - {fileID: 7161211515976270597, guid: fe372e5eb4602664ba2bf856c4ffc47f, type: 3}
   - {fileID: 7276965238237120900, guid: 7dfd431fc77359d47bd657505877f763, type: 3}
   rareMobPrefabs:
-  - {fileID: 7211410574268338187, guid: 55dca02dfb005cf4e8bc3686c0229b90, type: 3}
+  - {fileID: 5819065216720755470, guid: 686203d25e1955b49aa009e1a4edddd9, type: 3}
   spawnPointCategory: 37
-  spawnCount: {x: 5, y: 15}
-  rareMobChance: 5
+  spawnCount: {x: 7, y: 14}
+  rareMobChance: 2
   reasons:
   - space-winter
   - budget-cuts
@@ -1035,6 +1099,63 @@ MonoBehaviour:
   - maintenance areas
   - '[REDACTED]'
   - place with all those juicy wires
+--- !u!1 &6000598525508854915
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1809593919738534580}
+  - component: {fileID: 1375060888515666893}
+  m_Layer: 0
+  m_Name: Immovable Rod
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1809593919738534580
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6000598525508854915}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -5.2508955, y: 0.74306184, z: -0.91875}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 6277872687871681347}
+  m_RootOrder: 13
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1375060888515666893
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6000598525508854915}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 42a1680a936ac544990d2d9061ebd7d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  EventName: Immovable Rod
+  StartTimer: 0
+  EndTimer: 0
+  EventType: 1
+  ChanceToHappen: 0
+  MinPlayersToTrigger: 0
+  parametersPageType: 0
+  FakeEvent: 0
+  AnnounceEvent: 1
+  immovableRodPrefab: {fileID: 7144248469089430455, guid: 92917100ffedb8446b152dfce67581f8,
+    type: 3}
+  minStrength: 200
+  maxStrength: 500
+  timeBetweenExplosions: 1
 --- !u!1 &6093678303304513412
 GameObject:
   m_ObjectHideFlags: 0
@@ -1064,7 +1185,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 6277872687871681347}
-  m_RootOrder: 10
+  m_RootOrder: 11
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1734058573413260740
 MonoBehaviour:
@@ -1408,7 +1529,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 6277872687871681347}
-  m_RootOrder: 5
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &6462514027336449978
 MonoBehaviour:
@@ -1553,61 +1674,3 @@ Transform:
   m_Father: {fileID: 8934140032923375002}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &9019151151982202521
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 7644278449202499015}
-  - component: {fileID: 5219137714795788897}
-  m_Layer: 0
-  m_Name: ScrubberSurge
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &7644278449202499015
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9019151151982202521}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 6277872687871681347}
-  m_RootOrder: 12
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5219137714795788897
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9019151151982202521}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 71eaa0e8f701f82478bc2e15b2690d8c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  EventName: Scrubber Surge
-  StartTimer: 0
-  EndTimer: 0
-  EventType: 1
-  ChanceToHappen: 30
-  MinPlayersToTrigger: 0
-  parametersPageType: 0
-  FakeEvent: 0
-  AnnounceEvent: 0
-  reagentContainer: {fileID: 5188649654063371458, guid: 63a58edd1e5377040a9ea82e307c1f04,
-    type: 3}
-  dispersionAgents:
-  - {fileID: 11400000, guid: 89e87c0935d40e6249cef390e612f90a, type: 2}
-  - {fileID: 11400000, guid: 2fe711bafe5c109f8b44185374a5071d, type: 2}
-  spawnDelayRange: {x: 3, y: 10}

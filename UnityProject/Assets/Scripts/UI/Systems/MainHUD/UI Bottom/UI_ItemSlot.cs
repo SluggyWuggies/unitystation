@@ -12,6 +12,7 @@ using UnityEngine.Serialization;
 using UnityEngine.UI;
 using AdminCommands;
 using HealthV2;
+using Managers;
 using UI;
 
 /// <summary>
@@ -76,6 +77,8 @@ public class UI_ItemSlot : TooltipMonoBehaviour
 	public Image MoreInventoryImage;
 	public HasSubInventory HasSubInventory;
 
+	public Material OverlayMaterial;
+
 	private void Awake()
 	{
 		if (amountText)
@@ -88,7 +91,7 @@ public class UI_ItemSlot : TooltipMonoBehaviour
 			MoreInventoryImage.enabled = false;
 		}
 
-		image = new UI_ItemImage(gameObject);
+		image = new UI_ItemImage(gameObject, OverlayMaterial);
 		hidden = initiallyHidden;
 	}
 
@@ -234,7 +237,7 @@ public class UI_ItemSlot : TooltipMonoBehaviour
 
 		if (!nullItem)
 		{
-			image?.ShowItem(item, color);
+			image?.ShowItem(item,OverlayMaterial,  color);
 			if (placeholderImage)
 				placeholderImage.color = new Color(1, 1, 1, 0);
 
@@ -289,7 +292,7 @@ public class UI_ItemSlot : TooltipMonoBehaviour
 			return;
 		}
 
-		image.ClearAll();
+		image?.ClearAll();
 		if (amountText)
 		{
 			amountText.enabled = false;
@@ -300,9 +303,13 @@ public class UI_ItemSlot : TooltipMonoBehaviour
 			placeholderImage.color = Color.white;
 		}
 
-		if (MoreInventoryImage)
+		if (HasSubInventory)
 		{
 			HasSubInventory.itemStorage = null;
+		}
+
+		if (MoreInventoryImage)
+		{
 			MoreInventoryImage.enabled = false;
 		}
 	}

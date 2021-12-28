@@ -214,8 +214,6 @@ namespace Blob
 		{
 			if (internalTimer >= 60)
 			{
-				Chat.AddActionMsgToChat(gameObject, $"<color=#FF151F>You explode from your {bodyPart}, a new being has been born.</color>",
-					$"<color=#FF151F>{gameObject.ExpensiveName()} explodes into a pile of mush.</color>");
 				FormBlob();
 				return;
 			}
@@ -252,16 +250,21 @@ namespace Blob
 		/// </summary>
 		private void FormBlob()
 		{
+			UpdateManager.Remove(CallbackType.PERIODIC_UPDATE, PeriodicUpdate);
+
 			var playerScript = gameObject.GetComponent<PlayerScript>();
 
-			var bound = MatrixManager.MainStationMatrix.Bounds;
+			var bound = MatrixManager.MainStationMatrix.LocalBounds;
+
+			//To ensure that it has to be station matrix
+			var matrixInfo = GetComponent<RegisterTile>().Matrix.MatrixInfo;
 
 			//Teleport user to random location on station if outside radius of 600 or on a space tile
 			if (((gameObject.AssumedWorldPosServer() - MatrixManager.MainStationMatrix.GameObject.AssumedWorldPosServer())
-				.magnitude > 600f) || MatrixManager.IsSpaceAt(gameObject.GetComponent<PlayerSync>().ServerPosition, true))
+				.magnitude > 600f) || MatrixManager.IsSpaceAt(gameObject.GetComponent<PlayerSync>().ServerPosition, true, matrixInfo) || matrixInfo != MatrixManager.MainStationMatrix)
 			{
 				Vector3 position = new Vector3(Random.Range(bound.xMin, bound.xMax), Random.Range(bound.yMin, bound.yMax), 0);
-				while (MatrixManager.IsSpaceAt(Vector3Int.FloorToInt(position), true) || MatrixManager.IsWallAtAnyMatrix(Vector3Int.FloorToInt(position), true))
+				while (MatrixManager.IsSpaceAt(Vector3Int.FloorToInt(position), true, matrixInfo) || MatrixManager.IsWallAt(Vector3Int.FloorToInt(position), true))
 				{
 					position = new Vector3(Random.Range(bound.xMin, bound.xMax), Random.Range(bound.yMin, bound.yMax), 0);
 				}
@@ -269,7 +272,7 @@ namespace Blob
 				gameObject.GetComponent<PlayerSync>().SetPosition(position, true);
 			}
 
-			var spawnResult = Spawn.ServerPrefab(AntagManager.Instance.blobPlayerViewer, gameObject.GetComponent<PlayerSync>().ServerPosition, gameObject.transform.parent);
+			var spawnResult = Spawn.ServerPrefab(AntagManager.Instance.blobPlayerViewer, gameObject.RegisterTile().WorldPositionServer, gameObject.transform.parent);
 
 			if (!spawnResult.Successful)
 			{
@@ -280,16 +283,19 @@ namespace Blob
 
 			spawnResult.GameObject.GetComponent<PlayerScript>().mind = playerScript.mind;
 
-			PlayerSpawn.ServerTransferPlayerToNewBody(connectionToClient, spawnResult.GameObject, playerScript.mind.GetCurrentMob(), Event.BlobSpawned, playerScript.characterSettings);
+			var connection = GetComponent<NetworkIdentity>().connectionToClient;
+			PlayerSpawn.ServerTransferPlayerToNewBody(connection, spawnResult.GameObject, playerScript.mind.GetCurrentMob(), Event.BlobSpawned, playerScript.characterSettings);
 
 			playerScript.mind = null;
 
 			//Start the blob control script
 			spawnResult.GameObject.GetComponent<BlobPlayer>().BlobStart();
 
-			gameObject.GetComponent<LivingHealthMasterBase>().Harvest();
+			Chat.AddActionMsgToChat(spawnResult.GameObject, $"<color=#FF151F>You explode from your {bodyPart}, a new being has been born.</color>",
+				$"<color=#FF151F>{gameObject.ExpensiveName()} explodes into a pile of mush.</color>");
 
-			UpdateManager.Remove(CallbackType.PERIODIC_UPDATE, PeriodicUpdate);
+			gameObject.GetComponent<LivingHealthMasterBase>().Gib();
+
 			Destroy(this);
 		}
 

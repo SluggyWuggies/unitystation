@@ -68,7 +68,7 @@ namespace UI
 			{
 				return; // Disallowing picking a job while another job has been selected.
 			}
-			_ = SoundManager.Play(SingletonSOSounds.Instance.Click01);
+			_ = SoundManager.Play(CommonSounds.Instance.Click01);
 			screen_Jobs.SetActive(false);
 			footer.SetActive(false);
 			waitMessage.SetActive(true);
@@ -79,7 +79,7 @@ namespace UI
 
 		private void ShowJobSelection()
 		{
-			_ = SoundManager.Play(SingletonSOSounds.Instance.Click01);
+			_ = SoundManager.Play(CommonSounds.Instance.Click01);
 			screen_Jobs.SetActive(true);
 			footer.SetActive(true);
 			waitMessage.SetActive(false);
@@ -119,12 +119,18 @@ namespace UI
 			screen_Jobs.SetActive(true);
 			SetFooter();
 			footer.SetActive(true);
+			UpdateManager.Add(CallbackType.UPDATE, UpdateMe);
+		}
+
+		private void OnDisable()
+		{
+			UpdateManager.Remove(CallbackType.UPDATE, UpdateMe);
 		}
 
 		/// <summary>
 		/// If a role has been selected this waits for the player to spawn.
 		/// </summary>
-		private void Update()
+		private void UpdateMe()
 		{
 			if (PlayerManager.HasSpawned)
 			{

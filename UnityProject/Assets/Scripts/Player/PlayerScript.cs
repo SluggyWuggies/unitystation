@@ -2,11 +2,11 @@ using System.Text;
 using Systems.Ai;
 using UnityEngine;
 using Mirror;
-using Blob;
 using HealthV2;
-using UI;
 using Player;
+using Player.Movement;
 using UI.Action;
+using Items;
 
 public class PlayerScript : NetworkBehaviour, IMatrixRotation, IAdminInfo, IActionGUI
 {
@@ -44,12 +44,15 @@ public class PlayerScript : NetworkBehaviour, IMatrixRotation, IAdminInfo, IActi
 
 	public Directional playerDirectional { get; set; }
 
-	private PlayerSync _playerSync; //Example of good on-demand reference init
-	public PlayerSync PlayerSync => _playerSync ? _playerSync : (_playerSync = GetComponent<PlayerSync>());
+	public PlayerSync PlayerSync;
 
 	public Equipment Equipment { get; private set; }
 
 	public RegisterPlayer registerTile { get; set; }
+
+	private PlayerCrafting playerCrafting;
+
+	public PlayerCrafting PlayerCrafting => playerCrafting;
 
 	public PlayerOnlySyncValues PlayerOnlySyncValues { get; private set; }
 
@@ -66,10 +69,10 @@ public class PlayerScript : NetworkBehaviour, IMatrixRotation, IAdminInfo, IActi
 	public Vector3Int AssumedWorldPos => pushPull.AssumedWorldPositionServer();
 
 	/// <summary>
-	/// Serverside world position.
+	/// World position of the player.
 	/// Returns InvalidPos if you're hidden (e.g. in a locker)
 	/// </summary>
-	public Vector3Int WorldPos => registerTile.WorldPositionServer;
+	public Vector3Int WorldPos => registerTile.WorldPosition;
 
 	/// <summary>
 	/// This player's item storage.
@@ -85,9 +88,9 @@ public class PlayerScript : NetworkBehaviour, IMatrixRotation, IAdminInfo, IActi
 	public float RTT;
 
 	[HideInInspector]
-	[SyncVar]
 	public bool RcsMode;
-	public MatrixMove RcsMatrixMove { get; set; }
+	[HideInInspector]
+	public MatrixMove RcsMatrixMove;
 
 	private bool isUpdateRTT;
 	private float waitTimeForRTTUpdate = 0f;
@@ -138,6 +141,8 @@ public class PlayerScript : NetworkBehaviour, IMatrixRotation, IAdminInfo, IActi
 		Equipment = GetComponent<Equipment>();
 		Cooldowns = GetComponent<HasCooldowns>();
 		PlayerOnlySyncValues = GetComponent<PlayerOnlySyncValues>();
+		playerCrafting = GetComponent<PlayerCrafting>();
+		PlayerSync = GetComponent<PlayerSync>();
 	}
 
 	public override void OnStartClient()
@@ -338,9 +343,9 @@ public class PlayerScript : NetworkBehaviour, IMatrixRotation, IAdminInfo, IActi
 	/// <summary>
 	/// True if this player is a ghost, meaning they exist in the ghost layer
 	/// </summary>
-	public bool IsGhost => PlayerUtils.IsGhost(gameObject);
+	public bool IsGhost => (PlayerState == PlayerStates.Normal) == false;
 
-	/// <summary>
+ 	/// <summary>
 	/// Same as is ghost, but also true when player inside his dead body
 	/// </summary>
 	public bool IsDeadOrGhost
@@ -358,6 +363,15 @@ public class PlayerScript : NetworkBehaviour, IMatrixRotation, IAdminInfo, IActi
 
 	// If the player acts like a ghost but is still playing ingame, used for blobs and in the future maybe AI.
 	public bool IsPlayerSemiGhost => playerState == PlayerStates.Blob || playerState == PlayerStates.Ai;
+
+	public void ReturnGhostToBody()
+	{
+		var ghost = mind?.ghost;
+		if (ghost != null)
+		{
+			ghost.playerNetworkActions.GhostEnterBody();
+		}
+	}
 
 	public object Chat { get; internal set; }
 

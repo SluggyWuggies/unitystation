@@ -15,6 +15,24 @@ MonoBehaviour:
   Watts: 1000
   MaxWatts: 1000
   InternalResistance: 240
+--- !u!114 &3754805696864176165
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1089748232968454180}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8688576ed720a4f40b3583f62adeeb23, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  groundReagents:
+    m_keys:
+    - {fileID: 11400000, guid: d59d2c18ec64d1e47983d0ce43d91a5b, type: 2}
+    - {fileID: 11400000, guid: bb1b374d9154ed45ca903a8ace087e8d, type: 2}
+    - {fileID: 11400000, guid: 0dbe4ccb54c65da5e88a73f36441a195, type: 2}
+    m_values: 0f0000000500000005000000
 --- !u!1 &9156308078107356587
 GameObject:
   m_ObjectHideFlags: 0
@@ -58,6 +76,7 @@ SpriteRenderer:
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 0
@@ -115,10 +134,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ce21b73b5871e53458c587d56498f940, type: 2}
   - {fileID: 11400000, guid: 017f48424060c3e40ad9f951b6b7262b, type: 2}
   PresentSpriteSet: {fileID: 11400000, guid: ce21b73b5871e53458c587d56498f940, type: 2}
+  randomInitialSprite: 0
   pushTextureOnStartUp: 1
-  variantIndex: 0
+  initialVariantIndex: 0
   palette: []
-  Sprites: []
 --- !u!1001 &2685493019566052597
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -132,6 +151,16 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 21300000, guid: 1e9da9a7ebb03b746aca8eb51aa3bb94,
         type: 3}
+    - target: {fileID: 2930343684074530701, guid: 792079a5e2a75f94fab3174a3bcd7033,
+        type: 3}
+      propertyPath: m_WasSpriteAssigned
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3046926709100325285, guid: 792079a5e2a75f94fab3174a3bcd7033,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3046926709100325285, guid: 792079a5e2a75f94fab3174a3bcd7033,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -149,6 +178,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3046926709100325285, guid: 792079a5e2a75f94fab3174a3bcd7033,
         type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3046926709100325285, guid: 792079a5e2a75f94fab3174a3bcd7033,
+        type: 3}
       propertyPath: m_LocalRotation.x
       value: -0
       objectReference: {fileID: 0}
@@ -161,16 +195,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalRotation.z
       value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3046926709100325285, guid: 792079a5e2a75f94fab3174a3bcd7033,
-        type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3046926709100325285, guid: 792079a5e2a75f94fab3174a3bcd7033,
-        type: 3}
-      propertyPath: m_RootOrder
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3046926709100325285, guid: 792079a5e2a75f94fab3174a3bcd7033,
         type: 3}
@@ -195,7 +219,32 @@ PrefabInstance:
     - target: {fileID: 3156860657619003749, guid: 792079a5e2a75f94fab3174a3bcd7033,
         type: 3}
       propertyPath: m_AssetId
-      value: 
+      value: a910878bd30ff5d439b94cd12e623762
+      objectReference: {fileID: 0}
+    - target: {fileID: 3221977154736274355, guid: 792079a5e2a75f94fab3174a3bcd7033,
+        type: 3}
+      propertyPath: hitDamage
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3221977154736274355, guid: 792079a5e2a75f94fab3174a3bcd7033,
+        type: 3}
+      propertyPath: throwRange
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3221977154736274355, guid: 792079a5e2a75f94fab3174a3bcd7033,
+        type: 3}
+      propertyPath: initialName
+      value: power cell
+      objectReference: {fileID: 0}
+    - target: {fileID: 3221977154736274355, guid: 792079a5e2a75f94fab3174a3bcd7033,
+        type: 3}
+      propertyPath: throwDamage
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3221977154736274355, guid: 792079a5e2a75f94fab3174a3bcd7033,
+        type: 3}
+      propertyPath: initialDescription
+      value: A rechargeable electrochemical power cell.
       objectReference: {fileID: 0}
     - target: {fileID: 3221977154736274355, guid: 792079a5e2a75f94fab3174a3bcd7033,
         type: 3}
@@ -216,33 +265,13 @@ PrefabInstance:
         type: 2}
     - target: {fileID: 3221977154736274355, guid: 792079a5e2a75f94fab3174a3bcd7033,
         type: 3}
-      propertyPath: initialDescription
-      value: A rechargeable electrochemical power cell.
-      objectReference: {fileID: 0}
-    - target: {fileID: 3221977154736274355, guid: 792079a5e2a75f94fab3174a3bcd7033,
-        type: 3}
-      propertyPath: initialName
-      value: power cell
-      objectReference: {fileID: 0}
-    - target: {fileID: 3221977154736274355, guid: 792079a5e2a75f94fab3174a3bcd7033,
-        type: 3}
-      propertyPath: hitDamage
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 3221977154736274355, guid: 792079a5e2a75f94fab3174a3bcd7033,
-        type: 3}
-      propertyPath: throwDamage
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 3221977154736274355, guid: 792079a5e2a75f94fab3174a3bcd7033,
-        type: 3}
-      propertyPath: throwRange
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 3221977154736274355, guid: 792079a5e2a75f94fab3174a3bcd7033,
-        type: 3}
       propertyPath: initialTraits.Array.data[3]
       value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 8278144391334123708, guid: 792079a5e2a75f94fab3174a3bcd7033,
+        type: 3}
+      propertyPath: foreverID
+      value: a910878bd30ff5d439b94cd12e623762
       objectReference: {fileID: 0}
     - target: {fileID: 9159554893325135702, guid: 792079a5e2a75f94fab3174a3bcd7033,
         type: 3}

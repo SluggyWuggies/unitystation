@@ -46,7 +46,7 @@ namespace Items.Medical
 					$"{performerName} analyzes {targetName}'s vitals.");
 
 			var health = interaction.TargetObject.GetComponent<LivingHealthMasterBase>();
-			var totalPercent = Mathf.Round(100 * health.OverallHealth / health.MaxHealth);
+			var totalPercent = Mathf.Floor(100 * health.OverallHealth / health.MaxHealth);
 			var bloodTotal = Mathf.Round(health.GetTotalBlood());
 			var bloodPercent = Mathf.Round(bloodTotal / health.CirculatorySystem.BloodInfo.BLOOD_NORMAL * 100);
 			float[] fullDamage = new float[7];
@@ -57,7 +57,7 @@ namespace Items.Medical
 					$"<b>Overall status: {totalPercent} % healthy</b>\n" +
 					$"Blood level: {bloodTotal}cc, {bloodPercent} %\n");
 			StringBuilder partMessages = new StringBuilder();
-			foreach (var bodypart in health.ImplantList)
+			foreach (var bodypart in health.BodyPartList)
 			{
 				if (AdvancedHealthScanner == false && bodypart.DamageContributesToOverallHealth == false) continue;
 				if (bodypart.TotalDamage == 0) continue;
@@ -66,11 +66,15 @@ namespace Items.Medical
 				{
 					fullDamage[i] += bodypart.Damages[i];
 				}
-
 				partMessages.AppendLine(GetBodypartMessage(bodypart));
 			}
 
-			if ((int)totalPercent != 100)
+			if (health.brain)
+			{
+				fullDamage[(int) DamageType.Oxy] = health.brain.RelatedPart.Oxy;
+			}
+
+			if ((int)totalPercent != 100 || AdvancedHealthScanner)
 			{
 				scanMessage.Append("<mspace=0.6em>");
 				scanMessage.AppendLine(
@@ -87,7 +91,7 @@ namespace Items.Medical
 
 			if (interaction.IsAltClick && AdvancedHealthScanner)
 			{
-				foreach(BodyPart part in health.ImplantList)
+				foreach(BodyPart part in health.BodyPartList)
 				{
 					if(part.BodyPartType == interaction.TargetBodyPart)
 					{
@@ -106,16 +110,15 @@ namespace Items.Medical
 			string partName = bodypart.gameObject.ExpensiveName();
 
 			// Not the best way to do this, need a list of races
-			if (partName.StartsWith("human ") || partName.StartsWith("lizard ") || partName.StartsWith("moth ") || partName.StartsWith("cat "))
+			if (partName.StartsWith("human ") || partName.StartsWith("lizard ") || partName.StartsWith("moth ") || partName.StartsWith("catperson "))
 			{
 				partName = partName.Substring(partName.IndexOf(" ") + 1);
 			}
 
-			return $"{textInfo.ToTitleCase(partName), -12}" +
-					$"<color=#{bruteColor}>{Mathf.Round(bodypart.Brute), 4}</color>" +
-					$"<color=#{burnColor}>{Mathf.Round(bodypart.Burn), 4}</color>" +
-					$"<color=#{toxinColor}>{Mathf.Round(bodypart.Toxin), 4}</color>" +
-					$"<color=#{oxylossColor}>{Mathf.Round(bodypart.Oxy), 4}</color>";
+			return $"{textInfo.ToTitleCase(partName),-12}" +
+			       $"<color=#{bruteColor}>{Mathf.Round(bodypart.Brute),4}</color>" +
+			       $"<color=#{burnColor}>{Mathf.Round(bodypart.Burn),4}</color>" +
+			       $"<color=#{toxinColor}>{Mathf.Round(bodypart.Toxin),4}</color>";
 		}
 	}
 }

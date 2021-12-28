@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UI.Chat_UI;
 
 namespace UI
 {
@@ -10,7 +11,7 @@ namespace UI
 
 		public void OnClickExit()
 		{
-			_ = SoundManager.Play(SingletonSOSounds.Instance.Click01);
+			_ = SoundManager.Play(CommonSounds.Instance.Click01);
 
 			gameObject.SetActive(false);
 		}
@@ -20,7 +21,7 @@ namespace UI
 		/// </summary>
 		public void OnClickOption1()
 		{
-			_ = SoundManager.Play(SingletonSOSounds.Instance.Click01);
+			_ = SoundManager.Play(CommonSounds.Instance.Click01);
 
 			ChatUI.Instance.OnAdminHelpButton();
 		}
@@ -30,7 +31,7 @@ namespace UI
 		/// </summary>
 		public void OnClickOption2()
 		{
-			_ = SoundManager.Play(SingletonSOSounds.Instance.Click01);
+			_ = SoundManager.Play(CommonSounds.Instance.Click01);
 		}
 
 		/// <summary>
@@ -38,7 +39,7 @@ namespace UI
 		/// </summary>
 		public void OnClickOption3()
 		{
-			_ = SoundManager.Play(SingletonSOSounds.Instance.Click01);
+			_ = SoundManager.Play(CommonSounds.Instance.Click01);
 
 			Application.OpenURL(wikiURL);
 		}

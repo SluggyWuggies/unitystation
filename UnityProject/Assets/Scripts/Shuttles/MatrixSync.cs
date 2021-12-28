@@ -22,11 +22,13 @@ namespace Shuttles
 			[SyncVar(hook = nameof(SyncPivot))]
 			private Vector3 pivot;
 
-			[SyncVar(hook = nameof(OnRcsActivated))]
+			[SyncVar(hook = nameof(SyncMatrixID))]
 			[HideInInspector]
-			public bool rcsModeActive;
+			public int matrixID;
 
 		#endregion
+
+		public static int matrixIDcounter;
 
 		private void Awake()
 		{
@@ -52,7 +54,6 @@ namespace Shuttles
 			base.OnStartClient();
 
 			networkedMatrix.OnStartClient();
-			TileChangeNewPlayer.Send(netId);
 
 			if (matrixMove != null)
 			{
@@ -63,6 +64,9 @@ namespace Shuttles
 		public override void OnStartServer()
 		{
 			base.OnStartServer();
+
+			matrixID = matrixIDcounter;
+			matrixIDcounter++;
 
 			networkedMatrix.OnStartServer();
 
@@ -86,10 +90,9 @@ namespace Shuttles
 				matrixMove.pivot = pivot.RoundToInt();
 			}
 
-			public void OnRcsActivated(bool oldState, bool newState)
+			public void SyncMatrixID(int oldID, int newID)
 			{
-				rcsModeActive = newState;
-				matrixMove.OnRcsActivated(oldState, newState);
+				matrixID = newID;
 			}
 
 		#endregion

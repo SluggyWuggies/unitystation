@@ -1,19 +1,22 @@
 using System.Collections;
 using System.Collections.Generic;
-using AdminTools;
-using Audio.Managers;
-using Initialisation;
-using Mirror;
-using UI.Core;
-using UI.Jobs;
-using UI.UI_Bottom;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
-using UnityEngine.UI;
-using UI.Core.Windows;
-using UI.Windows;
+using Mirror;
+using AdminTools;
+using AdminTools.VariableViewer;
+using Audio.Managers;
+using Initialisation;
 using UI;
+using UI.Core;
+using UI.Core.Windows;
+using UI.Chat_UI;
+using UI.Jobs;
+using UI.UI_Bottom;
+using UI.Windows;
+using Systems.CraftingV2.GUI;
 
 public class UIManager : MonoBehaviour, IInitialise
 {
@@ -62,8 +65,12 @@ public class UIManager : MonoBehaviour, IInitialise
 	public CrayonUI CrayonUI;
 
 	public UI_SlotManager UI_SlotManager;
-	
+
 	public GeneralInputField GeneralInputField;
+
+	public CraftingMenu CraftingMenu;
+
+	public SplittingMenu SplittingMenu;
 
 	public static bool PreventChatInput
 	{
@@ -288,11 +295,13 @@ public class UIManager : MonoBehaviour, IInitialise
 	private void OnEnable()
 	{
 		SceneManager.activeSceneChanged += OnSceneChange;
+		UpdateManager.Add(CallbackType.UPDATE, UpdateMe);
 	}
 
 	private void OnDisable()
 	{
 		SceneManager.activeSceneChanged -= OnSceneChange;
+		UpdateManager.Remove(CallbackType.UPDATE, UpdateMe);
 	}
 
 	void OnSceneChange(Scene oldScene, Scene newScene)
@@ -319,7 +328,7 @@ public class UIManager : MonoBehaviour, IInitialise
 		Application.targetFrameRate = targetFrameRate;
 	}
 
-	private void Update()
+	private void UpdateMe()
 	{
 		//Read out of ping in toolTip
 		pingUpdate += Time.deltaTime;
@@ -332,42 +341,45 @@ public class UIManager : MonoBehaviour, IInitialise
 
 	public static void UpdateKeybindText(KeyAction keyAction, KeybindManager.KeyCombo keyCombo)
 	{
-		switch (keyAction)
-		{
-			case KeyAction.OpenBackpack:
-				Instance.panelHudBottomController.SetBackPackKeybindText(
-					FormatKeybind(keyCombo.MainKey)
-				);
-				break;
-			case KeyAction.OpenPDA:
-				Instance.panelHudBottomController.SetPDAKeybindText(
-					FormatKeybind(keyCombo.MainKey)
-				);
-				break;
-			case KeyAction.OpenBelt:
-				Instance.panelHudBottomController.SetBeltKeybindText(
-					FormatKeybind(keyCombo.MainKey)
-				);
-				break;
-			case KeyAction.PocketOne:
-				Instance.panelHudBottomController.SetPocketOneKeybindText(
-					FormatKeybind(keyCombo.MainKey)
-				);
-				break;
-			case KeyAction.PocketTwo:
-				Instance.panelHudBottomController.SetPocketTwoKeybindText(
-					FormatKeybind(keyCombo.MainKey)
-				);
-				break;
-			case KeyAction.PocketThree:
-				Instance.panelHudBottomController.SetPocketThreeKeybindText(
-					FormatKeybind(keyCombo.MainKey)
-				);
-				break;
-			default:
-				Logger.LogWarning($"There is no keybind text for KeyAction {keyAction}", Category.Keybindings);
-				break;
-		}
+		return;
+		//TODO needs to be re-implemented with dynamic UI issue #7948
+
+		// switch (keyAction)
+		// {
+		// 	case KeyAction.OpenBackpack:
+		// 		Instance.panelHudBottomController.SetBackPackKeybindText(
+		// 			FormatKeybind(keyCombo.MainKey)
+		// 		);
+		// 		break;
+		// 	case KeyAction.OpenPDA:
+		// 		Instance.panelHudBottomController.SetPDAKeybindText(
+		// 			FormatKeybind(keyCombo.MainKey)
+		// 		);
+		// 		break;
+		// 	case KeyAction.OpenBelt:
+		// 		Instance.panelHudBottomController.SetBeltKeybindText(
+		// 			FormatKeybind(keyCombo.MainKey)
+		// 		);
+		// 		break;
+		// 	case KeyAction.PocketOne:
+		// 		Instance.panelHudBottomController.SetPocketOneKeybindText(
+		// 			FormatKeybind(keyCombo.MainKey)
+		// 		);
+		// 		break;
+		// 	case KeyAction.PocketTwo:
+		// 		Instance.panelHudBottomController.SetPocketTwoKeybindText(
+		// 			FormatKeybind(keyCombo.MainKey)
+		// 		);
+		// 		break;
+		// 	case KeyAction.PocketThree:
+		// 		Instance.panelHudBottomController.SetPocketThreeKeybindText(
+		// 			FormatKeybind(keyCombo.MainKey)
+		// 		);
+		// 		break;
+		// 	default:
+		// 		Logger.LogWarning($"There is no keybind text for KeyAction {keyAction}", Category.Keybindings);
+		// 		break;
+		// }
 	}
 
 	private static string FormatKeybind(KeyCode key)
@@ -392,11 +404,6 @@ public class UIManager : MonoBehaviour, IInitialise
 		foreach (UI_ItemSlot slot in slots)
 		{
 			slot.Reset();
-		}
-
-		foreach (DamageMonitorListener listener in Instance.GetComponentsInChildren<DamageMonitorListener>())
-		{
-			listener.Reset();
 		}
 
 		StorageHandler.CloseStorageUI();

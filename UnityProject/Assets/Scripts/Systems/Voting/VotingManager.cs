@@ -62,12 +62,14 @@ public class VotingManager : NetworkBehaviour
 	{
 		EventManager.AddHandler(Event.RoundStarted, OnRoundStarted);
 		EventManager.AddHandler(Event.RoundEnded, OnRoundEnded);
+		UpdateManager.Add(CallbackType.UPDATE, UpdateMe);
 	}
 
 	void OnDisable()
 	{
 		EventManager.RemoveHandler(Event.RoundStarted, OnRoundStarted);
 		EventManager.RemoveHandler(Event.RoundEnded, OnRoundEnded);
+		UpdateManager.Remove(CallbackType.UPDATE, UpdateMe);
 	}
 
 	void OnRoundStarted()
@@ -84,7 +86,7 @@ public class VotingManager : NetworkBehaviour
 	}
 
 	[Server]
-	public void TryInitiateRestartVote(GameObject instigator)
+	public void TryInitiateRestartVote(GameObject instigator, NetworkConnection sender = null)
 	{
 		if (voteInProgress || voteRestartSuccess) return;
 
@@ -101,6 +103,7 @@ public class VotingManager : NetworkBehaviour
 		votePolicy = VotePolicy.MajorityRules;
 		voteInProgress = true;
 		RpcOpenVoteWindow("Vote restart initiated by", instigator.name, CountAmountString(), (30 - prevSecond).ToString());
+		RpcVoteCallerDefault(sender);
 		Logger.Log($"Vote restart initiated by {instigator.name}", Category.Admin);
 	}
 
@@ -137,7 +140,7 @@ public class VotingManager : NetworkBehaviour
 		Logger.Log(msg, Category.Admin);
 	}
 
-	void Update()
+	void UpdateMe()
 	{
 		if (voteInProgress)
 		{
@@ -258,5 +261,13 @@ public class VotingManager : NetworkBehaviour
 		if (GUI_IngameMenu.Instance == null) return;
 
 		GUI_IngameMenu.Instance.VotePopUp.ShowVotePopUp(title, instigator, count, time);
+	}
+
+	[TargetRpc]
+	private void RpcVoteCallerDefault(NetworkConnection target)
+	{
+		if (GUI_IngameMenu.Instance == null) return;
+
+		GUI_IngameMenu.Instance.VotePopUp.VoteYes();
 	}
 }

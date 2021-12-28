@@ -26,12 +26,14 @@ MonoBehaviour:
   miningTime: 5
   constructable: 1
   RadiationPassability: 1
+  ThermalConductivity: 0.05
+  HeatCapacity: 10000
   doesReflectBullet: 0
   indestructible: 0
   ExplosionImpassable: 0
   passableException:
-    m_keys: 02000000
-    m_values: 01
+    m_keys: 0200000003000000
+    m_values: 0101
   maxHealth: 200
   damageDeflection: 0
   armor:

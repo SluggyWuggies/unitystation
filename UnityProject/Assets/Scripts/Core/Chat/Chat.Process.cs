@@ -10,6 +10,7 @@ using Core.Chat;
 using DatabaseAPI;
 using Mirror;
 using ScriptableObjects;
+using Strings;
 using Tilemaps.Behaviours.Meta;
 using Unitystation.Options;
 using WebSocketSharp;
@@ -47,8 +48,6 @@ public partial class Chat
 	public Color warningColor;
 	public Color blobColor;
 	public Color defaultColor;
-
-	private static GameObject playerGameObject;
 
 	private static bool playedSound;
 
@@ -113,14 +112,17 @@ public partial class Chat
 		// Emote
 		if (message.StartsWith("*") || message.StartsWith("/me ", true, CultureInfo.CurrentCulture))
 		{
-			//Note : This is stupid but it's the only way I could find a way to make this work
-			//We shouldn't have to check twice in different functions just to have a reference of the player who did the emote.
-			if(CheckForEmoteAction(message, Instance.emoteActionManager))
-			{
-				playerGameObject = sentByPlayer.GameObject;
-			}
 			message = message.Replace("/me", ""); // note that there is no space here as compared to the above if
 			message = message.Substring(1); // so that this substring can properly cut off both * and the space
+
+			if(CheckForEmoteAction(message, Instance.emoteActionManager))
+			{
+				DoEmoteAction(message, sentByPlayer.GameObject, Instance.emoteActionManager);
+
+				//Message is done in DoEmoteAction()
+				message = "";
+			}
+
 			chatModifiers |= ChatModifier.Emote;
 		}
 		// Whisper
@@ -187,7 +189,7 @@ public partial class Chat
 	/// </summary>
 	/// <returns>The chat message, formatted to suit the chat log.</returns>
 	public static string ProcessMessageFurther(string message, string speaker, ChatChannel channels,
-		ChatModifier modifiers, bool stripTags = true)
+		ChatModifier modifiers, Loudness loudness, uint originatorUint = 0, bool stripTags = true)
 	{
 		playedSound = false;
 		//Highlight in game name by bolding and underlining if possible
@@ -234,12 +236,6 @@ public partial class Chat
 		{
 			// /me message
 			channels = ChatChannel.Local;
-			if(playerGameObject != null)
-			{
-				DoEmoteAction(message, playerGameObject, Instance.emoteActionManager);
-				playerGameObject = null;
-				return "";
-			}
 
 			message = AddMsgColor(channels, $"<i><b>{speaker}</b> {message}</i>");
 			return message;
@@ -323,10 +319,19 @@ public partial class Chat
 			chan = "";
 		}
 
+		var textSize = loudness switch
+		{
+			Loudness.QUIET => ChatTemplates.SmallText,
+			Loudness.LOUD => ChatTemplates.LargeText,
+			Loudness.SCREAMING => ChatTemplates.VeryLargeText,
+			Loudness.EARRAPE => ChatTemplates.ExtremelyLargeText,
+			_ => message.Contains("!!") ? ChatTemplates.LargeText : ChatTemplates.NormalText,
+		};
+
 		return AddMsgColor(channels,
 			$"{chan}<b>{speaker}</b> {verb}" // [cmd]  Username says,
 			+ "  " // Two hair spaces. This triggers Text-to-Speech.
-			+ "\"" + message + "\""); // "This text will be spoken by TTS!"
+			+ $"<size={textSize}>" + "\"" +  message + "\"" + "</size>"); // "This text will be spoken by TTS!"
 	}
 
 	private static string StripAll(string input)
@@ -505,7 +510,7 @@ public partial class Chat
 	/// on the client. Do not use for anything else!
 	/// </summary>
 	public static void ProcessUpdateChatMessage(uint recipientUint, uint originatorUint, string message,
-		string messageOthers, ChatChannel channels, ChatModifier modifiers, string speaker, GameObject recipient, bool stripTags = true)
+		string messageOthers, ChatChannel channels, ChatModifier modifiers, string speaker, GameObject recipient, Loudness loudness, bool stripTags = true)
 	{
 
 		var isOriginator = true;
@@ -522,8 +527,8 @@ public partial class Chat
 
 		if (GhostValidationRejection(originatorUint, channels)) return;
 
-		var msg = ProcessMessageFurther(message, speaker, channels, modifiers, stripTags);
-		ChatRelay.Instance.UpdateClientChat(msg, channels, isOriginator, recipient);
+		var msg = ProcessMessageFurther(message, speaker, channels, modifiers, loudness, originatorUint, stripTags);
+		ChatRelay.Instance.UpdateClientChat(msg, channels, isOriginator, recipient, loudness, modifiers);
 	}
 
 	private static bool GhostValidationRejection(uint originator, ChatChannel channels)

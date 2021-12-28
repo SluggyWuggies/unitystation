@@ -1,9 +1,8 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 using Systems.Atmospherics;
 using Systems.Electricity;
-using Core.Input_System.InteractionV2.Interactions;
-using Pipes;
+using Systems.Interaction;
+
 
 namespace Objects.Atmospherics
 {
@@ -63,6 +62,11 @@ namespace Objects.Atmospherics
 
 			if (isOperating)
 			{
+				if (operatingMode == Mode.Extracting && pipeData.mixAndVolume.Density().y > MaxInternalPressure)
+				{
+					return;
+				}
+
 				GasMix.TransferGas(targetMix, sourceMix, molesRate * Effectiveness);
 				metaDataLayer.UpdateSystemsAt(registerTile.LocalPositionServer, SystemType.AtmosSystem);
 			}
@@ -101,20 +105,24 @@ namespace Objects.Atmospherics
 
 		private void UpdateState()
 		{
-			isOperating = powerState == PowerState.Off ? false : isTurnedOn;
+			isOperating = powerState != PowerState.Off && isTurnedOn;
 
-			switch (operatingMode)
+			if (CustomNetworkManager.IsServer)
 			{
-				default:
-				case Mode.Injecting:
-					sourceMix = pipeMix;
-					targetMix = metaNode.GasMix;
-					break;
-				case Mode.Extracting:
-					sourceMix = metaNode.GasMix;
-					targetMix = pipeMix;
-					break;
+				switch (operatingMode)
+				{
+					default:
+					case Mode.Injecting:
+						sourceMix = pipeMix;
+						targetMix = metaNode.GasMix;
+						break;
+					case Mode.Extracting:
+						sourceMix = metaNode.GasMix;
+						targetMix = pipeMix;
+						break;
+				}
 			}
+
 
 			Sprite sprite = operatingMode == Mode.Injecting ? Sprite.Injecting : Sprite.On;
 			sprite = isOperating ? sprite : Sprite.Off;

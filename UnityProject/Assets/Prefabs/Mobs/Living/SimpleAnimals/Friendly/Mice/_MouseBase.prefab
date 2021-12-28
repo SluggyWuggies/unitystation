@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 198e62f73ad0d294699f0d7d013cefc1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  initialMoodLevel: 0
+  initialMoodLevel: 50
   maxMoodLevel: 50
   isAffectedByDamage: 1
   moodOnHit: -10
@@ -50,6 +50,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mobName: mouse
+  registerObject: {fileID: 0}
   minTimeBetweenRandomActions: 10
   maxTimeBetweenRandomActions: 30
   doRandomActionWhenInTask: 1
@@ -203,7 +204,7 @@ PrefabInstance:
     - target: {fileID: 7607258964611336719, guid: 64d782023543d4542b89ce3f9402b084,
         type: 3}
       propertyPath: m_AssetId
-      value: 
+      value: 8986f5f9b33cae34aa97c4f56be39e3f
       objectReference: {fileID: 0}
     - target: {fileID: 7921348372470815473, guid: 64d782023543d4542b89ce3f9402b084,
         type: 3}

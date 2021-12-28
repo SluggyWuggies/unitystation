@@ -1,11 +1,12 @@
 ﻿using System;
-using Systems.Clearance;
+using UnityEngine;
+using NaughtyAttributes;
 using AddressableReferences;
 using Messages.Server;
-using NaughtyAttributes;
-using UnityEngine;
+using Systems.Clearance;
 using Systems.Electricity.NodeModules;
-using Core.Input_System.InteractionV2.Interactions;
+using Systems.Interaction;
+
 
 namespace Objects.Engineering
 {
@@ -250,7 +251,13 @@ namespace Objects.Engineering
 				return;
 			}
 
-			if (!interaction.HandObject.GetComponent<Welder>().IsOn)
+			if (isWrenched == false)
+			{
+				Chat.AddExamineMsgFromServer(interaction.Performer, "Emitter needs to be wrenched down first");
+				return;
+			}
+
+			if (interaction.HandObject.GetComponent<Welder>().IsOn == false)
 			{
 				Chat.AddExamineMsgFromServer(interaction.Performer, "You need a fueled and lit welder");
 				return;
@@ -308,7 +315,7 @@ namespace Objects.Engineering
 			}
 			else
 			{
-				if (MatrixManager.IsSpaceAt(registerTile.WorldPositionServer, true))
+				if (MatrixManager.IsSpaceAt(registerTile.WorldPositionServer, true, registerTile.Matrix.MatrixInfo))
 				{
 					Chat.AddExamineMsgFromServer(interaction.Performer, "Emitter needs to be on a floor or plating");
 					return;

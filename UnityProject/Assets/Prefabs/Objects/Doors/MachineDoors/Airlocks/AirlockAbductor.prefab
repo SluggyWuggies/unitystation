@@ -41,7 +41,7 @@ PrefabInstance:
     - target: {fileID: 552305384801587101, guid: 6af0a221ec6985a46956ac77fab1f771,
         type: 3}
       propertyPath: m_AssetId
-      value: 
+      value: be65d2803c03b3947a800c3392e78053
       objectReference: {fileID: 0}
     - target: {fileID: 692202176989214050, guid: 6af0a221ec6985a46956ac77fab1f771,
         type: 3}
@@ -79,6 +79,12 @@ PrefabInstance:
       propertyPath: isWindowedDoor
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2423441889713074305, guid: 6af0a221ec6985a46956ac77fab1f771,
+        type: 3}
+      propertyPath: airlockAssemblyPrefab
+      value: 
+      objectReference: {fileID: 5903367534500500450, guid: 1fe09e2798421e342b6c845bd89f2283,
+        type: 3}
     - target: {fileID: 3444326074182531729, guid: 6af0a221ec6985a46956ac77fab1f771,
         type: 3}
       propertyPath: m_Layer
@@ -138,6 +144,11 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 11400000, guid: a197fde8411d86e4c9c1e02b08f3d21b,
         type: 2}
+    - target: {fileID: 4973688389494506678, guid: 6af0a221ec6985a46956ac77fab1f771,
+        type: 3}
+      propertyPath: foreverID
+      value: be65d2803c03b3947a800c3392e78053
+      objectReference: {fileID: 0}
     - target: {fileID: 5572436852781215207, guid: 6af0a221ec6985a46956ac77fab1f771,
         type: 3}
       propertyPath: m_Size.x

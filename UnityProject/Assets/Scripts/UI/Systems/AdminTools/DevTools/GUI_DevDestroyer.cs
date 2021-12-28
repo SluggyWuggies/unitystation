@@ -1,9 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using DatabaseAPI;
-using Messages.Client.DevSpawner;
 using UnityEngine;
+using Messages.Client.DevSpawner;
+
 
 namespace UI.AdminTools
 {
@@ -30,15 +29,17 @@ namespace UI.AdminTools
 			cachedLightingState = lightingSystem.enabled;
 			lightingSystem.enabled = false;
 			UIManager.IsMouseInteractionDisabled = true;
+			UpdateManager.Add(CallbackType.UPDATE, UpdateMe);
 		}
 
 		private void OnDisable()
 		{
 			lightingSystem.enabled = cachedLightingState;
 			UIManager.IsMouseInteractionDisabled = false;
+			UpdateManager.Remove(CallbackType.UPDATE, UpdateMe);
 		}
 
-		private void Update()
+		private void UpdateMe()
 		{
 			// check which objects we are over, pick the top one to delete
 			if (CommonInput.GetMouseButtonDown(0))
@@ -53,8 +54,7 @@ namespace UI.AdminTools
 					}
 					else
 					{
-						DevDestroyMessage.Send(hits.First().GetComponentInParent<CustomNetTransform>().gameObject,
-							ServerData.UserID, PlayerList.Instance.AdminToken);
+						DevDestroyMessage.Send(hits.First().GetComponentInParent<CustomNetTransform>().gameObject);
 					}
 				}
 			}

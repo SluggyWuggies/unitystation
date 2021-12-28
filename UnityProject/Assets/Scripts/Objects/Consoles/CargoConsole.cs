@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using AddressableReferences;
+using Items;
 using Mirror;
 using UnityEngine;
 using UI.Objects.Cargo;
@@ -17,6 +19,8 @@ namespace Objects.Cargo
 
 		[SerializeField]
 		private List<JobType> allowedTypes = null;
+
+		[SerializeField] private AddressableAudioSource creditArrivalSound;
 
 		public bool WillInteract(HandApply interaction, NetworkSide side)
 		{
@@ -40,18 +44,18 @@ namespace Objects.Cargo
 
 		public void ServerPerformInteraction(HandApply interaction)
 		{
-			if (Validations.HasItemTrait(interaction.HandObject, CommonTraits.Instance.Id))
+			if (interaction.HandSlot.Item.TryGetComponent<IDCard>(out var id))
 			{
-				CheckID(interaction.HandSlot.Item.GetComponent<IDCard>().JobType, interaction.Performer);
+				CheckID(id.JobType, interaction.Performer);
+				return;
 			}
-			else if (Validations.HasItemTrait(interaction.HandObject, CommonTraits.Instance.Emag))
+			Emag mag = interaction.HandSlot.Item.GetComponent<Emag>();
+			if (mag == null || Emagged) return;
+			if (mag.UseCharge(interaction))
 			{
-				//"You adjust the supply console's routing and receiver spectrum, unlocking special supplies and contraband.
 				Emagged = true;
-				if (cargoGUI)
-				{
-					cargoGUI.pageCart.UpdateTab();
-				}
+				CorrectID = true;
+				if (cargoGUI) cargoGUI.pageCart.UpdateTab();
 			}
 		}
 
@@ -75,6 +79,11 @@ namespace Objects.Cargo
 			Chat.AddActionMsgToChat(playeref, $"You swipe your ID through the supply console's ID slot, {denyString}",
 				$"{playeref.ExpensiveName()} swiped their ID through the supply console's ID slot");
 
+		}
+
+		public void PlayBudgetUpdateSound()
+		{
+			_ = SoundManager.PlayNetworkedAtPosAsync(creditArrivalSound, gameObject.WorldPosServer());
 		}
 	}
 }

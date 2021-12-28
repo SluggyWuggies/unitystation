@@ -11,6 +11,7 @@ using Mirror;
 using UnityEngine.Serialization;
 using Objects;
 using Objects.Construction;
+using Player.Movement;
 using Random = UnityEngine.Random;
 
 
@@ -29,8 +30,7 @@ public class PushPull : NetworkBehaviour, IRightClickable/*, IServerSpawn*/
 	/// <summary>
 	/// *** USE WITH CAUTION! ***
 	/// Setting it to true without parent container will make it appear at HiddenPos.
-	/// Setting it to false only makes sense if you plan to reinitialize CNT later...
-	/// I think this is valid server side only
+	/// Valid server side only
 	/// </summary>
 	public bool VisibleState {
 		get => Pushable.VisibleState;
@@ -386,7 +386,7 @@ public class PushPull : NetworkBehaviour, IRightClickable/*, IServerSpawn*/
 
 			if (pullable.StartFollowing(this))
 			{
-				SoundManager.PlayNetworkedAtPos(SingletonSOSounds.Instance.ThudSwoosh, pullable.transform.position, sourceObj: pullableObject);
+				SoundManager.PlayNetworkedAtPos(CommonSounds.Instance.ThudSwoosh, pullable.transform.position, sourceObj: pullableObject);
 
 				PulledObjectServer = pullable;
 
@@ -1015,7 +1015,7 @@ public class PushPull : NetworkBehaviour, IRightClickable/*, IServerSpawn*/
 		{
 			// orthogonal movement
 			if (registerTile.IsPassableFromInside(-dir, serverSide) == false
-				&& MatrixManager.HasAnyDepartureBlockedAnyMatrix(from - dir, serverSide, registerTile))
+				&& MatrixManager.HasAnyDepartureBlockedAt(from - dir, serverSide, registerTile))
 			{
 				return true;
 			}
@@ -1028,8 +1028,8 @@ public class PushPull : NetworkBehaviour, IRightClickable/*, IServerSpawn*/
 
 			if (registerTile.IsPassableFromInside(-horizontalDir, serverSide) == false
 				&& registerTile.IsPassableFromInside(-verticalDir, serverSide) == false
-				&& MatrixManager.HasAnyDepartureBlockedAnyMatrix(from-horizontalDir, serverSide, registerTile)
-				&& MatrixManager.HasAnyDepartureBlockedAnyMatrix(from - verticalDir, serverSide, registerTile))
+				&& MatrixManager.HasAnyDepartureBlockedAt(from-horizontalDir, serverSide, registerTile)
+				&& MatrixManager.HasAnyDepartureBlockedAt(from - verticalDir, serverSide, registerTile))
 			{
 				return true;
 			}
@@ -1054,7 +1054,7 @@ public class PushPull : NetworkBehaviour, IRightClickable/*, IServerSpawn*/
 		Vector3Int intDir = Vector3Int.RoundToInt((Vector2)dir);
 		Vector3Int target = from + intDir;
 		if (MatrixManager.IsPassableAtAllMatrices(from, target, isServer: false, context: gameObject) == false ||
-				MatrixManager.IsNoGravityAt(target, isServer: false))
+				MatrixManager.IsNoGravityAt(target, isServer: false, registerTile.Matrix.MatrixInfo))
 		{ //not allowing predictive push into space
 			return false;
 		}
@@ -1117,7 +1117,7 @@ public class PushPull : NetworkBehaviour, IRightClickable/*, IServerSpawn*/
 
 		if (pushTarget != TransformState.HiddenPos &&
 				pushTarget != newPos &&
-				MatrixManager.IsFloatingAt(gameObject, newPos, true) == false)
+				MatrixManager.IsFloatingAt(gameObject, newPos, true, registerTile.Matrix.MatrixInfo) == false)
 		{
 			//unexpected pos reported by server tile (common in space, space )
 			pushRequestQueue.Clear();
@@ -1188,7 +1188,7 @@ public class PushPull : NetworkBehaviour, IRightClickable/*, IServerSpawn*/
 		if (pos != predictivePushTarget)
 		{
 			Logger.LogFormat("Lerped to {0} while target pos was {1}", Category.PushPull, pos, predictivePushTarget);
-			if (MatrixManager.IsNoGravityAt(pos, false))
+			if (MatrixManager.IsNoGravityAt(pos, false, registerTile.Matrix.MatrixInfo))
 			{
 				Logger.LogTraceFormat("...uh, we assume it's a space push and finish prediction", Category.PushPull);
 				FinishPrediction();

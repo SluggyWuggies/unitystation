@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using AddressableReferences;
 using Initialisation;
 using Map;
@@ -12,7 +11,7 @@ using Objects.Wallmounts;
 using Strings;
 using UnityEngine;
 using Random = UnityEngine.Random;
-
+using StationObjectives;
 
 namespace Managers
 {
@@ -24,8 +23,8 @@ namespace Managers
 		private GameObject paperPrefab = default;
 
 		public StatusDisplayUpdateEvent OnStatusDisplayUpdate = new StatusDisplayUpdateEvent();
-		[NonSerialized] public string CommandStatusString;
-		[NonSerialized] public string EscapeShuttleTimeString;
+		[NonSerialized] public string CommandStatusString = string.Empty;
+		[NonSerialized] public string EscapeShuttleTimeString = string.Empty;
 
 		public void UpdateStatusDisplay(StatusDisplayChannel channel, string text)
 		{
@@ -46,7 +45,7 @@ namespace Managers
 		[NonSerialized] public AlertLevel CurrentAlertLevel;
 
 		//Server only:
-		private List<Vector2> asteroidLocations = new List<Vector2>();
+		public static List<Vector2> asteroidLocations = new List<Vector2>();
 
 		public DateTime lastAlertChange;
 		public double coolDownAlertChange = 5;
@@ -59,9 +58,10 @@ namespace Managers
 		{
 			updateTypes = new Dictionary<UpdateSound, AddressableAudioSource>
 			{
-				{UpdateSound.Notice, SingletonSOSounds.Instance.Notice2},
-				{UpdateSound.Alert, SingletonSOSounds.Instance.Notice1},
-				{UpdateSound.Announce, SingletonSOSounds.Instance.AnnouncementAnnounce}
+				{UpdateSound.Notice, CommonSounds.Instance.Notice2},
+				{UpdateSound.Alert, CommonSounds.Instance.Notice1},
+				{UpdateSound.Announce, CommonSounds.Instance.AnnouncementAnnounce},
+				{UpdateSound.CentComAnnounce, CommonSounds.Instance.AnnouncementCentCom}
 			};
 		}
 
@@ -91,7 +91,7 @@ namespace Managers
 				yield break;
 			}
 
-			_ = SoundManager.PlayNetworked(SingletonSOSounds.Instance.AnnouncementWelcome);
+			_ = SoundManager.PlayNetworked(CommonSounds.Instance.AnnouncementWelcome);
 
 			yield return WaitFor.Seconds(60f);
 
@@ -125,25 +125,22 @@ namespace Managers
 			{
 				SendExtendedUpdate();
 			}
-
+			StationObjectiveManager.Instance.ServerChooseObjective();
 			StartCoroutine(WaitToGenericReport());
 		}
 
 		private void SendExtendedUpdate()
 		{
-			MakeAnnouncement(ChatTemplates.CentcomAnnounce, string.Format(ReportTemplates.InitialUpdate, ReportTemplates.ExtendedInitial),
-				UpdateSound.Notice);
+			var message = string.Format(ReportTemplates.InitialUpdate, ReportTemplates.ExtendedInitial);
+			MakeAnnouncement(ChatTemplates.CentcomAnnounce, message, UpdateSound.Notice);
 		}
+
 		private void SendAntagUpdate()
 		{
-			_ = SoundManager.PlayNetworked(SingletonSOSounds.Instance.AnnouncementIntercept);
-			MakeAnnouncement(
-				ChatTemplates.CentcomAnnounce,
-				string.Format(
-					ReportTemplates.InitialUpdate,
-					ReportTemplates.AntagInitialUpdate+"\n\n"+
-					ChatTemplates.GetAlertLevelMessage(AlertLevelChange.UpToBlue)),
-				UpdateSound.Alert);
+			_ = SoundManager.PlayNetworked(CommonSounds.Instance.AnnouncementIntercept);
+			var message = string.Format(ReportTemplates.InitialUpdate,
+					$"{ReportTemplates.AntagInitialUpdate}\n\n{ChatTemplates.GetAlertLevelMessage(AlertLevelChange.UpToBlue)}");
+			MakeAnnouncement(ChatTemplates.CentcomAnnounce, message, UpdateSound.Alert);
 			SpawnReports(ReportTemplates.AntagThreat);
 			ChangeAlertLevel(AlertLevel.Blue, false);
 		}
@@ -224,7 +221,7 @@ namespace Managers
 
 				AudioSourceParameters audioSourceParameters = new AudioSourceParameters(pitch: 1f);
 				_ = SoundManager.PlayNetworked(updateTypes[UpdateSound.Notice], audioSourceParameters);
-				_ = SoundManager.PlayNetworked(SingletonSOSounds.Instance.AnnouncementCommandReport);
+				_ = SoundManager.PlayNetworked(CommonSounds.Instance.AnnouncementCommandReport);
 			}
 		}
 
@@ -233,55 +230,55 @@ namespace Managers
 		/// </summary>
 		/// <param name="template">String that will be the header of the annoucement. We have a couple ready to use </param>
 		/// <param name="text">String that will be the message body</param>
-		/// <param name="type">Value from the UpdateSound enum to play as sound when announcing</param>
-		public static void MakeAnnouncement( string template, string text, UpdateSound type )
+		/// <param name="soundType">Value from the UpdateSound enum to play as sound when announcing</param>
+		public static void MakeAnnouncement(string template, string text, UpdateSound soundType)
 		{
-			if ( text.Trim() == string.Empty )
+			if (string.IsNullOrWhiteSpace(text)) return;
+
+			if (soundType != UpdateSound.NoSound)
 			{
-				return;
+				_ = SoundManager.PlayNetworked(updateTypes[soundType]);
 			}
 
-			if (type != UpdateSound.NoSound)
-			{
-				_ = SoundManager.PlayNetworked( updateTypes[type] );
-			}
-
-			Chat.AddSystemMsgToChat(string.Format( template, text ), MatrixManager.MainStationMatrix);
+			Chat.AddSystemMsgToChat(string.Format(template, text), MatrixManager.MainStationMatrix);
 		}
 
 		/// <summary>
 		/// Text should be no less than 10 chars
 		/// </summary>
-		public static void MakeShuttleCallAnnouncement( string minutes, string text, bool bypassLength = false )
+		public static void MakeShuttleCallAnnouncement(int seconds, string text, bool bypassLength = false)
 		{
 			if (!bypassLength && (text.Trim() == string.Empty || text.Trim().Length < 10))
 			{
 				return;
 			}
 
-			Chat.AddSystemMsgToChat(
-				string.Format(ChatTemplates.PriorityAnnouncement, string.Format(ChatTemplates.ShuttleCallSub,minutes,text) ),
-				MatrixManager.MainStationMatrix);
+			var timeSpan = TimeSpan.FromSeconds(seconds);
+			var timeStr = timeSpan.Seconds > 0
+					? $"{timeSpan.Minutes} minutes and {timeSpan.Seconds} seconds"
+					: $"{timeSpan.Minutes} minutes";
+			var message = string.Format(ChatTemplates.PriorityAnnouncement, string.Format(ChatTemplates.ShuttleCallSub, timeStr, text));
+			Chat.AddSystemMsgToChat(message, MatrixManager.MainStationMatrix);
 
-			_ = SoundManager.PlayNetworked(SingletonSOSounds.Instance.ShuttleCalled);
+			_ = SoundManager.PlayNetworked(CommonSounds.Instance.ShuttleCalled);
 		}
 
 		/// <summary>
 		/// Text can be empty
 		/// </summary>
-		public static void MakeShuttleRecallAnnouncement( string text )
+		public static void MakeShuttleRecallAnnouncement(string text)
 		{
-			Chat.AddSystemMsgToChat(
-				string.Format(ChatTemplates.PriorityAnnouncement, string.Format(ChatTemplates.ShuttleRecallSub,text)),
-				MatrixManager.MainStationMatrix);
+			var message = string.Format(ChatTemplates.PriorityAnnouncement, string.Format(ChatTemplates.ShuttleRecallSub, text));
+			Chat.AddSystemMsgToChat(message, MatrixManager.MainStationMatrix);
 
-			_ = SoundManager.PlayNetworked(SingletonSOSounds.Instance.ShuttleRecalled);
+			_ = SoundManager.PlayNetworked(CommonSounds.Instance.ShuttleRecalled);
 		}
 
 		public enum UpdateSound {
 			Notice,
 			Alert,
 			Announce,
+			CentComAnnounce,
 			NoSound
 		}
 

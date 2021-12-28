@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using Messages.Client.SpriteMessages;
+using System.Threading.Tasks;
 using Messages.Server.SpritesMessages;
 using Mirror;
 using UnityEngine;
@@ -29,6 +29,11 @@ public class SpriteHandlerManager : NetworkBehaviour
 		{
 			Destroy(this);
 		}
+
+		if (SpriteCatalogue.ResistantCatalogue.Count == 0)
+		{
+			new Task(SpriteCatalogue.Instance.GenerateResistantCatalogue).Start();
+		}
 	}
 
 	private void OnEnable()
@@ -47,6 +52,11 @@ public class SpriteHandlerManager : NetworkBehaviour
 		NewClientChanges.Clear();
 		PresentSprites.Clear();
 		SpriteUpdateMessage.UnprocessedData.Clear();
+	}
+
+	public void OnDestroy()
+	{
+		PresentSprites.Clear();
 	}
 
 	public static void UnRegisterHandler(NetworkIdentity networkIdentity, SpriteHandler spriteHandler)
@@ -130,19 +140,6 @@ public class SpriteHandlerManager : NetworkBehaviour
 			}
 		}
 		SpriteUpdateMessage.SendToSpecified(requestedBy, Newtem);
-	}
-
-
-	public override void OnStartClient()
-	{
-		StartCoroutine(WaitForNetInitialisation());
-		base.OnStartClient();
-	}
-
-	private IEnumerator WaitForNetInitialisation()
-	{
-		yield return WaitFor.Seconds(3);
-		SpriteRequestCurrentStateMessage.Send(this.GetComponent<NetworkIdentity>().netId);
 	}
 
 	void LateUpdate()

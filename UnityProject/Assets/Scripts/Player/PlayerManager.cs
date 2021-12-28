@@ -18,6 +18,7 @@ public class PlayerManager : MonoBehaviour
 	public static JoinedViewer LocalViewerScript { get; private set; }
 
 	//For access via other parts of the game
+	//TODO why do we have PlayerScript & LocalPlayerScript when they are the same thing????
 	public static PlayerScript PlayerScript { get; private set; }
 
 	public static bool HasSpawned { get; private set; }
@@ -58,6 +59,7 @@ public class PlayerManager : MonoBehaviour
 		SceneManager.activeSceneChanged += OnLevelFinishedLoading;
 		EventManager.AddHandler(Event.PlayerDied, OnPlayerDeath);
 		EventManager.AddHandler(Event.PlayerRejoined, OnRejoinPlayer);
+		UpdateManager.Add(CallbackType.UPDATE, UpdateMe);
 	}
 
 	private void OnDisable()
@@ -66,6 +68,7 @@ public class PlayerManager : MonoBehaviour
 		EventManager.RemoveHandler(Event.PlayerDied, OnPlayerDeath);
 		EventManager.RemoveHandler(Event.PlayerRejoined, OnRejoinPlayer);
 		PlayerPrefs.Save();
+		UpdateManager.Remove(CallbackType.UPDATE, UpdateMe);
 	}
 
 	private void OnRejoinPlayer()
@@ -85,7 +88,7 @@ public class PlayerManager : MonoBehaviour
 		UIManager.Display.RejoinedEvent();
 	}
 
-	private void Update()
+	private void UpdateMe()
 	{
 		if (MovementControllable != null)
 		{

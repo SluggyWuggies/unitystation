@@ -141,7 +141,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 8900cdeabd1254649a8dfe5764f9c9de,
+      objectReference: {fileID: 21300000, guid: c3fd932f54dbc104c8aae0fb5e3f9eeb,
         type: 3}
     - target: {fileID: 1007890708488979326, guid: 00ba0ed75e40b254bb69e80ab1bdec09,
         type: 3}
@@ -153,7 +153,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: aea86856306566d43bfb7f194de93f06,
+      objectReference: {fileID: 21300000, guid: c3fd932f54dbc104c8aae0fb5e3f9eeb,
         type: 3}
     - target: {fileID: 1851283994397664114, guid: 00ba0ed75e40b254bb69e80ab1bdec09,
         type: 3}
@@ -165,7 +165,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: e68ca6a528b15fa41b3d44a12350dc2f,
+      objectReference: {fileID: 21300000, guid: c3fd932f54dbc104c8aae0fb5e3f9eeb,
         type: 3}
     - target: {fileID: 3245374881883497152, guid: 00ba0ed75e40b254bb69e80ab1bdec09,
         type: 3}
@@ -177,7 +177,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 2ceb4c268e998e442a734342bea90606,
+      objectReference: {fileID: 21300000, guid: c3fd932f54dbc104c8aae0fb5e3f9eeb,
         type: 3}
     - target: {fileID: 5683916597021410754, guid: 00ba0ed75e40b254bb69e80ab1bdec09,
         type: 3}
@@ -320,6 +320,7 @@ TilemapRenderer:
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 0
@@ -562,6 +563,7 @@ TilemapRenderer:
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 0
@@ -654,7 +656,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 8900cdeabd1254649a8dfe5764f9c9de,
+      objectReference: {fileID: 21300000, guid: c3fd932f54dbc104c8aae0fb5e3f9eeb,
         type: 3}
     - target: {fileID: 1007890708488979326, guid: 00ba0ed75e40b254bb69e80ab1bdec09,
         type: 3}
@@ -666,7 +668,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: aea86856306566d43bfb7f194de93f06,
+      objectReference: {fileID: 21300000, guid: c3fd932f54dbc104c8aae0fb5e3f9eeb,
         type: 3}
     - target: {fileID: 1851283994397664114, guid: 00ba0ed75e40b254bb69e80ab1bdec09,
         type: 3}
@@ -678,7 +680,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: e68ca6a528b15fa41b3d44a12350dc2f,
+      objectReference: {fileID: 21300000, guid: c3fd932f54dbc104c8aae0fb5e3f9eeb,
         type: 3}
     - target: {fileID: 3245374881883497152, guid: 00ba0ed75e40b254bb69e80ab1bdec09,
         type: 3}
@@ -690,7 +692,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 2ceb4c268e998e442a734342bea90606,
+      objectReference: {fileID: 21300000, guid: c3fd932f54dbc104c8aae0fb5e3f9eeb,
         type: 3}
     - target: {fileID: 5684164214070304010, guid: 00ba0ed75e40b254bb69e80ab1bdec09,
         type: 3}
@@ -934,6 +936,7 @@ MonoBehaviour:
   SafetyProtocolsOn: 1
   initialPosition: {x: 0, y: 0, z: 0}
   pivot: {x: 0, y: 0, z: 0}
+  matrix: {fileID: 0}
   IsForceStopped: 0
   RequiresFuel: 0
   rcsModeActive: 0
@@ -1041,6 +1044,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MatrixSync: {fileID: 0}
+  matrix: {fileID: 0}
 --- !u!4 &662924431 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5727247646144013472, guid: 00ba0ed75e40b254bb69e80ab1bdec09,
@@ -1107,6 +1111,7 @@ TilemapRenderer:
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 0
@@ -1269,7 +1274,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 8900cdeabd1254649a8dfe5764f9c9de,
+      objectReference: {fileID: 21300000, guid: c3fd932f54dbc104c8aae0fb5e3f9eeb,
         type: 3}
     - target: {fileID: 1007890708488979326, guid: 00ba0ed75e40b254bb69e80ab1bdec09,
         type: 3}
@@ -1281,7 +1286,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: aea86856306566d43bfb7f194de93f06,
+      objectReference: {fileID: 21300000, guid: c3fd932f54dbc104c8aae0fb5e3f9eeb,
         type: 3}
     - target: {fileID: 1851283994397664114, guid: 00ba0ed75e40b254bb69e80ab1bdec09,
         type: 3}
@@ -1293,7 +1298,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: e68ca6a528b15fa41b3d44a12350dc2f,
+      objectReference: {fileID: 21300000, guid: c3fd932f54dbc104c8aae0fb5e3f9eeb,
         type: 3}
     - target: {fileID: 3245374881883497152, guid: 00ba0ed75e40b254bb69e80ab1bdec09,
         type: 3}
@@ -1305,7 +1310,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 2ceb4c268e998e442a734342bea90606,
+      objectReference: {fileID: 21300000, guid: c3fd932f54dbc104c8aae0fb5e3f9eeb,
         type: 3}
     - target: {fileID: 5683916597021410754, guid: 00ba0ed75e40b254bb69e80ab1bdec09,
         type: 3}
@@ -1859,7 +1864,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 8900cdeabd1254649a8dfe5764f9c9de,
+      objectReference: {fileID: 21300000, guid: c3fd932f54dbc104c8aae0fb5e3f9eeb,
         type: 3}
     - target: {fileID: 1007890708488979326, guid: 00ba0ed75e40b254bb69e80ab1bdec09,
         type: 3}
@@ -1871,7 +1876,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: aea86856306566d43bfb7f194de93f06,
+      objectReference: {fileID: 21300000, guid: c3fd932f54dbc104c8aae0fb5e3f9eeb,
         type: 3}
     - target: {fileID: 1851283994397664114, guid: 00ba0ed75e40b254bb69e80ab1bdec09,
         type: 3}
@@ -1883,7 +1888,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: e68ca6a528b15fa41b3d44a12350dc2f,
+      objectReference: {fileID: 21300000, guid: c3fd932f54dbc104c8aae0fb5e3f9eeb,
         type: 3}
     - target: {fileID: 3245374881883497152, guid: 00ba0ed75e40b254bb69e80ab1bdec09,
         type: 3}
@@ -1895,7 +1900,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 2ceb4c268e998e442a734342bea90606,
+      objectReference: {fileID: 21300000, guid: c3fd932f54dbc104c8aae0fb5e3f9eeb,
         type: 3}
     - target: {fileID: 5683916597021410754, guid: 00ba0ed75e40b254bb69e80ab1bdec09,
         type: 3}
@@ -2562,6 +2567,7 @@ TilemapRenderer:
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 0
@@ -2777,6 +2783,7 @@ TilemapRenderer:
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 0
@@ -28678,6 +28685,7 @@ TilemapRenderer:
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 0
@@ -28855,7 +28863,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 8900cdeabd1254649a8dfe5764f9c9de,
+      objectReference: {fileID: 21300000, guid: c3fd932f54dbc104c8aae0fb5e3f9eeb,
         type: 3}
     - target: {fileID: 1007890708488979326, guid: 00ba0ed75e40b254bb69e80ab1bdec09,
         type: 3}
@@ -28867,7 +28875,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: aea86856306566d43bfb7f194de93f06,
+      objectReference: {fileID: 21300000, guid: c3fd932f54dbc104c8aae0fb5e3f9eeb,
         type: 3}
     - target: {fileID: 1851283994397664114, guid: 00ba0ed75e40b254bb69e80ab1bdec09,
         type: 3}
@@ -28879,7 +28887,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: e68ca6a528b15fa41b3d44a12350dc2f,
+      objectReference: {fileID: 21300000, guid: c3fd932f54dbc104c8aae0fb5e3f9eeb,
         type: 3}
     - target: {fileID: 3245374881883497152, guid: 00ba0ed75e40b254bb69e80ab1bdec09,
         type: 3}
@@ -28891,7 +28899,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 2ceb4c268e998e442a734342bea90606,
+      objectReference: {fileID: 21300000, guid: c3fd932f54dbc104c8aae0fb5e3f9eeb,
         type: 3}
     - target: {fileID: 5683916597021410754, guid: 00ba0ed75e40b254bb69e80ab1bdec09,
         type: 3}
@@ -29034,6 +29042,7 @@ TilemapRenderer:
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 0
@@ -29169,6 +29178,7 @@ TilemapRenderer:
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 0

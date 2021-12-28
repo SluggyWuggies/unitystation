@@ -1,11 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using AdminTools;
 using UnityEngine;
 using UnityEngine.UI;
-using Objects.Atmospherics;
+using AdminTools;
 using UI.Core;
+using Objects.Atmospherics;
+
 
 namespace UI.Objects.Atmospherics
 {
@@ -155,11 +156,13 @@ namespace UI.Objects.Atmospherics
 		{
 			base.OnEnable();
 			StartCoroutine(ClientWaitForProvider());
+			UpdateManager.Add(CallbackType.UPDATE, UpdateMe);
 		}
 
 		private void OnDisable()
 		{
 			hiss.Stop();
+			UpdateManager.Remove(CallbackType.UPDATE, UpdateMe);
 		}
 
 		#endregion Lifecycle
@@ -259,7 +262,7 @@ namespace UI.Objects.Atmospherics
 			}
 		}
 
-		private void Update()
+		private void UpdateMe()
 		{
 			//if the red LED is lit up, it needs to flash.
 			//This toggles the red LED on / off based on the elapsed time
@@ -349,11 +352,12 @@ namespace UI.Objects.Atmospherics
 		/// Update the actual release pressure and all the attached UI elements
 		/// </summary>
 		/// <param name="newValue"></param>
-		public void ServerUpdateReleasePressure(int newValue)
+		public void ServerUpdateReleasePressure(float newValue)
 		{
 			gasContainer.ReleasePressure = newValue;
-			ReleasePressureDial.ServerSpinTo(newValue);
-			ReleasePressureWheel.SetValueServer(newValue.ToString());
+			int intValue = Mathf.RoundToInt(newValue);
+			ReleasePressureDial.ServerSpinTo(intValue);
+			ReleasePressureWheel.SetValueServer(intValue.ToString()) ;
 		}
 
 		/// <summary>
@@ -372,9 +376,11 @@ namespace UI.Objects.Atmospherics
 		public void ServerEditReleasePressure(string newValue)
 		{
 			if (string.IsNullOrEmpty(newValue)) return;
-			var releasePressure = Convert.ToInt32(newValue);
-			releasePressure = Mathf.Clamp(releasePressure, 0, Canister.MAX_RELEASE_PRESSURE);
-			ServerUpdateReleasePressure(releasePressure);
+			if (float.TryParse(newValue, out var releasePressure))
+			{
+				releasePressure = Mathf.Clamp(releasePressure, 0, Canister.MAX_RELEASE_PRESSURE);
+				ServerUpdateReleasePressure(releasePressure);
+			}
 		}
 
 		/// <summary>

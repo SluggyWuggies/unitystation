@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using NaughtyAttributes;
+using UnityEngine;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
-using UnityEngine;
+using NaughtyAttributes;
 using NaughtyAttributes.Editor;
 
 namespace Core.Editor
@@ -19,7 +18,7 @@ namespace Core.Editor
 	{
 		private int tab = 0;
 
-		[MenuItem("Tools/Quick Build", priority = 100)]
+		[MenuItem("Tools/Quick Build", priority = 2)]
 		public static void ShowWindow()
 		{
 			GetWindow<QuickBuild>().Show();
@@ -32,7 +31,6 @@ namespace Core.Editor
 			JsonUtility.FromJsonOverwrite(data, this);
 
 			projectPath = Directory.GetCurrentDirectory();
-			gameManager = AssetDatabase.LoadAssetAtPath<GameManager>("Assets/Prefabs/SceneConstruction/NestedManagers/GameManager.prefab");
 
 			var obj = new SerializedObject(this);
 			mainStationProperty = obj.FindProperty(nameof(mainStationScene));
@@ -69,7 +67,6 @@ namespace Core.Editor
 		#region Quick Build Tab
 
 		[SerializeField, Scene] private string mainStationScene = "TestStation";
-		[SerializeField] private bool isQuickLoad = true;
 		[SerializeField] private BuildTarget target = BuildTarget.StandaloneWindows64;
 		[SerializeField] private string buildPath;
 		[SerializeField] private bool isDevelopmentBuild = true;
@@ -81,11 +78,14 @@ namespace Core.Editor
 
 		private static readonly string[] requiredScenes = { "StartUp", "Lobby", "OnlineScene" };
 
-		private GameManager gameManager;
-
 		private void ShowQuickBuildTab()
 		{
 			EditorGUILayout.Space();
+
+			EditorGUILayout.HelpBox("Automatically sets build settings to get MVB " +
+					"(minimum viable build) by including only necessary scenes.\n\n" +
+					"Operates independently of the main build window. Settings are persistent and won't be picked up by git " +
+					"(except Quick Load which is handled externally, so be sure to not commit that change).", MessageType.Info);
 
 			NaughtyEditorGUI.PropertyField_Layout(mainStationProperty, false);
 			mainStationScene = mainStationProperty.stringValue;
@@ -93,12 +93,12 @@ namespace Core.Editor
 
 			EditorGUI.BeginChangeCheck();
 			var quickLoadLabel = new GUIContent(
-				"QuickLoad",
-				"At runtime, skips the lobby scene and boots you straight into the map.");
-			isQuickLoad = EditorGUILayout.Toggle(quickLoadLabel, isQuickLoad);
+					"Quick Load",
+					"At runtime, skips the lobby scene and boots you straight into the map.");
+			EditorGUILayout.Toggle(quickLoadLabel, QuickLoad.IsEnabled);
 			if (EditorGUI.EndChangeCheck())
 			{
-				UpdateGameManager(isQuickLoad);
+				QuickLoad.Toggle();
 			}
 
 			EditorGUILayout.Space();
@@ -113,7 +113,7 @@ namespace Core.Editor
 			if (isDevelopmentBuild)
 			{
 				var content = new GUIContent(
-						"Scripts Only",
+						"    Scripts Only",
 						"Recompiles scripts only. Results in the fastest build, but only works " +
 						"if no other assets have been modified since the previous build.");
 				isScriptsOnly = EditorGUILayout.Toggle(content, isScriptsOnly);
@@ -121,7 +121,7 @@ namespace Core.Editor
 			else
 			{
 				GUI.enabled = false;
-				isScriptsOnly = EditorGUILayout.Toggle("Scripts Only", false);
+				isScriptsOnly = EditorGUILayout.Toggle("    Scripts Only", false);
 				GUI.enabled = true;
 			}
 
@@ -187,26 +187,8 @@ namespace Core.Editor
 			SetPathForDisplay(buildPath);
 		}
 
-		private void UpdateGameManager(bool isQuickLoad)
-		{
-			if (gameManager == null)
-			{
-				Logger.LogWarning($"{nameof(GameManager)} not found! Cannot set {nameof(GameManager.QuickLoad)} property.");
-				return;
-			}
-
-			if (gameManager.QuickLoad != isQuickLoad)
-			{
-				gameManager.QuickLoad = isQuickLoad;
-				EditorUtility.SetDirty(gameManager);
-				AssetDatabase.SaveAssets();
-			}
-		}
-
 		private void Build()
 		{
-			UpdateGameManager(isQuickLoad);
-
 			string[] sceneNames = new string[requiredScenes.Length + 1];
 			requiredScenes.CopyTo(sceneNames, 0);
 			sceneNames[sceneNames.Length - 1] = mainStationScene;
@@ -228,7 +210,7 @@ namespace Core.Editor
 				buildPlayerOptions.options |= BuildOptions.Development;
 				if (isScriptsOnly)
 				{
-					buildPlayerOptions.options |= BuildOptions.Development;
+					buildPlayerOptions.options |= BuildOptions.BuildScriptsOnly;
 				}
 			}
 

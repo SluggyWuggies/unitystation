@@ -50,9 +50,14 @@ public static class VariableViewer
 
 	}
 
-	public static void ProcessTransform(Transform transform, GameObject WhoBy)
+	public static void ProcessTransform(Transform transform, GameObject WhoBy, bool RefreshHierarchy = false)
 	{
-		Librarian.library.TraverseHierarchy();
+		if (Librarian.library.TransformToBookShelves.Count == 0)
+		{
+			Librarian.library.TraverseHierarchy();
+			RefreshHierarchy = true;
+		}
+
 		Librarian.Library.LibraryBookShelf BookShelf;
 		if (Librarian.TransformToBookShelf.ContainsKey(transform))
 		{
@@ -67,7 +72,10 @@ public static class VariableViewer
 
 		BookShelf.PopulateBookShelf();
 		SendBookShelfToClient(BookShelf,WhoBy);
-		LibraryNetMessage.Send(Librarian.library, WhoBy);
+		if (RefreshHierarchy)
+		{
+			LibraryNetMessage.Send(Librarian.library, WhoBy);
+		}
 
 	}
 
@@ -178,6 +186,8 @@ public static class VariableViewer
 				if (Bookshelf.Shelf == null)
 				{
 					Logger.LogError("Bookshelf has been destroyed > " + BookshelfID, Category.VariableViewer);
+					Librarian.library.TraverseHierarchy();
+					LibraryNetMessage.Send(Librarian.library, WhoBy);
 					return;
 				}
 
@@ -557,6 +567,8 @@ public static class Librarian
 				{
 					foreach (object c in list)
 					{
+						if (c == null) continue;
+
 						Sentence _sentence = new Sentence();
 						_sentence.ValueVariable = c;
 						_sentence.OnPageID = Page.ID;
@@ -609,6 +621,14 @@ public static class Librarian
 				}
 			}
 
+			foreach (var root in Roots.ToArray())
+			{
+				if (root.Shelf == null)
+				{
+					Roots.Remove(root);
+				}
+			}
+
 			foreach (var TF in Transforms)
 			{
 				Librarian.library.TransformToBookShelves.Remove(TF);
@@ -631,7 +651,6 @@ public static class Librarian
 					RecursivePopulate(root.transform, null);
 				}
 			}
-
 		}
 
 		List<LibraryBookShelf> THISDestroy = new List<LibraryBookShelf>();
@@ -1026,16 +1045,23 @@ public static class Librarian
 			//Logger.Log(this.ToString());
 			//Logger.Log(ID.ToString());
 			//Logger.Log(Variable.GetType().ToString());
-			if (PInfo != null)
+			try
 			{
-				PInfo.SetValue(BindedTo.BookClass, DeSerialiseValue(Variable, Value, Variable.GetType()));
-			}
-			else if (Info != null)
-			{
-				Info.SetValue(BindedTo.BookClass, DeSerialiseValue(Variable, Value, Variable.GetType()));
-			}
+				if (PInfo != null)
+				{
+					PInfo.SetValue(BindedTo.BookClass, DeSerialiseValue(Variable, Value, Variable.GetType()));
+				}
+				else if (Info != null)
+				{
+					Info.SetValue(BindedTo.BookClass, DeSerialiseValue(Variable, Value, Variable.GetType()));
+				}
 
-			UpdatePage();
+				UpdatePage();
+			}
+			catch (ArgumentException exception)
+			{
+				Logger.LogError($"Catch Argument Exception for Variable Viewer {exception.Message} \n {exception.StackTrace}", Category.VariableViewer);
+			}
 		}
 
 		public void Invoke()
@@ -1064,7 +1090,7 @@ public static class Librarian
 				{
 					if (InType == null || InObject == null || InObject as IConvertible == null)
 					{
-						Logger.LogError($"Can't convert {StringVariable} to {InObject.GetType()}  " +
+						Logger.Log($"Can't convert {StringVariable} to {InObject.GetType()}  " +
 							$"[(InType == null) = {InType == null} || (InObject == null) == {InObject == null} || (InObject as IConvertible == null) = {InObject as IConvertible == null}]", Category.VariableViewer);
 						return null;
 					}

@@ -2,11 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
+using System.Text;
 using Systems;
 using UnityEngine;
-using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using DatabaseAPI;
@@ -14,15 +13,14 @@ using DiscordWebhook;
 using Mirror;
 using GameConfig;
 using Initialisation;
-using AddressableReferences;
 using Audio.Containers;
 using Managers;
 using Messages.Server;
 using Tilemaps.Behaviours.Layers;
+using UnityEngine.Profiling;
 
 public partial class GameManager : MonoBehaviour, IInitialise
 {
-
 	public static GameManager Instance;
 	public bool counting;
 	/// <summary>
@@ -80,6 +78,11 @@ public partial class GameManager : MonoBehaviour, IInitialise
 	public int CharacterNameLimit { get; set; }
 
 	/// <summary>
+	/// ENABLE ON SERVERS THAT SUPPORT AUTO-RESTARTING ONLY VIA A MANAGER!
+	/// </summary>
+	public bool ServerShutsDownOnRoundEnd { get; set; }
+
+	/// <summary>
 	/// If true, only admins who put http/https links in OOC will be allowed
 	/// </summary>
 	public bool AdminOnlyHtml { get; set; }
@@ -121,20 +124,21 @@ public partial class GameManager : MonoBehaviour, IInitialise
 	private bool loadedDirectlyToStation;
 	public bool LoadedDirectlyToStation => loadedDirectlyToStation;
 
-	public Queue<PlayerSpawnRequest> SpawnPlayerRequestQueue = new Queue<PlayerSpawnRequest>();
-
-	private bool QueueProcessing;
-
-	private float timeElapsedQueueCheckServer = 0;
-
-	private const float QueueCheckTimeServer = 1f;
-
 	public bool QuickLoad = false;
 
 	public InitialisationSystems Subsystem => InitialisationSystems.GameManager;
 
 	[SerializeField]
 	private AudioClipsArray endOfRoundSounds = null;
+
+	[NonSerialized]
+	public int ServerCurrentFPS;
+	[NonSerialized]
+	public int ServerAverageFPS;
+	[NonSerialized]
+	public int errorCounter;
+	[NonSerialized]
+	public int uniqueErrorCounter;
 
 	void IInitialise.Initialise()
 	{
@@ -183,6 +187,7 @@ public partial class GameManager : MonoBehaviour, IInitialise
 		CharacterNameLimit = GameConfigManager.GameConfig.CharacterNameLimit;
 		AdminOnlyHtml = GameConfigManager.GameConfig.AdminOnlyHtml;
 		MalfAIRecieveTheirIntendedObjectiveChance = GameConfigManager.GameConfig.MalfAIRecieveTheirIntendedObjectiveChance;
+		ServerShutsDownOnRoundEnd = GameConfigManager.GameConfig.ServerShutsDownOnRoundEnd;
 		Physics.autoSimulation = false;
 		Physics2D.simulationMode = SimulationMode2D.Update;
 	}
@@ -190,13 +195,13 @@ public partial class GameManager : MonoBehaviour, IInitialise
 	private void OnEnable()
 	{
 		SceneManager.activeSceneChanged += OnSceneChange;
-		EventManager.AddHandler(Event.ScenesLoadedServer, OnRoundStart);
+		UpdateManager.Add(CallbackType.UPDATE, UpdateMe);
 	}
 
 	private void OnDisable()
 	{
 		SceneManager.activeSceneChanged -= OnSceneChange;
-		EventManager.RemoveHandler(Event.ScenesLoadedServer, OnRoundStart);
+		UpdateManager.Remove(CallbackType.UPDATE, UpdateMe);
 	}
 
 	///<summary>
@@ -350,8 +355,9 @@ public partial class GameManager : MonoBehaviour, IInitialise
 		UpdateRoundTimeMessage.Send(stationTime.ToString("O"));
 	}
 
-	private void Update()
+	private void UpdateMe()
 	{
+		if (CustomNetworkManager.IsServer == false) return;
 		if (!isProcessingSpaceBody && PendingSpaceBodies.Count > 0)
 		{
 			InitEscapeShuttle();
@@ -369,15 +375,11 @@ public partial class GameManager : MonoBehaviour, IInitialise
 		else if (counting)
 		{
 			stationTime = stationTime.AddSeconds(Time.deltaTime);
-			roundTimer.text = stationTime.ToString("HH:mm");
+			roundTimer.text = stationTime.ToString("HH:mm:ss");
 		}
 
-		timeElapsedQueueCheckServer += Time.deltaTime;
-		if (timeElapsedQueueCheckServer > QueueCheckTimeServer)
-		{
-			ProcessSpawnPlayerQueue();
-			timeElapsedQueueCheckServer -= QueueCheckTimeServer;
-		}
+		if(CustomNetworkManager.Instance._isServer == false) return;
+
 	}
 
 	/// <summary>
@@ -396,18 +398,6 @@ public partial class GameManager : MonoBehaviour, IInitialise
 
 		// Wait for the PlayerList instance to init before checking player count
 		StartCoroutine(WaitToCheckPlayers());
-	}
-
-	void OnRoundStart()
-	{
-		if (CustomNetworkManager.Instance._isServer)
-		{
-			// Execute server-side OnSpawn hooks for mapped objects
-			var iServerSpawns = FindObjectsOfType<MonoBehaviour>().OfType<IServerSpawn>();
-			MappedOnSpawnServer(iServerSpawns);
-		}
-
-		EventManager.Broadcast(Event.PostRoundStarted);
 	}
 
 	public void MappedOnSpawnServer(IEnumerable<IServerSpawn> iServerSpawns)
@@ -441,6 +431,7 @@ public partial class GameManager : MonoBehaviour, IInitialise
 			CrewManifestManager.Instance.ServerClearList();
 		}
 
+		LogPlayersAntagPref();
 
 		if (string.IsNullOrEmpty(NextGameMode) || NextGameMode == "Random")
 		{
@@ -454,6 +445,9 @@ public partial class GameManager : MonoBehaviour, IInitialise
 			NextGameMode = InitialGameMode;
 		}
 
+		DiscordWebhookMessage.Instance.AddWebHookMessageToQueue(DiscordWebhookURLs.DiscordWebhookAdminLogURL,
+			$"{GameMode.Name} chosen", "[GameMode]");
+
 		// Game mode specific setup
 		GameMode.SetupRound();
 
@@ -466,6 +460,49 @@ public partial class GameManager : MonoBehaviour, IInitialise
 
 		// Tell all clients that the countdown has finished
 		UpdateCountdownMessage.Send(true, 0);
+		EventManager.Broadcast(Event.PostRoundStarted);
+	}
+
+	/// <summary>
+	/// Used to log how many of each antag preference the players in the ready queue have
+	/// </summary>
+	private void LogPlayersAntagPref()
+	{
+		var antagDict = new Dictionary<string, int>();
+
+		foreach (var readyPlayer in PlayerList.Instance.ReadyPlayers)
+		{
+			if(readyPlayer.CharacterSettings?.AntagPreferences == null) continue;
+
+			foreach (var antagPreference in readyPlayer.CharacterSettings.AntagPreferences)
+			{
+				//Only record enabled antags
+				if(antagPreference.Value == false) continue;
+
+				if (antagDict.TryGetValue(antagPreference.Key, out var antagNum))
+				{
+					antagNum++;
+				}
+				else
+				{
+					antagDict.Add(antagPreference.Key, 1);
+				}
+			}
+		}
+
+		var antagString = new StringBuilder();
+
+		antagString.AppendLine($"There are {PlayerList.Instance.ReadyPlayers.Count} ready players");
+
+		var count = PlayerList.Instance.ReadyPlayers.Count;
+
+		foreach (var antag in antagDict)
+		{
+			antagString.AppendLine($"{antag.Value} players have {antag.Key} enabled, {count - antag.Value} have it disabled");
+		}
+
+		DiscordWebhookMessage.Instance.AddWebHookMessageToQueue(DiscordWebhookURLs.DiscordWebhookAdminLogURL,
+			antagString.ToString(), "[AntagPreferences]");
 	}
 
 	/// <summary>
@@ -569,52 +606,28 @@ public partial class GameManager : MonoBehaviour, IInitialise
 	}
 
 	[Server]
-	public void ProcessSpawnPlayerQueue()
+	public void TrySpawnPlayer(PlayerSpawnRequest player)
 	{
-		if (QueueProcessing) return;
-
-		QueueProcessing = true;
-
-		var count = SpawnPlayerRequestQueue.Count;
-
-		if (count == 0)
+		if (player == null || player.JoinedViewer == null)
 		{
-			QueueProcessing = false;
 			return;
 		}
 
-		for(var i = 1; i <= count; i++)
+		int slotsTaken = Instance.ClientGetOccupationsCount(player.RequestedOccupation.JobType);
+		int slotsMax = Instance.GetOccupationMaxCount(player.RequestedOccupation.JobType);
+		if (slotsTaken >= slotsMax)
 		{
-			var player = SpawnPlayerRequestQueue.Peek();
-
-			if (player == null || player.JoinedViewer == null)
-			{
-				SpawnPlayerRequestQueue.Dequeue();
-				continue;
-			}
-
-			int slotsTaken = GameManager.Instance.ClientGetOccupationsCount(player.RequestedOccupation.JobType);
-			int slotsMax = GameManager.Instance.GetOccupationMaxCount(player.RequestedOccupation.JobType);
-			if (slotsTaken >= slotsMax)
-			{
-				SpawnPlayerRequestQueue.Dequeue();
-				continue;
-			}
-
-			//regardless of their chosen occupation, they might spawn as an antag instead.
-			//If they do, bypass the normal spawn logic.
-			if (GameManager.Instance.TrySpawnAntag(player))
-			{
-				SpawnPlayerRequestQueue.Dequeue();
-				continue;
-			}
-
-			PlayerSpawn.ServerSpawnPlayer(player);
-
-			SpawnPlayerRequestQueue.Dequeue();
+			return;
 		}
 
-		QueueProcessing = false;
+		//regardless of their chosen occupation, they might spawn as an antag instead.
+		//If they do, bypass the normal spawn logic.
+		if (Instance.GameMode.TrySpawnAntag(player))
+		{
+			return;
+		}
+
+		PlayerSpawn.ServerSpawnPlayer(player);
 	}
 
 	/// <summary>
@@ -748,18 +761,33 @@ public partial class GameManager : MonoBehaviour, IInitialise
 		StartCoroutine(ServerRoundRestart());
 	}
 
+	private float GetMemeoryUsagePrecentage()
+	{
+		return (Profiler.GetTotalAllocatedMemoryLong() / 1048576) / SystemInfo.systemMemorySize * 100;
+	}
+
 	IEnumerator ServerRoundRestart()
 	{
-		Logger.Log("Server restarting round now.", Category.Round);
-		Chat.AddGameWideSystemMsgToChat("<b>The round is now restarting...</b>");
+		string[] args = Environment.GetCommandLineArgs();
+		if ((ServerShutsDownOnRoundEnd == false || args.Contains("-NoReboot"))
+		    && (ServerAverageFPS >= 45 || GetMemeoryUsagePrecentage() <= 75f) || args.Contains("-AlwaysReboot") == false)
+		{
+			Logger.Log("Server restarting round now.", Category.Round);
+			Chat.AddGameWideSystemMsgToChat("<b>The round is now restarting...</b>");
+			// Notify all clients that the round has ended
+			EventManager.Broadcast(Event.RoundEnded, true);
 
-		// Notify all clients that the round has ended
-		EventManager.Broadcast(Event.RoundEnded, true);
+			yield return WaitFor.Seconds(0.2f);
 
-		yield return WaitFor.Seconds(0.2f);
+			CustomNetworkManager.Instance.ServerChangeScene("OnlineScene");
 
-		CustomNetworkManager.Instance.ServerChangeScene("OnlineScene");
-
-		StopAllCoroutines();
+			StopAllCoroutines();
+			yield break;
+		}
+		Logger.LogError("Server is rebooting now. If you don't have a way to automatically restart the " +
+		           "Unitystation process such as systemctl the server won't be able to restart!", Category.Round);
+		Chat.AddGameWideSystemMsgToChat("<size=72><b>The server is now restarting!</b></size>");
+		yield return WaitFor.Seconds(2f);
+		Application.Quit();
 	}
 }

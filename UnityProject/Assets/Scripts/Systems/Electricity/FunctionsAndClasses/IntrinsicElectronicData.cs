@@ -312,7 +312,7 @@ namespace Systems.Electricity
 				FlushConnectionAndUp();
 				MetaDataPresent.IsOn.ElectricalData.Remove(MetaDataPresent);
 				ElectricalManager.Instance.electricalSync.StructureChange = true;
-				MetaDataPresent.Locatedon.RemoveUnderFloorTile(MetaDataPresent.NodeLocation, MetaDataPresent.RelatedTile);
+				MetaDataPresent.Locatedon.TileChangeManager.MetaTileMap.RemoveTileWithlayer(MetaDataPresent.NodeLocation, LayerType.Underfloor);
 
 			}
 		}

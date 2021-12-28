@@ -1,10 +1,10 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using Systems.Atmospherics;
 using Tilemaps.Behaviours.Meta;
 using UnityEngine;
+using Mirror;
 
 /// <summary>
 /// Subsystem behavior which manages updating the MetaDataNodes and simulation that affects them for a given matrix.
@@ -54,11 +54,9 @@ public class MetaDataSystem : SubsystemBehaviour
 		}
 	}
 
+	[Server]
 	public override void Initialize()
 	{
-		if (!CustomNetworkManager.IsServer)
-			return;
-
 		Stopwatch sw = new Stopwatch();
 		sw.Start();
 
@@ -67,7 +65,7 @@ public class MetaDataSystem : SubsystemBehaviour
 			LocateRooms();
 			Stopwatch Dsw = new Stopwatch();
 			Dsw.Start();
-			matrix.UnderFloorLayer.InitialiseUnderFloorUtilities();
+			matrix.MetaTileMap.InitialiseUnderFloorUtilities(CustomNetworkManager.IsServer);
 			Dsw.Stop();
 			Logger.Log($"Initialise {gameObject.name} Utilities (Power cables, Atmos pipes): " + Dsw.ElapsedMilliseconds + " ms", Category.Matrix);
 		}
@@ -124,11 +122,11 @@ public class MetaDataSystem : SubsystemBehaviour
 
 	private void LocateRooms()
 	{
-		BoundsInt bounds = metaTileMap.GetBounds();
+		var bounds = metaTileMap.GetLocalBounds();
 
 		var watch = new Stopwatch();
 		watch.Start();
-		foreach (Vector3Int position in bounds.allPositionsWithin)
+		foreach (Vector3Int position in bounds.allPositionsWithin())
 		{
 			FindRoomAt(position);
 		}
@@ -192,7 +190,7 @@ public class MetaDataSystem : SubsystemBehaviour
 
 						// If matrix manager says, the neighboring positions is space, the whole room is connected to space.
 						// Otherwise there is another matrix, blocking off the connection to space.
-						if (MatrixManager.IsSpaceAt(worldPosition, true))
+						if (MatrixManager.IsSpaceAt(worldPosition, true, matrix.MatrixInfo))
 						{
 							isSpace = true;
 						}
@@ -264,7 +262,7 @@ public class MetaDataSystem : SubsystemBehaviour
 					Vector3 neighborWorldPosition = MatrixManager.LocalToWorldInt(neighbor, MatrixManager.Get(matrix.Id));
 
 					// if matrixManager says, it's not space at the neighboring position, there must be a matrix with a non-space tile
-					if (!MatrixManager.IsSpaceAt(neighborWorldPosition.RoundToInt(), true))
+					if (!MatrixManager.IsSpaceAt(neighborWorldPosition.RoundToInt(), true, matrix.MatrixInfo))
 					{
 						MatrixInfo matrixInfo = MatrixManager.AtPoint(neighborWorldPosition.RoundToInt(), true);
 

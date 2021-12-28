@@ -21,6 +21,8 @@ public partial class PlayerList : NetworkBehaviour
 	public static PlayerList Instance;
 	public int ConnectionCount => loggedIn.Count;
 	public int OfflineConnCount => loggedOff.Count;
+	public int OnlineAndOfflineConnCount => loggedIn.Count + loggedOff.Count;
+
 	public List<ConnectedPlayer> InGamePlayers => loggedIn.FindAll(player => player.Script != null);
 
 	public List<ConnectedPlayer> NonAntagPlayers =>
@@ -374,6 +376,28 @@ public partial class PlayerList : NetworkBehaviour
 	}
 
 	[Server]
+	public void Remove(ConnectedPlayer ConnectedPlayer)
+	{
+
+		if (loggedOff.Contains(ConnectedPlayer))
+		{
+			loggedOff.Remove(ConnectedPlayer);
+		}
+
+		if (loggedIn.Contains(ConnectedPlayer))
+		{
+			loggedIn.Remove(ConnectedPlayer);
+		}
+
+		ConnectedPlayer.Connection.Disconnect();
+
+
+	}
+
+
+
+
+	[Server]
 	public void RemoveByConnection(NetworkConnection connection)
 	{
 		if (connection?.address == null || connection.identity == null)
@@ -456,16 +480,34 @@ public partial class PlayerList : NetworkBehaviour
 	}
 
 	[Server]
-	public GameObject TakeLoggedOffPlayerbyClientId(string clientId, string userId)
+	public ConnectedPlayer RemovePlayerbyClientId(string clientId, string userId, ConnectedPlayer newPlayer)
 	{
-		Logger.LogTraceFormat("Searching for logged off players with userId: {0} clientId: {1}", Category.Connections, userId, clientId);
+		Logger.LogTraceFormat("Searching for players with userId: {0} clientId: {1}", Category.Connections, userId, clientId);
 		foreach (var player in loggedOff)
 		{
-			if (player.ClientId == clientId || player.UserId == userId)
+			if ((player.ClientId == clientId || player.UserId == userId) && newPlayer != player)
 			{
-				Logger.LogTraceFormat("Found logged off player with userId {0} clientId: {1}", Category.Connections, player.UserId, player.ClientId);
+				Logger.LogTraceFormat("Found player with userId {0} clientId: {1}", Category.Connections, player.UserId, player.ClientId);
 				loggedOff.Remove(player);
-				return player.GameObject;
+				return player;
+			}
+		}
+		foreach (var player in loggedIn)
+		{
+			if (PlayerManager.LocalViewerScript && PlayerManager.LocalViewerScript.gameObject == player.GameObject ||
+			    PlayerManager.LocalPlayer == player.GameObject)
+			{
+				continue; //server player
+			}
+
+			if (adminUsers.Contains(player.UserId)) continue; // Allow admins to multikey (local devs connecting multiple clients)
+
+			if ((player.ClientId == clientId || player.UserId == userId) && newPlayer != player)
+			{
+				Logger.LogTraceFormat("Found player with userId {0} clientId: {1}", Category.Connections, player.UserId, player.ClientId);
+				player.Connection.Disconnect(); //new client while online or dc timer not triggering yet
+				loggedIn.Remove(player);
+				return player;
 			}
 		}
 
@@ -555,6 +597,7 @@ public struct ClientConnectedPlayer
 {
 	public string UserName;
 	public string Tag;
+	public int PingToServer;
 
 	//Used to make this ClientConnectedPlayer unique even if UserName and Tags are the same
 	public int Index;

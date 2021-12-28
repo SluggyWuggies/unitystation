@@ -51,7 +51,11 @@ namespace Core.Directionals
 
 		public override bool IsPassable(bool isServer, GameObject context = null)
 		{
-			if (context == gameObject) return true;
+			if (context != null)
+			{
+				if (context == gameObject) return true;
+			}
+
 
 			return Passable;
 		}
@@ -72,6 +76,14 @@ namespace Core.Directionals
 			if (Passable == false) return true;
 
 			return IsPassableAtSide(GetSideFromVector(leavingTo), leavableSides);
+		}
+
+		public override bool DoesNotBlockClick(Vector3Int reachingFrom, bool isServer)
+		{
+			if (IsLeavableOnAll) return true;
+			if (Passable == false) return true;
+
+			return IsPassableAtSide(GetSideFromVector(reachingFrom), leavableSides);
 		}
 
 		public override bool IsAtmosPassable(Vector3Int enteringFrom, bool isServer)

@@ -34,16 +34,8 @@ namespace Items
 		#region SyncVarFuncs
 		void Awake()
 		{
-			EnsureInit();
-		}
-
-		private void EnsureInit()
-		{
-			if (spriteHandler == null)
-			{
-				charges = startCharges;
-				spriteHandler = gameObject.transform.Find("Charges").GetComponent<SpriteHandler>();
-			}
+			charges = startCharges;
+			spriteHandler = gameObject.transform.Find("Charges").GetComponent<SpriteHandler>();
 		}
 
 		public void OnDisable()
@@ -56,7 +48,6 @@ namespace Items
 
 		public override void OnStartClient()
 		{
-			EnsureInit();
 			SyncCharges(Charges, charges);
 			base.OnStartClient();
 		}
@@ -69,9 +60,7 @@ namespace Items
 
 		private void SyncCharges(int oldCharges, int newCharges)
 		{
-			EnsureInit();
 			charges = newCharges;
-
 		}
 
 		public string Examine(Vector3 worldPos)
@@ -101,6 +90,19 @@ namespace Items
 		/// </summary>
 		public bool UseCharge(HandApply interaction)
 		{
+			return UseCharge(interaction.TargetObject, interaction.Performer);
+		}
+
+		public bool UseCharge(GameObject TargetObject, GameObject Performer)
+		{
+			Chat.AddActionMsgToChat(Performer,
+				$"You wave the Emag over the {TargetObject.ExpensiveName()}'s electrical panel.",
+				$"{Performer.ExpensiveName()} waves something over the {TargetObject.ExpensiveName()}'s electrical panel.");
+			return UseChargeLogic(Performer);
+		}
+
+		private bool UseChargeLogic(GameObject Performer)
+		{
 			if (Charges > 0)
 			{
 				//if this is the first charge taken off, add recharge loop
@@ -116,7 +118,7 @@ namespace Items
 				}
 				else
 				{
-					_ = SoundManager.PlayNetworkedForPlayer(recipient: interaction.Performer, OutOfChargesSFXA, sourceObj: gameObject);
+					_ = SoundManager.PlayNetworkedForPlayer(recipient: Performer, OutOfChargesSFXA, sourceObj: gameObject);
 					spriteHandler.Empty();
 				}
 				return true;

@@ -35,8 +35,6 @@ namespace UI.CharacterCreator
 
 		public Dictionary<BodyPart, List<BodyPart>> ParentDictionary = new Dictionary<BodyPart, List<BodyPart>>();
 
-		public List<GameObject> RootCustomisations = new List<GameObject>();
-
 		public List<BodyTypeName> AvailableBodyTypes = new List<BodyTypeName>();
 
 		public int SelectedBodyType = 0;
@@ -58,11 +56,6 @@ namespace UI.CharacterCreator
 
 		public PlayerHealthData ThisSetRace = null;
 
-		public CharacterSprites torsoSpriteController;
-		public CharacterSprites headSpriteController;
-
-		public PlayerTextureData playerTextureData;
-
 		public CharacterDir currentDir;
 
 		[SerializeField] private List<Color> availableSkinColors;
@@ -79,13 +72,6 @@ namespace UI.CharacterCreator
 		public int CurrentSurfaceInt = 0;
 
 		public Color CurrentSurfaceColour = Color.white;
-
-		/// <summary>
-		/// Empty, blank sprite texture used for selecting null customizations
-		/// (e.g. selecting or scrolling to "None" for hair, facial hair, underwear,
-		/// or socks).
-		/// </summary>
-		public SpriteDataSO BobTheEmptySprite;
 
 		public List<CustomisationStorage> bodyPartCustomisationStorage = new List<CustomisationStorage>();
 		public List<ExternalCustomisation> ExternalCustomisationStorage = new List<ExternalCustomisation>();
@@ -142,6 +128,7 @@ namespace UI.CharacterCreator
 			var copyStr = JsonConvert.SerializeObject(currentCharacter);
 			lastSettings = JsonConvert.DeserializeObject<CharacterSettings>(copyStr);
 			colorPicker.gameObject.SetActive(false);
+			colorPicker.onValueChanged.RemoveAllListeners();
 			colorPicker.onValueChanged.AddListener(OnColorChange);
 			DisplayErrorText("");
 			RefreshSelectorData();
@@ -211,8 +198,7 @@ namespace UI.CharacterCreator
 			ReturnCharacterPreviewFromTheCharacterSelector();
 			Cleanup();
 			LoadSettings(currentCharacter);
-			RefreshAll();
-			_ = SoundManager.Play(SingletonSOSounds.Instance.Click01);
+			_ = SoundManager.Play(CommonSounds.Instance.Click01);
 		}
 
 		private void ShowCharacterSelectorPage()
@@ -223,7 +209,7 @@ namespace UI.CharacterCreator
 			CharacterSelectorPage.SetActive(true);
 			CharacterCreatorPage.SetActive(false);
 			CheckIfCharacterListIsEmpty();
-			_ = SoundManager.Play(SingletonSOSounds.Instance.Click01);
+			_ = SoundManager.Play(CommonSounds.Instance.Click01);
 		}
 
 		public void ShowCharacterDeletionConfirmation()
@@ -251,22 +237,21 @@ namespace UI.CharacterCreator
 			currentCharacter.Species = Race.Human.ToString();
 			ShowCharacterCreator();
 			ReturnCharacterPreviewFromTheCharacterSelector();
-			RefreshAll();
-			_ = SoundManager.Play(SingletonSOSounds.Instance.Click01);
+			_ = SoundManager.Play(CommonSounds.Instance.Click01);
 		}
 
 		public void EditCharacter()
 		{
-			_ = SoundManager.Play(SingletonSOSounds.Instance.Click01);
+			_ = SoundManager.Play(CommonSounds.Instance.Click01);
 			LoadSettings(PlayerCharacters[currentCharacterIndex]);
 			lastSettings = PlayerCharacters[currentCharacterIndex];
 			ReturnCharacterPreviewFromTheCharacterSelector();
 			ShowCharacterCreator();
-			RefreshAll();
 		}
 
 		public void HandleExitButton()
 		{
+			ItemChange(CharacterPreviewDropdown.value);
 			gameObject.SetActive(false);
 		}
 
@@ -290,6 +275,7 @@ namespace UI.CharacterCreator
 			CharacterPreviewDropdown.ClearOptions();
 			var itemOptions = PlayerCharacters.Select(pcd => pcd.Name).ToList();
 			CharacterPreviewDropdown.AddOptions(itemOptions);
+			CharacterPreviewDropdown.onValueChanged.RemoveAllListeners();
 			CharacterPreviewDropdown.onValueChanged.AddListener(ItemChange);
 		}
 
@@ -305,7 +291,7 @@ namespace UI.CharacterCreator
 			PlayerManager.CurrentCharacterSettings = PlayerCharacters[currentCharacterIndex];
 			SaveLastCharacterIndex();
 			RefreshSelectorData();
-			_ = SoundManager.Play(SingletonSOSounds.Instance.Click01);
+			_ = SoundManager.Play(CommonSounds.Instance.Click01);
 		}
 
 		private void CheckIfCharacterListIsEmpty()
@@ -337,7 +323,7 @@ namespace UI.CharacterCreator
 			RefreshSelectorData();
 			RefreshAll();
 			SaveLastCharacterIndex();
-			_ = SoundManager.Play(SingletonSOSounds.Instance.Click01);
+			_ = SoundManager.Play(CommonSounds.Instance.Click01);
 		}
 
 		public void ScrollSelectorRight()
@@ -354,7 +340,7 @@ namespace UI.CharacterCreator
 			RefreshSelectorData();
 			RefreshAll();
 			SaveLastCharacterIndex();
-			_ = SoundManager.Play(SingletonSOSounds.Instance.Click01);
+			_ = SoundManager.Play(CommonSounds.Instance.Click01);
 		}
 
 		private void GetOriginalLocalPositionForCharacterPreview()
@@ -397,6 +383,13 @@ namespace UI.CharacterCreator
 				SetRace = RaceSOSingleton.Instance.Races.First();
 			}
 
+			InitiateFresh(SetRace);
+			currentCharacter.SkinTone = inCharacterSettings.SkinTone;
+		}
+
+		public void InitiateFresh(PlayerHealthData SetRace)
+		{
+			Cleanup();
 			//SelectedSpecies
 			SelectedSpecies = 0;
 			foreach (var Species in RaceSOSingleton.Instance.Races)
@@ -413,12 +406,12 @@ namespace UI.CharacterCreator
 			ThisSetRace = SetRace;
 
 			availableSkinColors = SetRace.Base.SkinColours;
-			currentCharacter.SkinTone = inCharacterSettings.SkinTone;
+
 			PlayerManager.CurrentCharacterSettings = currentCharacter;
 			SetUpSpeciesBody(SetRace);
 			PopulateAllDropdowns(SetRace);
-			DoInitChecks();
 			RefreshAll();
+			DoInitChecks();
 		}
 
 		#region BodyPartsSprites
@@ -493,9 +486,9 @@ namespace UI.CharacterCreator
 
 			//Setup sprite//
 			//OpenBodySprites
-			if (bodyPart?.Storage?.Populater?.DeprecatedContents != null)
+			if (bodyPart?.OrganStorage?.Populater?.DeprecatedContents != null)
 			{
-				foreach (var Organ in bodyPart.Storage.Populater.DeprecatedContents)
+				foreach (var Organ in bodyPart.OrganStorage.Populater.DeprecatedContents)
 				{
 					var subBodyPart = Organ.GetComponent<BodyPart>();
 					ParentDictionary[bodyPart].Add(subBodyPart);
@@ -665,33 +658,14 @@ namespace UI.CharacterCreator
 			RefreshClothing();
 			RefreshPronoun();
 			RefreshRace();
+			RefreshRotation();
 		}
 
 		public void RollRandomCharacter()
 		{
-			// Randomise gender
-			Type gender = typeof(BodyType);
-			Array genders = gender.GetEnumValues();
-			int index = UnityEngine.Random.Range(0,3);
-			currentCharacter.BodyType = (BodyType)genders.GetValue(index);
-
-			//Randomises player name and age.
-			switch (currentCharacter.BodyType)
-			{
-				case BodyType.Male:
-					currentCharacter.Name = StringManager.GetRandomMaleName();
-					break;
-				case BodyType.Female:
-					currentCharacter.Name = StringManager.GetRandomFemaleName();
-					break;
-				default:
-					currentCharacter.Name = StringManager.GetRandomName(Gender.NonBinary);  //probably should get gender neutral names?
-					break;																	//for now it will pick from both the male and female name pools
-			}
-			currentCharacter.Age = UnityEngine.Random.Range(19, 78);
+			currentCharacter = CharacterSettings.RandomizeCharacterSettings(currentCharacter.Species);
 
 			//Randomises player accents. (Italian, Scottish, etc)
-			randomizeAccent();
 
 
 			//Randomises character skin tones.
@@ -707,30 +681,15 @@ namespace UI.CharacterCreator
 		private void randomizeAppearance()
 		{
 			//Randomizes hair, tails, etc
-			foreach(var custom in GetComponentsInChildren<BodyPartCustomisationBase>())
+			foreach(var custom in OpenBodyCustomisation.Values)
 			{
 				custom.RandomizeValues();
 			}
+
 			//Randomizes clothes
-			foreach(var customSubPart in GetComponentsInChildren<CustomisationSubPart>())
+			foreach(var customSubPart in OpenCustomisation)
 			{
 				customSubPart.RandomizeValues();
-			}
-		}
-
-		private void randomizeAccent()
-		{
-			int accentChance = UnityEngine.Random.Range(0, 100);
-			if(accentChance <= 35)
-			{
-				Type accent = typeof(Speech);
-				Array accents = accent.GetEnumValues();
-				int index = UnityEngine.Random.Range(0, 7);
-				currentCharacter.Speech = (Speech)accents.GetValue(index);
-			}
-			else
-			{
-				currentCharacter.Speech = Speech.None;
 			}
 		}
 
@@ -776,7 +735,7 @@ namespace UI.CharacterCreator
 			}
 
 			currentDir = (CharacterDir) nextDir;
-			SetRotation();
+			RefreshRotation();
 		}
 
 		public void RightRotate()
@@ -788,10 +747,10 @@ namespace UI.CharacterCreator
 			}
 
 			currentDir = (CharacterDir) nextDir;
-			SetRotation();
+			RefreshRotation();
 		}
 
-		public void SetRotation()
+		public void RefreshRotation()
 		{
 			int referenceOffset = 0;
 			if (currentDir == CharacterDir.down)
@@ -924,9 +883,9 @@ namespace UI.CharacterCreator
 				}
 			}
 
-			if (bodyPart?.Storage?.Populater?.DeprecatedContents != null)
+			if (bodyPart?.OrganStorage?.Populater?.DeprecatedContents != null)
 			{
-				foreach (var Organ in bodyPart.Storage.Populater.DeprecatedContents)
+				foreach (var Organ in bodyPart.OrganStorage.Populater.DeprecatedContents)
 				{
 					var subBodyPart = Organ.GetComponent<BodyPart>();
 					SubSetBodyPart(subBodyPart, path);
@@ -1129,9 +1088,9 @@ namespace UI.CharacterCreator
 				SaveCustomisations(NewCustomisationStorage, OpenBodyCustomisation[bodyPart.name]);
 			}
 
-			if (bodyPart?.Storage?.Populater?.DeprecatedContents != null)
+			if (bodyPart?.OrganStorage?.Populater?.DeprecatedContents != null)
 			{
-				foreach (var Organ in bodyPart.Storage.Populater.DeprecatedContents)
+				foreach (var Organ in bodyPart.OrganStorage.Populater.DeprecatedContents)
 				{
 					var subBodyPart = Organ.GetComponent<BodyPart>();
 					SubSaveBodyPart(subBodyPart, path);
@@ -1161,20 +1120,16 @@ namespace UI.CharacterCreator
 			catch (InvalidOperationException e)
 			{
 				Logger.LogFormat("Invalid character settings: {0}", Category.Character, e.Message);
-				_ = SoundManager.Play(SingletonSOSounds.Instance.AccessDenied);
+				_ = SoundManager.Play(CommonSounds.Instance.AccessDenied);
 				DisplayErrorText(e.Message);
 				return;
 			}
 
-			PlayerCharacters[currentCharacterIndex] = currentCharacter;
-
-			//Ensure that the character skin tone is assigned when saving the character
-			string skintone = currentCharacter.SkinTone = "#" + ColorUtility.ToHtmlStringRGB(CurrentSurfaceColour);
-			PlayerCharacters[currentCharacterIndex].SkinTone = skintone;
-
+			PlayerCharacters[currentCharacterIndex] = currentCharacter; //SaveData Saves the PlayerCharacters
 			SaveData();
+			GetSavedCharacters();
 			ShowCharacterSelectorPage();
-			_ = SoundManager.Play(SingletonSOSounds.Instance.Click01);
+			_ = SoundManager.Play(CommonSounds.Instance.Click01);
 			gameObject.SetActive(false);
 		}
 
@@ -1281,7 +1236,7 @@ namespace UI.CharacterCreator
 
 			currentCharacter.BodyType = AvailableBodyTypes[SelectedBodyType].bodyType;
 			SkinColourChange(CurrentSurfaceColour);
-			SetRotation();
+			RefreshRotation();
 			RefreshBodyType();
 		}
 
@@ -1301,10 +1256,17 @@ namespace UI.CharacterCreator
 
 		public void OnAgeChange()
 		{
-			int.TryParse(ageField.text, out int tryInt);
-			tryInt = Mathf.Clamp(tryInt, 18, 99);
-			currentCharacter.Age = tryInt;
-			RefreshAge();
+			if (int.TryParse(ageField.text, out int tryInt))
+			{
+				tryInt = Mathf.Clamp(tryInt, 18, 99);
+				currentCharacter.Age = tryInt;
+				RefreshAge();
+			}
+			else
+			{
+				RefreshAge();
+			}
+
 		}
 
 		#endregion
@@ -1475,25 +1437,8 @@ namespace UI.CharacterCreator
 
 			Cleanup();
 			var SetRace = RaceSOSingleton.Instance.Races[SelectedSpecies];
-			availableSkinColors = SetRace.Base.SkinColours;
-			SetUpSpeciesBody(SetRace);
-			PopulateAllDropdowns(SetRace);
-			DoInitChecks();
-
-			foreach (var BodyCustomisation in OpenBodyCustomisation)
-			{
-				BodyCustomisation.Value.Refresh();
-			}
-
-			foreach (var Customisation in OpenCustomisation)
-			{
-				Customisation.Refresh();
-			}
-
-
+			InitiateFresh(SetRace);
 			RefreshRace();
-
-			OnSurfaceColourChange();
 		}
 
 		private void RefreshRace()
@@ -1548,12 +1493,6 @@ namespace UI.CharacterCreator
 	{
 		public string path;
 		public string Data;
-	}
-
-	public class DataAndType
-	{
-		public CustomisationType CustomisationType;
-		public string data;
 	}
 
 	public enum CustomisationType

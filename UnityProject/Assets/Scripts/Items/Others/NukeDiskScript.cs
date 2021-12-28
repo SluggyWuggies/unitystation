@@ -1,27 +1,26 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using Systems.Atmospherics;
 using HealthV2;
 using UnityEngine;
 using Mirror;
+using TileManagement;
 using Random = UnityEngine.Random;
 
 namespace Items.Command
 {
-	public class NukeDiskScript : NetworkBehaviour
+	public class NukeDiskScript : NetworkBehaviour, IServerSpawn
 	{
 		[SerializeField]
 		private float boundRadius = 600;
 		private Pickupable pick;
 		private CustomNetTransform customNetTrans;
-		private RegisterItem registerItem;
-		private BoundsInt bound;
+		private RegisterTile registerTile;
+		private BetterBoundsInt bound;
 		private EscapeShuttle escapeShuttle;
 
 		private float timeCheckDiskLocation = 5.0f;
 
-		private bool isInit = false;
 		private bool boundsConfigured = false;
 
 		/// <summary>
@@ -34,33 +33,16 @@ namespace Items.Command
 		/// </summary>
 		public bool stopAutoTeleport;
 
-		public override void OnStartServer()
+		private void Awake()
 		{
-			base.OnStartServer();
-			Init();
-		}
-
-		public override void OnStartClient()
-		{
-			base.OnStartClient();
-			Init();
-		}
-
-		private void Init()
-		{
-			if (isInit) return;
-			isInit = true;
-
 			customNetTrans = GetComponent<CustomNetTransform>();
-			registerItem = GetComponent<RegisterItem>();
+			registerTile = GetComponent<RegisterTile>();
 			pick = GetComponent<Pickupable>();
-
-			registerItem.WaitForMatrixInit(EnsureInit);
 		}
 
-		private void EnsureInit(MatrixInfo matrixInfo)
+		public void OnSpawnServer(SpawnInfo info)
 		{
-			bound = MatrixManager.MainStationMatrix.Bounds;
+			bound = MatrixManager.MainStationMatrix.LocalBounds;
 			escapeShuttle = FindObjectOfType<EscapeShuttle>();
 			boundsConfigured = true;
 		}
@@ -100,7 +82,7 @@ namespace Items.Command
 			if (escapeShuttle != null && escapeShuttle.Status != EscapeShuttleStatus.DockedCentcom)
 			{
 				var matrixInfo = escapeShuttle.MatrixInfo;
-				if (matrixInfo == null || matrixInfo.Bounds.Contains(registerItem.WorldPositionServer))
+				if (matrixInfo == null || matrixInfo.LocalBounds.Contains(registerTile.LocalPosition))
 				{
 					return false;
 				}
@@ -142,7 +124,7 @@ namespace Items.Command
 		private void Teleport()
 		{
 			Vector3 position = new Vector3(Random.Range(bound.xMin, bound.xMax), Random.Range(bound.yMin, bound.yMax), 0);
-			while (MatrixManager.IsSpaceAt(Vector3Int.FloorToInt(position), true) || MatrixManager.IsWallAtAnyMatrix(Vector3Int.FloorToInt(position), true))
+			while (MatrixManager.IsSpaceAt(Vector3Int.FloorToInt(position), true, registerTile.Matrix.MatrixInfo) || MatrixManager.IsWallAt(Vector3Int.FloorToInt(position), true))
 			{
 				position = new Vector3(Random.Range(bound.xMin, bound.xMax), Random.Range(bound.yMin, bound.yMax), 0);
 			}

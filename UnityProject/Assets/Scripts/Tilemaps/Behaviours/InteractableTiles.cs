@@ -86,9 +86,33 @@ public class InteractableTiles : MonoBehaviour, IClientInteractable<PositionalHa
 	public static InteractableTiles GetAt(Vector2 worldPos, bool isServer)
 	{
 		var matrixInfo = MatrixManager.AtPoint(worldPos.RoundToInt(), isServer);
-		var matrix = matrixInfo.Matrix;
-		var tileChangeManager = matrix.GetComponentInParent<TileChangeManager>();
-		return tileChangeManager.GetComponent<InteractableTiles>();
+		return matrixInfo.TileChangeManager.InteractableTiles;
+	}
+
+	/// <summary>
+	/// Gets the interactable tiles for the matrix at the indicated world position. Unless there's only space!
+	/// in that case tries to fetch an adjacent matrix, in the case of none, it returns the space matrix
+	/// </summary>
+	public static Matrix TryGetNonSpaceMatrix(Vector3Int worldPos, bool isServer)
+	{
+		var matrixInfo = MatrixManager.AtPoint(worldPos, isServer);
+		if (matrixInfo.Matrix.IsSpaceMatrix == false)
+		{
+			return matrixInfo.Matrix;
+		}
+
+		//This is just space! Lets try getting an adjacent matrix
+		foreach (var pos in worldPos.BoundsAround().allPositionsWithin)
+		{
+			matrixInfo = MatrixManager.AtPoint(pos, isServer);
+			if (matrixInfo.Matrix.IsSpaceMatrix == false)
+			{
+				return matrixInfo.Matrix;
+			}
+		}
+
+		//we're in space and theres nothing but space all around us, we tried.
+		return MatrixManager.Instance.spaceMatrix;
 	}
 
 	/// <summary>
@@ -210,7 +234,7 @@ public class InteractableTiles : MonoBehaviour, IClientInteractable<PositionalHa
 			{
 				// Then we loop through each under floor layer in the matrix until we
 				// can find an interaction.
-				foreach (BasicTile underFloorTile in matrix.UnderFloorLayer.GetAllTilesByType<BasicTile>(localPosition))
+				foreach (BasicTile underFloorTile in matrix.MetaTileMap.GetAllTilesByType<BasicTile>(localPosition, LayerType.Underfloor))
 				{
 					// If pointing at electrical cable tile and player is holding
 					// Wirecutter in hand, we enable the cutting window and return false
@@ -230,7 +254,7 @@ public class InteractableTiles : MonoBehaviour, IClientInteractable<PositionalHa
 					else
 					{
 						var underFloorApply = new TileApply(interaction.Performer, interaction.UsedObject, interaction.Intent,
-							(Vector2Int) localPosition, this, underFloorTile, interaction.HandSlot, interaction.TargetVector);
+							(Vector2Int) localPosition, this, underFloorTile, interaction.HandSlot, interaction.TargetPosition);
 
 						if (TryInteractWithTile(underFloorApply)) return true;
 					}
@@ -239,7 +263,7 @@ public class InteractableTiles : MonoBehaviour, IClientInteractable<PositionalHa
 			else
 			{
 				var tileApply = new TileApply(interaction.Performer, interaction.UsedObject, interaction.Intent,
-				(Vector2Int) localPosition, this, basicTile, interaction.HandSlot, interaction.TargetVector);
+				(Vector2Int) localPosition, this, basicTile, interaction.HandSlot, interaction.TargetPosition);
 
 				return TryInteractWithTile(tileApply);
 			}
@@ -280,10 +304,9 @@ public class InteractableTiles : MonoBehaviour, IClientInteractable<PositionalHa
 
 		// convert world position to cell position and set Z value to Z value from message
 		Vector3Int targetCellPosition = matrix.MetaTileMap.WorldToCell(message.targetWorldPosition);
-		targetCellPosition.z = message.positionZ;
 
 		// get electical tile from targetCellPosition
-		ElectricalCableTile electricalCable = matrix.UnderFloorLayer.GetTileUsingZ(targetCellPosition) as ElectricalCableTile;
+		ElectricalCableTile electricalCable = TileManager.GetTile(message.TileType, message.Name) as ElectricalCableTile;
 
 		if (electricalCable == null) return;
 
@@ -333,11 +356,11 @@ public class InteractableTiles : MonoBehaviour, IClientInteractable<PositionalHa
 	}
 
 	//for internal IF2 usages only, does server side logic for processing tileapply
-	public void ServerProcessInteraction(GameObject performer, Vector2 targetVector,  GameObject processorObj,
+	public void ServerProcessInteraction(GameObject performer, Vector2 TargetPosition,  GameObject processorObj,
 			ItemSlot usedSlot, GameObject usedObject, Intent intent, TileApply.ApplyType applyType)
 	{
 		//find the indicated tile interaction
-		var worldPosTarget = (Vector2)performer.transform.position + targetVector;
+		var worldPosTarget = (Vector2)TargetPosition.To3().ToWorld(performer.RegisterTile().Matrix);
 		Vector3Int localPosition = WorldToCell(worldPosTarget);
 		//pass the interaction down to the basic tile
 		LayerTile tile = LayerTileAt(worldPosTarget, true);
@@ -350,11 +373,11 @@ public class InteractableTiles : MonoBehaviour, IClientInteractable<PositionalHa
 
 			if (basicTile.LayerType == LayerType.Underfloor)
 			{
-				foreach (var underFloorTile in matrix.UnderFloorLayer.GetAllTilesByType<BasicTile>(localPosition))
+				foreach (var underFloorTile in matrix.MetaTileMap.GetAllTilesByType<BasicTile>(localPosition, LayerType.Underfloor))
 				{
 					var underFloorApply = new TileApply(
 							performer, usedObject, intent, (Vector2Int) localPosition,
-							this, underFloorTile, usedSlot, targetVector, applyType);
+							this, underFloorTile, usedSlot, TargetPosition, applyType);
 
 					foreach (var tileInteraction in underFloorTile.TileInteractions)
 					{
@@ -371,7 +394,7 @@ public class InteractableTiles : MonoBehaviour, IClientInteractable<PositionalHa
 			{
 				var tileApply = new TileApply(
 						performer, usedObject, intent, (Vector2Int) localPosition,
-						this, basicTile, usedSlot, targetVector, applyType);
+						this, basicTile, usedSlot, TargetPosition, applyType);
 
 				PerformTileInteract(tileApply);
 			}
@@ -415,8 +438,8 @@ public class InteractableTiles : MonoBehaviour, IClientInteractable<PositionalHa
 
 		if(tile is BasicTile basicTile)
 		{
-			var tileApply = new TileApply(interaction.Performer, interaction.UsedObject, interaction.Intent, (Vector2Int)WorldToCell(interaction.ShadowWorldLocation), this, basicTile, null, -((Vector2)interaction.Performer.transform.position - interaction.ShadowWorldLocation), TileApply.ApplyType.MouseDrop);
-			var tileMouseDrop = new TileMouseDrop(interaction.Performer, interaction.UsedObject, interaction.Intent, (Vector2Int)WorldToCell(interaction.ShadowWorldLocation), this, basicTile, -((Vector2)interaction.Performer.transform.position - interaction.ShadowWorldLocation));
+			var tileApply = new TileApply(interaction.Performer, interaction.UsedObject, interaction.Intent, (Vector2Int)WorldToCell(interaction.ShadowWorldLocation), this, basicTile, null, interaction.ShadowWorldLocation.To3().ToLocal(interaction.Performer.RegisterTile().Matrix), TileApply.ApplyType.MouseDrop);
+			var tileMouseDrop = new TileMouseDrop(interaction.Performer, interaction.UsedObject, interaction.Intent, (Vector2Int)WorldToCell(interaction.ShadowWorldLocation), this, basicTile, interaction.ShadowWorldLocation.To3().ToLocal(interaction.Performer.RegisterTile().Matrix));
 			foreach (var tileInteraction in basicTile.TileInteractions)
 			{
 				if (tileInteraction == null) continue;
@@ -449,7 +472,7 @@ public class InteractableTiles : MonoBehaviour, IClientInteractable<PositionalHa
 			OrientationEnum orientation = OrientationEnum.Down;
 			Vector3Int PlaceDirection = PlayerManager.LocalPlayerScript.WorldPos - tilePos;
 			bool isWallBlocked = false;
-			if (PlaceDirection.x != 0 && !MatrixManager.IsWallAtAnyMatrix(tilePos + new Vector3Int(PlaceDirection.x > 0 ? 1 : -1, 0, 0), true))
+			if (PlaceDirection.x != 0 && !MatrixManager.IsWallAt(tilePos + new Vector3Int(PlaceDirection.x > 0 ? 1 : -1, 0, 0), true))
 			{
 				if (PlaceDirection.x > 0)
 				{
@@ -462,7 +485,7 @@ public class InteractableTiles : MonoBehaviour, IClientInteractable<PositionalHa
 			}
 			else
 			{
-				if (PlaceDirection.y != 0 && !MatrixManager.IsWallAtAnyMatrix(tilePos + new Vector3Int(0, PlaceDirection.y > 0 ? 1 : -1, 0), true))
+				if (PlaceDirection.y != 0 && !MatrixManager.IsWallAt(tilePos + new Vector3Int(0, PlaceDirection.y > 0 ? 1 : -1, 0), true))
 				{
 					if (PlaceDirection.y > 0)
 					{
@@ -479,7 +502,7 @@ public class InteractableTiles : MonoBehaviour, IClientInteractable<PositionalHa
 				}
 			}
 
-			if (!MatrixManager.IsWallAtAnyMatrix(tilePos, false) || isWallBlocked)
+			if (!MatrixManager.IsWallAt(tilePos, false) || isWallBlocked)
 			{
 				if (instanceActive)
 				{
@@ -556,11 +579,11 @@ public class InteractableTiles : MonoBehaviour, IClientInteractable<PositionalHa
 		var getTile = metaTileMap.GetTile(cellPos, LayerType.Walls) as BasicTile;
 		if (getTile == null || getTile.Mineable == false) return false;
 
-		SoundManager.PlayNetworkedAtPos(SingletonSOSounds.Instance.BreakStone, worldPosition);
+		SoundManager.PlayNetworkedAtPos(CommonSounds.Instance.BreakStone, worldPosition);
 		Spawn.ServerPrefab(getTile.SpawnOnDeconstruct, worldPosition,
 			count: getTile.SpawnAmountOnDeconstruct);
-		tileChangeManager.RemoveTile(cellPos, LayerType.Walls);
-		tileChangeManager.RemoveOverlaysOfType(cellPos, LayerType.Effects, OverlayType.Mining);
+		tileChangeManager.MetaTileMap.RemoveTileWithlayer(cellPos, LayerType.Walls);
+		tileChangeManager.MetaTileMap.RemoveOverlaysOfType(cellPos, LayerType.Effects, OverlayType.Mining);
 
 		return true;
 	}
@@ -583,11 +606,11 @@ public class InteractableTiles : MonoBehaviour, IClientInteractable<PositionalHa
 		AnimatedOverlayTile animatedTile,
 		float animationTime)
 	{
-		tileChangeManager.AddOverlay(cellPos, animatedTile);
+		tileChangeManager.MetaTileMap.AddOverlay(cellPos, animatedTile);
 
 		yield return WaitFor.Seconds(animationTime);
 
-		tileChangeManager.RemoveOverlaysOfType(cellPos, LayerType.Effects, animatedTile.OverlayType);
+		tileChangeManager.MetaTileMap.RemoveOverlaysOfType(cellPos, LayerType.Effects, animatedTile.OverlayType);
 	}
 
 }

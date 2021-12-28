@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Messages.Server;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
 using UnityEngine.SceneManagement;
 
 namespace Unitystation.Options
@@ -56,20 +58,20 @@ namespace Unitystation.Options
 
         public void OnZoomIn()
         {
-            _ = SoundManager.Play(SingletonSOSounds.Instance.Click01);
+            _ = SoundManager.Play(CommonSounds.Instance.Click01);
             CamZoomHandler.IncreaseZoomLevel();
 
         }
 
         public void OnZoomOut()
         {
-            _ = SoundManager.Play(SingletonSOSounds.Instance.Click01);
+            _ = SoundManager.Play(CommonSounds.Instance.Click01);
             CamZoomHandler.DecreaseZoomLevel();
         }
 
         public void OpenOptionsMenu()
         {
-            _ = SoundManager.Play(SingletonSOSounds.Instance.Click01);
+            _ = SoundManager.Play(CommonSounds.Instance.Click01);
             OptionsMenu.Instance.Open();
         }
 
@@ -78,6 +80,7 @@ namespace Unitystation.Options
 	        if (!UIManager.Instance.lobbyUIPlayerListController.gameObject.activeSelf)
 	        {
 		        UIManager.Instance.lobbyUIPlayerListController.GenerateList();
+		        StartCoroutine(UIManager.Instance.lobbyUIPlayerListController.RefreshPing(gameObject));
 		        UIManager.Instance.lobbyUIPlayerListController.gameObject.SetActive(true);
 	        }
 	        else

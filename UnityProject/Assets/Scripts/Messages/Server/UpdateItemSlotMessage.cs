@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Mirror;
 using UnityEngine;
@@ -87,18 +88,25 @@ namespace Messages.Server
 				NamedSlot = itemSlot.SlotIdentifier.NamedSlot.GetValueOrDefault(NamedSlot.none)
 			};
 
-			msg.StorageIndexOnGameObject = 0;
-			foreach (var itemStorage in itemSlot.ItemStorage.GetComponents<ItemStorage>())
+			try
 			{
-				if (itemStorage == itemSlot.ItemStorage)
+				msg.StorageIndexOnGameObject = 0;
+				foreach (var itemStorage in itemSlot.ItemStorage.GetComponents<ItemStorage>())
 				{
-					break;
+					if (itemStorage == itemSlot.ItemStorage)
+					{
+						break;
+					}
+
+					msg.StorageIndexOnGameObject++;
 				}
 
-				msg.StorageIndexOnGameObject++;
+				SendTo(recipient, msg);
 			}
-
-			SendTo(recipient, msg);
+			catch (NullReferenceException exception)
+			{
+				Logger.LogError($"An NRE was caught in UpdateItemSlotMessage: {exception.Message} \n {exception.StackTrace}", Category.Inventory);
+			}
 		}
 
 		/// <summary>
@@ -107,8 +115,10 @@ namespace Messages.Server
 		/// <param name="recipients">clients to inform</param>
 		/// <param name="inventorySlot">slot to tell them about</param>
 		/// <returns></returns>
-		public static void Send(IEnumerable<GameObject> recipients, ItemSlot itemSlot)
+		public static void Send(HashSet<GameObject> recipients, ItemSlot itemSlot)
 		{
+			if (recipients.Count == 0) return;
+
 			NetMessage msg = new NetMessage
 			{
 				Storage = itemSlot.ItemStorageNetID,

@@ -10,7 +10,7 @@ PrefabInstance:
     - target: {fileID: 1201516008082455910, guid: 1ce21cfcc54d23d42825f0d4a9b15d49,
         type: 3}
       propertyPath: m_AssetId
-      value: 
+      value: a32ec150419df5048b8f35730ef9b6fd
       objectReference: {fileID: 0}
     - target: {fileID: 1237104279000022438, guid: 1ce21cfcc54d23d42825f0d4a9b15d49,
         type: 3}
@@ -83,12 +83,27 @@ PrefabInstance:
       propertyPath: m_WasSpriteAssigned
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 1717291329471442864, guid: 1ce21cfcc54d23d42825f0d4a9b15d49,
+        type: 3}
+      propertyPath: inventoryMoveSound.AssetAddress
+      value: null
+      objectReference: {fileID: 0}
+    - target: {fileID: 1717291329471442864, guid: 1ce21cfcc54d23d42825f0d4a9b15d49,
+        type: 3}
+      propertyPath: inventoryRemoveSound.AssetAddress
+      value: null
+      objectReference: {fileID: 0}
     - target: {fileID: 2378934203328871246, guid: 1ce21cfcc54d23d42825f0d4a9b15d49,
         type: 3}
       propertyPath: LobbyCustomisation
       value: 
       objectReference: {fileID: 7311007552350428261, guid: cc7a5d030cb502044943c5e48e78d197,
         type: 3}
+    - target: {fileID: 2378934203328871246, guid: 1ce21cfcc54d23d42825f0d4a9b15d49,
+        type: 3}
+      propertyPath: limbLossBleedingValue
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2378934203328871246, guid: 1ce21cfcc54d23d42825f0d4a9b15d49,
         type: 3}
       propertyPath: bodyPartAshesAboveThisDamage
@@ -125,5 +140,15 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 11400000, guid: 6dda2899405f60f41b278475aa065caa,
         type: 2}
+    - target: {fileID: 4935539326687624021, guid: 1ce21cfcc54d23d42825f0d4a9b15d49,
+        type: 3}
+      propertyPath: initialVariantIndex
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5296840151121956031, guid: 1ce21cfcc54d23d42825f0d4a9b15d49,
+        type: 3}
+      propertyPath: foreverID
+      value: a32ec150419df5048b8f35730ef9b6fd
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1ce21cfcc54d23d42825f0d4a9b15d49, type: 3}

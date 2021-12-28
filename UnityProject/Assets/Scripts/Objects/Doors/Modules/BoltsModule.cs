@@ -1,12 +1,13 @@
 using AddressableReferences;
 using System.Collections.Generic;
+using Initialisation;
 using Items;
 using NaughtyAttributes;
 using UnityEngine;
 
 namespace Doors.Modules
 {
-	public class BoltsModule : DoorModuleBase
+	public class BoltsModule : DoorModuleBase, IServerSpawn
 	{
 		[SerializeField] private ItemTrait IDToggleCard;
 
@@ -38,12 +39,18 @@ namespace Doors.Modules
 			}
 		}
 
+
+		public void OnSpawnServer(SpawnInfo info)
+		{
+			master.HackingProcessBase.RegisterPort(ToggleBolts, master.GetType());
+			master.HackingProcessBase.RegisterPort(PreventBoltsFall, master.GetType());
+		}
 		/// <summary>
 		/// Set the current state for this door's bolts.
 		/// </summary>
 		/// <param name="state">True means the bolts are down and the door can't be opened</param>
 		[ContextMenu("Set bolt state")]
-		public void SetBoltsState(bool state)
+		private void SetBoltsState(bool state)
 		{
 			boltsDown = state;
 
@@ -72,13 +79,25 @@ namespace Doors.Modules
 			boltsLights = enable;
 		}
 
+		public void ToggleBolts()
+		{
+			SetBoltsState(!boltsDown);
+		}
+
 		public override ModuleSignal OpenInteraction(HandApply interaction, HashSet<DoorProcessingStates> States)
 		{
 			if (interaction != null && interaction.UsedObject != null)
 			{
 				if (interaction.UsedObject.GetComponent<ItemAttributesV2>().HasTrait(IDToggleCard))
 				{
-					SetBoltsState(!boltsDown);
+					PulseToggleBolts();
+					return ModuleSignal.Break;
+				}
+
+				if (PulsePreventBoltsFall())
+				{
+					SetBoltsState(true); //so Preveving all cables
+					return ModuleSignal.Break;
 				}
 			}
 
@@ -91,11 +110,38 @@ namespace Doors.Modules
 			{
 				if (interaction.UsedObject.GetComponent<ItemAttributesV2>().HasTrait(IDToggleCard))
 				{
-					SetBoltsState(!boltsDown);
+					PulseToggleBolts();
+					return ModuleSignal.Break;
 				}
+
+
 			}
 
 			return ModuleSignal.Continue;
+		}
+
+		public void PreventBoltsFall()
+		{
+			master.HackingProcessBase.ReceivedPulse(PreventBoltsFall);
+		}
+
+		public bool PulsePreventBoltsFall()
+		{
+			return master.HackingProcessBase.PulsePortConnectedNoLoop(PreventBoltsFall, true);
+		}
+
+		public void PulseToggleBolts(bool? State = null)
+		{
+			if (State != null)
+			{
+				if (State.Value == boltsDown) return;
+				master.HackingProcessBase.ImpulsePort(ToggleBolts);
+			}
+			else
+			{
+				master.HackingProcessBase.ImpulsePort(ToggleBolts);
+			}
+
 		}
 
 		public override ModuleSignal BumpingInteraction(GameObject byPlayer, HashSet<DoorProcessingStates> States)
@@ -105,6 +151,10 @@ namespace Doors.Modules
 
 		public override bool CanDoorStateChange()
 		{
+			if (PulsePreventBoltsFall())
+			{
+				SetBoltsState(true);
+			}
 			return !boltsDown;
 		}
 	}

@@ -144,11 +144,11 @@ namespace AdminTools
 			panel.SetAdminOverlayPanel(entry.infos, Instance, obj.transform, entry.offset);
 		}
 
-		public static void ClientFullUpdate(AdminInfoUpdate update)
+		public static void ClientFullUpdate(AdminInfosEntry[] entries)
 		{
 			Instance.ReturnAllPanelsToPool();
 
-			foreach (var e in update.entries)
+			foreach (var e in entries)
 			{
 				ClientAddEntry(e);
 			}
@@ -168,19 +168,9 @@ namespace AdminTools
 			});
 		}
 
-		public static void RequestFullUpdate(string adminId, string adminToken)
+		public static void RequestFullUpdate(ConnectedPlayer admin)
 		{
-			var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
-
-			if (admin != null)
-			{
-				AdminInfoUpdateMessage.SendFullUpdate(admin, Instance.serverInfos);
-			}
-			else
-			{
-				Logger.Log($"Someone tried to request all admin info overlay entries and failed. " +
-				           $"Using adminId: {adminId} and token: {adminToken}", Category.Admin);
-			}
+			AdminInfoUpdateMessage.SendFullUpdate(admin.GameObject, Instance.serverInfos);
 		}
 
 		public void ToggleOverlayBtn()
@@ -197,7 +187,7 @@ namespace AdminTools
 				}
 				else
 				{
-					PlayerManager.LocalPlayerScript.playerNetworkActions.CmdGetAdminOverlayFullUpdate(ServerData.UserID, PlayerList.Instance.AdminToken);
+					PlayerManager.LocalPlayerScript.playerNetworkActions.CmdGetAdminOverlayFullUpdate();
 					overlayToggleButton.image.color = selectedColor;
 				}
 			}

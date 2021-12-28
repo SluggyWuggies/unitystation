@@ -1,23 +1,24 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using HealthV2;
-using Items;
-using Light2D;
+﻿using System.Collections.Generic;
 using UnityEngine;
+using Light2D;
+using HealthV2;
+using Systems.Pipes;
+using Items;
+
 
 namespace Systems.Explosions
 {
 	public class ExplosionNode
 	{
-		public Vector2Int Location;
+		public Vector3Int Location;
 		public Matrix matrix;
 
 		public HashSet<ExplosionPropagationLine> PresentLines = new HashSet<ExplosionPropagationLine>();
 		public Vector2 AngleAndIntensity;
 
-		public List<Pipes.PipeNode> SavedPipes = new List<Pipes.PipeNode>();
+		public List<PipeNode> SavedPipes = new List<PipeNode>();
 
-		public void Initialise(Vector2Int Loc, Matrix Inmatrix)
+		public void Initialise(Vector3Int Loc, Matrix Inmatrix)
 		{
 			Location = Loc;
 			matrix = Inmatrix;
@@ -30,6 +31,11 @@ namespace Systems.Explosions
 			var v3int = new Vector3Int(Location.x, Location.y, 0);
 
 			var metaTileMap = matrix.MetaTileMap;
+
+			if (Damagedealt <= 0)
+			{
+				return;
+			}
 
 			if (metaTileMap == null)
 			{

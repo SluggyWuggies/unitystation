@@ -7,18 +7,15 @@ using System.Linq;
 using Mirror;
 using Newtonsoft.Json;
 using System.Globalization;
+using Managers;
 using Messages.Client;
 using Messages.Client.Admin;
 using Messages.Server;
 
 namespace AdminTools
 {
-	public class KickBanEntryPage : MonoBehaviour
+	public class KickBanEntryPage : SingletonManager<KickBanEntryPage>
 	{
-		private static KickBanEntryPage instance;
-
-		public static KickBanEntryPage Instance => instance;
-
 		[SerializeField] private GameObject kickPage = null;
 		[SerializeField] private GameObject banPage = null;
 		[SerializeField] private GameObject jobBanPage = null;
@@ -74,24 +71,12 @@ namespace AdminTools
 				jobBanMinutesField.text = "";
 				jobBanPermaBanToggle.isOn = false;
 
-				ClientJobBanDataAdminMessage.Send(DatabaseAPI.ServerData.UserID, PlayerList.Instance.AdminToken, playerToKick.uid);
+				ClientJobBanDataAdminMessage.Send(playerToKick.uid);
 
 				jobBanActionAfterDropDown.value = 0;
 			}
 
 			gameObject.SetActive(true);
-		}
-
-		private void Awake()
-		{
-			if (instance == null)
-			{
-				instance = this;
-			}
-			else
-			{
-				Destroy(this);
-			}
 		}
 
 		private void Start()
@@ -122,8 +107,7 @@ namespace AdminTools
 				return;
 			}
 
-			RequestKickMessage.Send(ServerData.UserID, PlayerList.Instance.AdminToken, playerToKickCache.uid,
-				kickReasonField.text, announceBan: kickAnnounceToggle.isOn);
+			RequestKickMessage.Send(playerToKickCache.uid, kickReasonField.text, announceBan: kickAnnounceToggle.isOn);
 
 			ClosePage();
 		}
@@ -144,8 +128,7 @@ namespace AdminTools
 
 			int minutes;
 			int.TryParse(minutesField.text, out minutes);
-			RequestKickMessage.Send(ServerData.UserID, PlayerList.Instance.AdminToken, playerToKickCache.uid,
-				banReasonField.text, true, minutes, announceBan: banAnnounceToggle.isOn);
+			RequestKickMessage.Send(playerToKickCache.uid, banReasonField.text, true, minutes, announceBan: banAnnounceToggle.isOn);
 			ClosePage();
 		}
 
@@ -190,12 +173,13 @@ namespace AdminTools
 
 				if(!jobTypeBool) continue;
 
-				PlayerList.RequestJobBan.Send(ServerData.UserID, PlayerList.Instance.AdminToken, playerToKickCache.uid,
-					jobBanReasonField.text, jobBanPermaBanToggle.isOn, minutes, jobType, ghost, kick);
+				PlayerList.RequestJobBan.Send(
+						playerToKickCache.uid, jobBanReasonField.text, jobBanPermaBanToggle.isOn, minutes, jobType, ghost, kick);
 			}
 
 			ClosePage();
 		}
+
 		public void ClosePage()
 		{
 			gameObject.SetActive(false);
@@ -212,29 +196,24 @@ namespace AdminTools
 		{
 			public struct NetMessage : NetworkMessage
 			{
-				public string AdminID;
-				public string AdminToken;
 				public string PlayerID;
 			}
 
 			public override void Process(NetMessage msg)
 			{
-				var admin = PlayerList.Instance.GetAdmin(msg.AdminID, msg.AdminToken);
-				if (admin == null) return;
-
 				//Server Stuff here
+				if (PlayerList.Instance.IsAdmin(SentByPlayer))
+				{
+					var jobBanEntries = PlayerList.Instance.ListOfBanEntries(msg.PlayerID);
 
-				var jobBanEntries = PlayerList.Instance.ListOfBanEntries(msg.PlayerID);
-
-				ServerSendsJobBanDataAdminMessage.Send(SentByPlayer.Connection, jobBanEntries);
+					ServerSendsJobBanDataAdminMessage.Send(SentByPlayer.Connection, jobBanEntries);
+				}
 			}
 
-			public static NetMessage Send(string adminID, string adminToken, string playerID)
+			public static NetMessage Send(string playerID)
 			{
 				NetMessage msg = new NetMessage
 				{
-					AdminID = adminID,
-					AdminToken = adminToken,
 					PlayerID = playerID
 				};
 
@@ -255,7 +234,7 @@ namespace AdminTools
 				//client Stuff here
 				var bans = JsonConvert.DeserializeObject<List<JobBanEntry>>(msg.JobBanEntries);
 
-				foreach (var jobObject in KickBanEntryPage.instance.jobBanJobTypeListObjects)
+				foreach (var jobObject in Instance.jobBanJobTypeListObjects)
 				{
 					jobObject.toBeBanned.isOn = false;
 

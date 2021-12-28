@@ -1,11 +1,10 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using Pipes;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Systems.Pipes;
 using Objects.Wallmounts;
-using System.Collections.Concurrent;
+
 
 namespace Systems.Atmospherics
 {
@@ -51,7 +50,7 @@ namespace Systems.Atmospherics
 			}
 		}
 
-		private void Update()
+		private void UpdateMe()
 		{
 			if (Mode == AtmosMode.GameLoop && Running)
 			{
@@ -93,21 +92,23 @@ namespace Systems.Atmospherics
 			pipeList.Remove(pipeData);
 		}
 
-		void OnEnable()
+		private void OnEnable()
 		{
 			EventManager.AddHandler(Event.PostRoundStarted, OnPostRoundStart);
 			EventManager.AddHandler(Event.RoundEnded, OnRoundEnd);
 			SceneManager.activeSceneChanged += OnSceneChange;
+			UpdateManager.Add(CallbackType.UPDATE, UpdateMe);
 		}
 
-		void OnDisable()
+		private void OnDisable()
 		{
 			EventManager.RemoveHandler(Event.PostRoundStarted, OnPostRoundStart);
 			EventManager.RemoveHandler(Event.RoundEnded, OnRoundEnd);
 			SceneManager.activeSceneChanged -= OnSceneChange;
+			UpdateManager.Remove(CallbackType.UPDATE, UpdateMe);
 		}
 
-		void OnPostRoundStart()
+		private void OnPostRoundStart()
 		{
 			if (Mode != AtmosMode.Manual)
 			{
@@ -115,7 +116,7 @@ namespace Systems.Atmospherics
 			}
 		}
 
-		void OnRoundEnd()
+		private void OnRoundEnd()
 		{
 			GasReactions.ResetReactionList();
 			AtmosThread.ClearAllNodes();
@@ -160,7 +161,7 @@ namespace Systems.Atmospherics
 			AtmosThread.Enqueue(node);
 		}
 
-		void OnSceneChange(Scene oldScene, Scene newScene)
+		private void OnSceneChange(Scene oldScene, Scene newScene)
 		{
 			inGameNewPipes.Clear();
 			inGameFireAlarms.Clear();

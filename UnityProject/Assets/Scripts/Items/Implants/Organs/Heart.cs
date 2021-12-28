@@ -5,7 +5,7 @@ using Chemistry;
 using HealthV2;
 using UnityEngine;
 
-public class Heart : BodyPartModification
+public class Heart : BodyPartFunctionality
 {
 	//The actual heartrate of this implant, in BPM.
 	/// <summary>
@@ -44,10 +44,16 @@ public class Heart : BodyPartModification
 
 	private bool alarmedForInternalBleeding = false;
 
+	[SerializeField]
+	private Reagent salt;
+
+	[SerializeField]
+	private float dangerSaltLevel = 5f; //in %
+
 	public override void ImplantPeriodicUpdate()
 	{
 		base.ImplantPeriodicUpdate();
-		if (RelatedPart.HealthMaster.OverallHealth < -100)
+		if (RelatedPart.HealthMaster.OverallHealth <= -100)
 		{
 
 			if (CanTriggerHeartAttack)
@@ -73,7 +79,7 @@ public class Heart : BodyPartModification
 			CurrentPulse = 0;
 		}
 
-		DoHeartBeat(RelatedPart.HealthMaster);
+		DoHeartBeat();
 	}
 
 	public override void InternalDamageLogic()
@@ -83,7 +89,7 @@ public class Heart : BodyPartModification
 		{
 			Chat.AddActionMsgToChat(RelatedPart.HealthMaster.gameObject,
 			$"You feel a sharp pain in your {RelatedPart.gameObject.ExpensiveName()}!",
-			$"{RelatedPart.HealthMaster.PlayerScriptOwner.visibleName} holds their {RelatedPart.gameObject.ExpensiveName()} in pain!");
+			$"{RelatedPart.HealthMaster.playerScript.visibleName} holds their {RelatedPart.gameObject.ExpensiveName()} in pain!");
 			alarmedForInternalBleeding = true;
 		}
 		if(RelatedPart.CurrentInternalBleedingDamage > RelatedPart.MaximumInternalBleedDamage)
@@ -92,7 +98,7 @@ public class Heart : BodyPartModification
 		}
 	}
 
-	public void DoHeartBeat(LivingHealthMasterBase healthMaster)
+	public void DoHeartBeat()
 	{
 		//If we actually have a circulatory system.
 		if (HeartAttack)
@@ -108,21 +114,22 @@ public class Heart : BodyPartModification
 			return;
 		}
 
+		//To exclude stuff like hunger and oxygen damage
 		var TotalModified = 1f;
-		foreach (var Modifier in RelatedPart.AppliedModifiers)
+		foreach (var modifier in bodyPart.AppliedModifiers)
 		{
 			var toMultiply = 1f;
-			if (Modifier == RelatedPart.DamageModifier)
+			if (modifier == bodyPart.DamageModifier)
 			{
-				toMultiply = Mathf.Max(0f,Mathf.Max(RelatedPart.MaxHealth - RelatedPart.TotalDamageWithoutOxyCloneRadStam, 0) / RelatedPart.MaxHealth);
+				toMultiply = Mathf.Max(0f,Mathf.Max(bodyPart.MaxHealth - bodyPart.TotalDamageWithoutOxyCloneRadStam, 0) / bodyPart.MaxHealth);
 			}
-			else if (Modifier == RelatedPart.HungerModifier)
+			else if (modifier == bodyPart.HungerModifier)
 			{
 				continue;
 			}
 			else
 			{
-				toMultiply = Mathf.Max(0f, Modifier.Multiplier);
+				toMultiply = Mathf.Max(0f, modifier.Multiplier);
 			}
 			TotalModified *= toMultiply;
 		}
@@ -133,30 +140,36 @@ public class Heart : BodyPartModification
 
 	public void Heartbeat(float efficiency)
 	{
+		if (efficiency > 1)
+		{
+			efficiency = 1;
+		}
 		CirculatorySystemBase circulatorySystem = RelatedPart.HealthMaster.CirculatorySystem;
 		if (circulatorySystem)
 		{
-			float pumpedReagent = Math.Min(heartStrength * efficiency, circulatorySystem.ReadyBloodPool.Total);
 			float totalWantedBlood = 0;
-			foreach (BodyPart implant in RelatedPart.HealthMaster.ImplantList)
+			foreach (BodyPart implant in RelatedPart.HealthMaster.BodyPartList)
 			{
 				if (implant.IsBloodCirculated == false) continue;
 				totalWantedBlood += implant.BloodThroughput;
 			}
+			float pumpedReagent = Math.Min(totalWantedBlood * efficiency, circulatorySystem.BloodPool.Total);
 
-			pumpedReagent = Math.Min(pumpedReagent, totalWantedBlood);
-			ReagentMix SpareBlood = new ReagentMix();
-
-			foreach (BodyPart implant in RelatedPart.HealthMaster.ImplantList)
+			foreach (BodyPart implant in RelatedPart.HealthMaster.BodyPartList)
 			{
 				if (implant.IsBloodCirculated == false) continue;
-				var BloodToGive = circulatorySystem.ReadyBloodPool.Take((implant.BloodThroughput / totalWantedBlood) * pumpedReagent);
-				BloodToGive.Add(SpareBlood);
-				SpareBlood.Clear();
-				SpareBlood.Add(implant.BloodPumpedEvent(BloodToGive));
+				implant.BloodPumpedEvent((implant.BloodThroughput / totalWantedBlood) * pumpedReagent);
+			}
+			if (RelatedPart.HealthMaster.IsDead) return; //For some reason the heart will randomly still continue to try and beat after death.
+			if (RelatedPart.BloodContainer.CurrentReagentMix.MajorMixReagent == salt || RelatedPart.BloodContainer.AmountOfReagent(salt) * 100 > dangerSaltLevel)
+			{
+				Chat.AddActionMsgToChat(RelatedPart.HealthMaster.gameObject,
+					"<color=red>Your body spasms as a jolt of pain surges all over your body then into your heart!</color>",
+					$"<color=red>{RelatedPart.HealthMaster.playerScript.visibleName} spasms before holding " +
+					$"{RelatedPart.HealthMaster.playerScript.characterSettings.TheirPronoun(RelatedPart.HealthMaster.playerScript)} chest in shock before falling to the ground!</color>");
+				RelatedPart.HealthMaster.Death();
 			}
 
-			circulatorySystem.ReadyBloodPool.Add(SpareBlood);
 		}
 	}
 

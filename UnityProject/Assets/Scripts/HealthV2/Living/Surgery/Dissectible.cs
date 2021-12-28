@@ -5,8 +5,8 @@ using UnityEngine;
 
 namespace HealthV2
 {
-	public class Dissectible : NetworkBehaviour, IClientInteractable<PositionalHandApply>,
-		ICheckedInteractable<PositionalHandApply>
+	public class Dissectible : NetworkBehaviour, IClientInteractable<HandApply>,
+		ICheckedInteractable<HandApply>
 	{
 		public LivingHealthMasterBase LivingHealthMasterBase;
 
@@ -61,7 +61,7 @@ namespace HealthV2
 			InitiateSurgeryItemTraits = new List<ItemTrait>(); //Make sure to include implantable stuff
 
 
-		public bool WillInteract(PositionalHandApply interaction, NetworkSide side)
+		public bool WillInteract(HandApply interaction, NetworkSide side)
 		{
 			if (interaction.Intent != Intent.Help) return false; //TODO problem with surgery in Progress and Trying to use something on help content on them
 			if (DefaultWillInteract.Default(interaction, side) == false) return false;
@@ -74,7 +74,7 @@ namespace HealthV2
 		}
 
 
-		public void ServerPerformInteraction(PositionalHandApply interaction)
+		public void ServerPerformInteraction(HandApply interaction)
 		{
 			if (ProcedureInProgress)
 			{
@@ -82,7 +82,7 @@ namespace HealthV2
 			}
 		}
 
-		public bool Interact(PositionalHandApply interaction)
+		public bool Interact(HandApply interaction)
 		{
 			if (DefaultWillInteract.Default(interaction, NetworkSide.Client) == false) return false;
 			//**Client**
@@ -173,60 +173,24 @@ namespace HealthV2
 
 		public void ServerCheck(SurgeryProcedureBase SurgeryProcedureBase, BodyPart ONBodyPart)
 		{
-			if (ProcedureInProgress == false) //Defer to server
+			if (ProcedureInProgress)
+				return; //Defer to server
+
+			if (BodyPartIsOn != null)
 			{
-				if (BodyPartIsOn != null)
+				if (BodyPartIsopen)
 				{
-					if (BodyPartIsopen)
+					foreach (var organBodyPart in BodyPartIsOn.ContainBodyParts)
 					{
-						foreach (var inBodyPart in BodyPartIsOn.ContainBodyParts)
+						if (organBodyPart == ONBodyPart)
 						{
-							if (inBodyPart == ONBodyPart)
-							{
-								foreach (var Procedure in inBodyPart.SurgeryProcedureBase)
-								{
-									if (Procedure is CloseProcedure || Procedure is ImplantProcedure) continue;
-									if (SurgeryProcedureBase == Procedure)
-									{
-										this.currentlyOn = inBodyPart.gameObject;
-										this.ThisPresentProcedure.SetupProcedure(this, inBodyPart, Procedure);
-										return;
-									}
-								}
-
-								return;
-							}
-						}
-
-						if (currentlyOn == ONBodyPart.gameObject)
-						{
-							foreach (var Procedure in BodyPartIsOn.SurgeryProcedureBase)
-							{
-								if (Procedure is CloseProcedure || Procedure is ImplantProcedure)
-								{
-									if (SurgeryProcedureBase == Procedure)
-									{
-										this.currentlyOn = currentlyOn;
-										this.ThisPresentProcedure.SetupProcedure(this, BodyPartIsOn, Procedure);
-										return;
-									}
-								}
-							}
-
-							return;
-						}
-					}
-					else
-					{
-						if (ONBodyPart.gameObject == currentlyOn)
-						{
-							foreach (var Procedure in BodyPartIsOn.SurgeryProcedureBase)
+							foreach (var Procedure in organBodyPart.SurgeryProcedureBase)
 							{
 								if (Procedure is CloseProcedure || Procedure is ImplantProcedure) continue;
 								if (SurgeryProcedureBase == Procedure)
 								{
-									this.currentlyOn = currentlyOn;
-									this.ThisPresentProcedure.SetupProcedure(this, BodyPartIsOn, Procedure);
+									this.currentlyOn = organBodyPart.gameObject;
+									this.ThisPresentProcedure.SetupProcedure(this, organBodyPart, Procedure);
 									return;
 								}
 							}
@@ -234,45 +198,84 @@ namespace HealthV2
 							return;
 						}
 					}
-				}
-				else
-				{
-					foreach (var RouteBody in LivingHealthMasterBase.RootBodyPartContainers)
+
+					if (currentlyOn == ONBodyPart.gameObject)
 					{
-						foreach (var Limb in RouteBody.ContainsLimbs)
+						foreach (var Procedure in BodyPartIsOn.SurgeryProcedureBase)
 						{
-							if (Limb == ONBodyPart)
+							if (Procedure is CloseProcedure || Procedure is ImplantProcedure)
 							{
-								foreach (var Procedure in Limb.SurgeryProcedureBase)
+								if (SurgeryProcedureBase == Procedure)
 								{
-									if (Procedure is CloseProcedure || Procedure is ImplantProcedure) continue;
-									if (SurgeryProcedureBase == Procedure)
-									{
-										this.currentlyOn = Limb.gameObject;
-										this.ThisPresentProcedure.SetupProcedure(this, Limb, Procedure);
-										return;
-									}
+									this.currentlyOn = currentlyOn;
+									this.ThisPresentProcedure.SetupProcedure(this, BodyPartIsOn, Procedure);
+									return;
 								}
 							}
 						}
-					}
 
-					if (LivingHealthMasterBase.GetComponent<PlayerSprites>().RaceBodyparts.Base.RootImplantProcedure ==
-					    SurgeryProcedureBase)
+						return;
+					}
+				}
+				else
+				{
+					if (ONBodyPart.gameObject == currentlyOn)
 					{
-						this.currentlyOn = LivingHealthMasterBase.gameObject;
-						this.ThisPresentProcedure.SetupProcedure(this, null, SurgeryProcedureBase);
+						foreach (var Procedure in BodyPartIsOn.SurgeryProcedureBase)
+						{
+							if (Procedure is CloseProcedure || Procedure is ImplantProcedure) continue;
+							if (SurgeryProcedureBase == Procedure)
+							{
+								this.currentlyOn = currentlyOn;
+								this.ThisPresentProcedure.SetupProcedure(this, BodyPartIsOn, Procedure);
+								return;
+							}
+						}
+
+						return;
 					}
 				}
 			}
+			else
+			{
+				foreach (var bodyPart in LivingHealthMasterBase.BodyPartList)
+				{
+					if (bodyPart == ONBodyPart)
+					{
+						foreach (var Procedure in bodyPart.SurgeryProcedureBase)
+						{
+							if (Procedure is CloseProcedure || Procedure is ImplantProcedure) continue;
+							if (SurgeryProcedureBase == Procedure)
+							{
+								this.currentlyOn = bodyPart.gameObject;
+								this.ThisPresentProcedure.SetupProcedure(this, bodyPart, Procedure);
+								return;
+							}
+						}
+					}
+				}
+
+				if (LivingHealthMasterBase.GetComponent<PlayerSprites>().RaceBodyparts.Base.RootImplantProcedure ==
+				    SurgeryProcedureBase)
+				{
+					this.currentlyOn = LivingHealthMasterBase.gameObject;
+					this.ThisPresentProcedure.SetupProcedure(this, null, SurgeryProcedureBase);
+				}
+			}
+
 		}
 
 		public void SendClientBodyParts(ConnectedPlayer SentByPlayer, BodyPartType inTargetBodyPart = BodyPartType.None)
 		{
 			if (currentlyOn == null)
 			{
-				SendSurgeryBodyParts.SendTo(LivingHealthMasterBase.GetBodyPartsInZone(inTargetBodyPart), this,
-					SentByPlayer);
+				var targetedBodyParts = new List<BodyPart>();
+				foreach (var bodyPart in LivingHealthMasterBase.SurfaceBodyParts)
+				{
+					targetedBodyParts.Add(bodyPart);
+				}
+
+				SendSurgeryBodyParts.SendTo(targetedBodyParts, this, SentByPlayer);
 			}
 			else
 			{
@@ -324,11 +327,11 @@ namespace HealthV2
 			public BodyPart PreviousBodyPart;
 
 
-			public PositionalHandApply Stored;
+			public HandApply Stored;
 			public SurgeryStep ThisSurgeryStep;
 
 
-			public void TryTool(PositionalHandApply interaction)
+			public void TryTool(HandApply interaction)
 			{
 				Stored = interaction;
 				ThisSurgeryStep = null;

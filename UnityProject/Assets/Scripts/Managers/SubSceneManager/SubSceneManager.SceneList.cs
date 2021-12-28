@@ -4,8 +4,6 @@ using UnityEditor;
 using UnityEngine.SceneManagement;
 using WebSocketSharp;
 using UnityEngine;
-using System.Linq;
-using Messages.Server.SubScenes;
 
 //The scene list on the server
 public partial class SubSceneManager
@@ -31,6 +29,8 @@ public partial class SubSceneManager
 			yield return null;
 		}
 
+		yield return StartCoroutine(ServerLoadSpaceScene(loadTimer));
+
 		//Choose and load a mainstation
 		yield return StartCoroutine(ServerLoadMainStation(loadTimer));
 
@@ -52,6 +52,19 @@ public partial class SubSceneManager
 		UIManager.Display.preRoundWindow.CloseMapLoadingPanel();
 		EventManager.Broadcast( Event.ScenesLoadedServer, false);
 		Logger.Log($"Server has loaded {serverChosenAwaySite} away site", Category.Round);
+	}
+
+	//Load the space scene on the server
+	IEnumerator ServerLoadSpaceScene(SubsceneLoadTimer loadTimer)
+	{
+		loadTimer.IncrementLoadBar($"Loading the void of time and space");
+		yield return StartCoroutine(LoadSubScene("SpaceScene", loadTimer));
+		loadedScenesList.Add(new SceneInfo
+		{
+			SceneName = "SpaceScene",
+			SceneType = SceneType.Space
+		});
+		netIdentity.isDirty = true;
 	}
 
 	//Choose and load a main station on the server
@@ -84,6 +97,7 @@ public partial class SubSceneManager
 			SceneName = serverChosenMainStation,
 			SceneType = SceneType.MainStation
 		});
+		netIdentity.isDirty = true;
 	}
 
 	//Load all the asteroids on the server
@@ -100,6 +114,7 @@ public partial class SubSceneManager
 				SceneName = asteroid,
 				SceneType = SceneType.Asteroid
 			});
+			netIdentity.isDirty = true;
 		}
 	}
 
@@ -125,7 +140,7 @@ public partial class SubSceneManager
 				SceneName = centComData.CentComSceneName,
 				SceneType = SceneType.AdditionalScenes
 			});
-
+			netIdentity.isDirty = true;
 			yield break;
 		}
 
@@ -139,6 +154,7 @@ public partial class SubSceneManager
 			SceneName = pickedMap,
 			SceneType = SceneType.AdditionalScenes
 		});
+		netIdentity.isDirty = true;
 	}
 
 	//Load all the asteroids on the server
@@ -176,6 +192,7 @@ public partial class SubSceneManager
 				SceneName = additionalScene,
 				SceneType = SceneType.AdditionalScenes
 			});
+			netIdentity.isDirty = true;
 		}
 	}
 
@@ -213,6 +230,7 @@ public partial class SubSceneManager
 				SceneName = serverChosenAwaySite,
 				SceneType = SceneType.AwaySite
 			});
+			netIdentity.isDirty = true;
 		}
 	}
 
@@ -240,27 +258,10 @@ public partial class SubSceneManager
 			SceneName = pickedMap,
 			SceneType = SceneType.AdditionalScenes
 		});
+		netIdentity.isDirty = true;
 
-		PokeClientSubScene.SendToAll( pickedMap);
 		SyndicateScene = SceneManager.GetSceneByName(pickedMap);
-		yield return StartCoroutine(RunOnSpawnServer(pickedMap));
 		SyndicateLoaded = true;
-	}
-
-	private IEnumerator RunOnSpawnServer(string map)
-	{
-		if (GameManager.Instance.CurrentRoundState == RoundState.Started) // the game started long ago!
-		{
-			yield return new WaitForEndOfFrame(); //let the matrix initialize first
-			var loadedScene = SceneManager.GetSceneByName(map);
-
-			var rootObjects = loadedScene.GetRootGameObjects();
-			foreach (var matrix in rootObjects) //different matrix of a scene, ex: syndie outpost and shuttle
-			{
-				var iserverspawnlist = matrix.GetComponentsInChildren<IServerSpawn>();
-				GameManager.Instance.MappedOnSpawnServer(iserverspawnlist);
-			}
-		}
 	}
 
 	public IEnumerator LoadWizard()
@@ -276,9 +277,8 @@ public partial class SubSceneManager
 			SceneName = pickedScene,
 			SceneType = SceneType.AdditionalScenes
 		});
+		netIdentity.isDirty = true;
 
-		PokeClientSubScene.SendToAll(pickedScene);
-		yield return StartCoroutine(RunOnSpawnServer(pickedScene));
 		WizardLoaded = true;
 	}
 

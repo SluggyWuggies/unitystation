@@ -19,6 +19,8 @@ GameObject:
   - component: {fileID: 1033521399077987722}
   - component: {fileID: 90804091474310291}
   - component: {fileID: 1481169419180323577}
+  - component: {fileID: 951381747229521920}
+  - component: {fileID: 5687824364782967995}
   m_Layer: 11
   m_Name: Object
   m_TagString: Untagged
@@ -79,11 +81,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isDirty: 1
   sceneId: 0
   serverOnly: 0
   visible: 0
-  m_AssetId: 
+  m_AssetId: ebb08cf966efc084aa918bd8d9429604
   hasSpawned: 0
 --- !u!114 &4800765294880679425
 MonoBehaviour:
@@ -101,6 +102,9 @@ MonoBehaviour:
   syncInterval: 0.1
   matrixDebugLogging: 0
   objectType: 1
+  customNetTransform: {fileID: 1361981371736346955}
+  prefabTracker: {fileID: 951381747229521920}
+  CurrentsortingGroup: {fileID: 1481169419180323577}
   AtmosPassable: 1
   ReachableThrough: 1
   initialPassable: 0
@@ -122,6 +126,7 @@ MonoBehaviour:
   syncInterval: 0.1
   snapToGridOnStart: 1
   IsFixedMatrix: 0
+  IsItem: 0
 --- !u!114 &5971563122362279857
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -157,6 +162,7 @@ MonoBehaviour:
       m_AssetGUID: 
       m_SubObjectName: 
       m_SubObjectType: 
+      m_EditorAssetChanged: 0
   damageDeflection: 0
   Armor:
     Melee: 0
@@ -169,6 +175,7 @@ MonoBehaviour:
     Acid: 0
     Magic: 0
     Bio: 0
+    DismembermentProtectionChance: 0
   Resistances:
     LavaProof: 0
     FireProof: 0
@@ -199,6 +206,7 @@ MonoBehaviour:
   initialDescription: 
   willHighlight: 1
   exportCost: 0
+  exportType: 0
   exportName: 
   exportMessage: 
 --- !u!114 &1033521399077987722
@@ -241,6 +249,50 @@ SortingGroup:
   m_SortingLayerID: 142874271
   m_SortingLayer: 12
   m_SortingOrder: 0
+--- !u!114 &951381747229521920
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4197940402254186057}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f4629d03e356d64eb509d18a7450082, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  foreverID: ebb08cf966efc084aa918bd8d9429604
+--- !u!114 &5687824364782967995
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4197940402254186057}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c23c49138f42840a1bc22ade283c1694, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncMode: 0
+  syncInterval: 0.1
+  registerTile: {fileID: 0}
+  floorDecal: {fileID: 0}
+  isInitiallyNotPushable: 1
+  pushPullSound:
+    SetLoadSetting: 0
+    AssetAddress: null
+    AssetReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+  soundDelayTime: 0
+  soundMinimumPitchVariance: 1
+  soundMaximumPitchVariance: 1
+  OnPullingSomethingChangedServer:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &5388634654466307187
 GameObject:
   m_ObjectHideFlags: 0
@@ -284,6 +336,7 @@ SpriteRenderer:
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
@@ -341,6 +394,5 @@ MonoBehaviour:
   PresentSpriteSet: {fileID: 0}
   randomInitialSprite: 0
   pushTextureOnStartUp: 1
-  variantIndex: 0
+  initialVariantIndex: 0
   palette: []
-  Sprites: []

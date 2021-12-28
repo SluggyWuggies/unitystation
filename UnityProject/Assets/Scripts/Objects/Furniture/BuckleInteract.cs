@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Player.Movement;
 using UnityEngine;
 
 namespace Objects
@@ -13,6 +14,8 @@ namespace Objects
 		//may be null
 		private OccupiableDirectionalSprite occupiableDirectionalSprite;
 		private Integrity integrity;
+
+		public PlayerScript OccupantPlayerScript;
 
 		/// <summary>
 		/// The time that a mob will spend trying to unbuckle himself from a chair when he is handcuffed.
@@ -113,9 +116,9 @@ namespace Objects
 		/// </summary>
 		public void BucklePlayer(PlayerScript playerScript)
 		{
-			SoundManager.PlayNetworkedAtPos(SingletonSOSounds.Instance.Click01, gameObject.WorldPosServer(), sourceObj: gameObject);
+			SoundManager.PlayNetworkedAtPos(CommonSounds.Instance.Click01, gameObject.WorldPosServer(), sourceObj: gameObject);
 
-			playerScript.playerMove.ServerBuckle(gameObject, OnUnbuckle);
+			playerScript.playerMove.ServerBuckle(this, OnUnbuckle);
 
 			//if this is a directional sprite, we render it in front of the player
 			//when they are buckled
@@ -136,7 +139,7 @@ namespace Objects
 
 		public void ServerPerformInteraction(HandApply interaction)
 		{
-			SoundManager.PlayNetworkedAtPos(SingletonSOSounds.Instance.Click01, interaction.TargetObject.WorldPosServer(), sourceObj: gameObject);
+			SoundManager.PlayNetworkedAtPos(CommonSounds.Instance.Click01, interaction.TargetObject.WorldPosServer(), sourceObj: gameObject);
 
 			Unbuckle();
 		}

@@ -98,7 +98,7 @@ namespace Objects.Construction
 				if (objectBehaviour.IsPushable)
 				{
 					//secure it if there's floor
-					if (MatrixManager.IsSpaceAt(registerObject.WorldPositionServer, true))
+					if (MatrixManager.IsSpaceAt(registerObject.WorldPositionServer, true, registerObject.Matrix.MatrixInfo))
 					{
 						Chat.AddExamineMsg(interaction.Performer, "A floor must be present to secure the window!");
 						return;
@@ -154,7 +154,7 @@ namespace Objects.Construction
 		{
 			var interactableTiles = InteractableTiles.GetAt(interaction.TargetObject.TileWorldPosition(), true);
 			Vector3Int cellPos = interactableTiles.WorldToCell(interaction.TargetObject.TileWorldPosition());
-			interactableTiles.TileChangeManager.UpdateTile(cellPos, layerTile);
+			interactableTiles.TileChangeManager.MetaTileMap.SetTile(cellPos, layerTile);
 			interactableTiles.TileChangeManager.SubsystemManager.UpdateAt(cellPos);
 			_ = Despawn.ServerSingle(gameObject);
 		}

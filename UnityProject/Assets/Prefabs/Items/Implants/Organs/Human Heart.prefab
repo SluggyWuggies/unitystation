@@ -19,6 +19,8 @@ MonoBehaviour:
   CanTriggerHeartAttack: 1
   SecondsOfRevivePulse: 30
   CurrentPulse: 0
+  salt: {fileID: 11400000, guid: b9bdb0acb54b8dc40837f92c2e7819a6, type: 2}
+  dangerSaltLevel: 5
 --- !u!1001 &7673087146983204625
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -32,10 +34,15 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 11400000, guid: b12bf42278e116845b8d25886a048590,
         type: 2}
+    - target: {fileID: 1817806423449182988, guid: 35ef0ee8523cfc342bc863c12a3ac07c,
+        type: 3}
+      propertyPath: foreverID
+      value: a05828ab8602a63449e9b422078fd217
+      objectReference: {fileID: 0}
     - target: {fileID: 4617501557389857493, guid: 35ef0ee8523cfc342bc863c12a3ac07c,
         type: 3}
       propertyPath: m_AssetId
-      value: 
+      value: a05828ab8602a63449e9b422078fd217
       objectReference: {fileID: 0}
     - target: {fileID: 4719944670933102433, guid: 35ef0ee8523cfc342bc863c12a3ac07c,
         type: 3}
@@ -108,6 +115,33 @@ PrefabInstance:
       propertyPath: m_WasSpriteAssigned
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 5047286037071161015, guid: 35ef0ee8523cfc342bc863c12a3ac07c,
+        type: 3}
+      propertyPath: relatedRecipes.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5047286037071161015, guid: 35ef0ee8523cfc342bc863c12a3ac07c,
+        type: 3}
+      propertyPath: relatedRecipes.Array.data[0].recipe
+      value: 
+      objectReference: {fileID: 11400000, guid: 7bc4854fc802d5b4bb3fda1ba37bb651,
+        type: 2}
+    - target: {fileID: 5047286037071161015, guid: 35ef0ee8523cfc342bc863c12a3ac07c,
+        type: 3}
+      propertyPath: relatedRecipes.Array.data[1].recipe
+      value: 
+      objectReference: {fileID: 11400000, guid: bedd16ccfdec01446b421ad054323e0d,
+        type: 2}
+    - target: {fileID: 5047286037071161015, guid: 35ef0ee8523cfc342bc863c12a3ac07c,
+        type: 3}
+      propertyPath: relatedRecipes.Array.data[0].ingredientIndex
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5047286037071161015, guid: 35ef0ee8523cfc342bc863c12a3ac07c,
+        type: 3}
+      propertyPath: relatedRecipes.Array.data[1].ingredientIndex
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5146776682568007683, guid: 35ef0ee8523cfc342bc863c12a3ac07c,
         type: 3}
       propertyPath: initialName
@@ -136,7 +170,7 @@ PrefabInstance:
     - target: {fileID: 8195321311611557117, guid: 35ef0ee8523cfc342bc863c12a3ac07c,
         type: 3}
       propertyPath: bloodThroughput
-      value: 2
+      value: 0.71428573
       objectReference: {fileID: 0}
     - target: {fileID: 8195321311611557117, guid: 35ef0ee8523cfc342bc863c12a3ac07c,
         type: 3}
@@ -150,6 +184,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8195321311611557117, guid: 35ef0ee8523cfc342bc863c12a3ac07c,
         type: 3}
+      propertyPath: limbLossBleedingValue
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8195321311611557117, guid: 35ef0ee8523cfc342bc863c12a3ac07c,
+        type: 3}
       propertyPath: MinMaxInternalBleedingValues.x
       value: 1
       objectReference: {fileID: 0}
@@ -160,6 +199,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 0}
+    - {fileID: 8095853447068111044, guid: 35ef0ee8523cfc342bc863c12a3ac07c, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 35ef0ee8523cfc342bc863c12a3ac07c, type: 3}
 --- !u!1 &3169642092305287280 stripped
 GameObject:

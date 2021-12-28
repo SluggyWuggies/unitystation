@@ -43,6 +43,7 @@ SpriteRenderer:
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
@@ -101,9 +102,8 @@ MonoBehaviour:
   PresentSpriteSet: {fileID: 11400000, guid: 7d2de9c440cedfa4a855277fac47f8d0, type: 2}
   randomInitialSprite: 0
   pushTextureOnStartUp: 1
-  variantIndex: 0
+  initialVariantIndex: 0
   palette: []
-  Sprites: []
 --- !u!1 &6387092560801259802
 GameObject:
   m_ObjectHideFlags: 0
@@ -147,6 +147,7 @@ MeshRenderer:
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
@@ -226,6 +227,8 @@ MonoBehaviour:
   superMatterShard: {fileID: 70068185008237990, guid: f2f44eb806b35ff40a64333b48771101,
     type: 3}
   superMatterScalpel: {fileID: 11400000, guid: 635f2dad6ee0ce749a89253fd4a13f8f, type: 2}
+  superMatterTongs: {fileID: 11400000, guid: 2c4443ad77d74b54a9a305c240a8a850, type: 2}
+  superMatterSliver: {fileID: 11400000, guid: 033fe3055c943534ca5d7b6585c693d8, type: 2}
   nuclearParticlePrefab: {fileID: 3294328072042417454, guid: 51e37bcfda438bc45bae02a757a88dbb,
     type: 3}
   arcEffect: {fileID: 106988, guid: 3f23c24bde2f784479d91bce3b78b3b3, type: 3}
@@ -447,6 +450,11 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4428698834604649417, guid: b06b702714bab49b9ad949eab1ca4534,
+        type: 3}
+      propertyPath: foreverID
+      value: a2f7e3ea5d1b72341939c4aeb0895b36
+      objectReference: {fileID: 0}
     - target: {fileID: 5212070883374448474, guid: b06b702714bab49b9ad949eab1ca4534,
         type: 3}
       propertyPath: PresentSpriteSet
@@ -608,7 +616,7 @@ PrefabInstance:
     - target: {fileID: 9212640593017544930, guid: b06b702714bab49b9ad949eab1ca4534,
         type: 3}
       propertyPath: m_AssetId
-      value: 
+      value: a2f7e3ea5d1b72341939c4aeb0895b36
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b06b702714bab49b9ad949eab1ca4534, type: 3}

@@ -4,11 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using Mirror;
 using UnityEngine;
+using Messages.Server;
+using UI;
 
 /// <summary>
 /// Allows an item to be stacked, occupying a single inventory slot.
 /// </summary>
-public class Stackable : NetworkBehaviour, IServerLifecycle, ICheckedInteractable<InventoryApply>, ICheckedInteractable<HandApply>
+public class Stackable : NetworkBehaviour, IServerLifecycle, ICheckedInteractable<InventoryApply>, ICheckedInteractable<HandApply>, IExaminable
 {
 	[Tooltip("Amount initially in the stack when this is spawned.")]
 	[SerializeField]
@@ -112,13 +114,6 @@ public class Stackable : NetworkBehaviour, IServerLifecycle, ICheckedInteractabl
 		InitStacksWith();
 		SyncAmount(amount, initialAmount);
 		amountInit = true;
-
-		//check for stacking with things on the ground
-		registerTile.WaitForMatrixInit(OnMatrixInit);
-	}
-
-	private void OnMatrixInit(MatrixInfo info)
-	{
 		ServerStackOnGround(registerTile.LocalPositionServer);
 	}
 
@@ -141,6 +136,12 @@ public class Stackable : NetworkBehaviour, IServerLifecycle, ICheckedInteractabl
 				ServerCombine(stackable);
 			}
 		}
+	}
+
+	[Server]
+	public void ServerSetAmount(int newAmount)
+	{
+		SyncAmount(amount, newAmount);
 	}
 
 	private void SyncAmount(int oldAmount, int newAmount)
@@ -216,13 +217,14 @@ public class Stackable : NetworkBehaviour, IServerLifecycle, ICheckedInteractabl
 	[Server]
 	public GameObject ServerRemoveOne()
 	{
-		SyncAmount(amount, amount - 1);
-		if (amount <= 0)
+		if ((amount-1) <= 0)
 		{
 			return gameObject;
 		}
+		SyncAmount(amount, amount - 1);
 
 		var spawnInfo = Spawn.ServerPrefab(prefab, gameObject.transform.position, gameObject.transform);
+		spawnInfo.GameObject.GetComponent<Stackable>().ServerSetAmount(1);
 		return spawnInfo.GameObject;
 	}
 
@@ -279,7 +281,7 @@ public class Stackable : NetworkBehaviour, IServerLifecycle, ICheckedInteractabl
 	/// </summary>
 	/// <param name="toCheck"></param>
 	/// <returns></returns>
-	private bool StacksWith(Stackable toCheck)
+	public bool StacksWith(Stackable toCheck)
 	{
 		if (toCheck == null) return false;
 
@@ -292,6 +294,13 @@ public class Stackable : NetworkBehaviour, IServerLifecycle, ICheckedInteractabl
 
 		//only has logic if this is the target object
 		if (interaction.TargetObject != gameObject) return false;
+
+		//Alt clicking with empty hand calls splitting menu UI
+		if (side == NetworkSide.Client && interaction.IsFromHandSlot && interaction.IsToHandSlot && interaction.FromSlot.IsEmpty && interaction.IsAltClick)
+		{
+			UIManager.Instance.SplittingMenu.Enable();
+			return true;
+		}
 
 		//clicking on it with an empty hand when stack is in another hand to take one from it,
 		//(if there is only one in this stack we will defer to normal inventory transfer logic)
@@ -306,7 +315,7 @@ public class Stackable : NetworkBehaviour, IServerLifecycle, ICheckedInteractabl
 	public void ServerPerformInteraction(InventoryApply interaction)
 	{
 		//clicking on it with an empty hand when stack is in another hand to take one from it
-		if (interaction.IsFromHandSlot && interaction.IsToHandSlot && interaction.FromSlot.IsEmpty)
+		if (interaction.IsFromHandSlot && interaction.IsToHandSlot && interaction.FromSlot.IsEmpty && !interaction.IsAltClick)
 		{
 			//spawn a new one and put it into the from slot with a stack size of 1
 			var single = Spawn.ServerPrefab(prefab).GameObject;
@@ -340,5 +349,10 @@ public class Stackable : NetworkBehaviour, IServerLifecycle, ICheckedInteractabl
 	public void ServerPerformInteraction(HandApply interaction)
 	{
 		ServerCombine(interaction.TargetObject.GetComponent<Stackable>());
+	}
+
+	public string Examine(Vector3 worldPos)
+	{
+		return $"This {gameObject.ExpensiveName()} contains {Amount} stacks.";
 	}
 }

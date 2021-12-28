@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using HealthV2;
 using Items;
 using Items.Others;
@@ -29,6 +28,10 @@ namespace Chemistry.Components
 			private set { maxCapacity = value; }
 		}
 
+
+		//How much room is there left in the container
+		public float SpareCapacity => maxCapacity - ReagentMixTotal;
+
 		[Tooltip("Reactions list which can happen inside container. Use Default for generic containers")]
 		[SerializeField] private ReactionSet reactionSet;
 		public ReactionSet ReactionSet
@@ -50,7 +53,6 @@ namespace Chemistry.Components
 		private bool destroyOnEmpty = default;
 
 		private ItemAttributesV2 itemAttributes = default;
-		private RegisterTile registerTile;
 		private CustomNetTransform customNetTransform;
 		private Integrity integrity;
 
@@ -131,8 +133,6 @@ namespace Chemistry.Components
 
 		private void Awake()
 		{
-			registerTile = GetComponent<RegisterTile>();
-
 			// register spill on throw
 			customNetTransform = GetComponent<CustomNetTransform>();
 			if (customNetTransform)
@@ -198,13 +198,16 @@ namespace Chemistry.Components
 			{
 				lock (addition.reagents)
 				{
-					if (!addition.reagents.m_dict.All(r => reagentWhitelist.Contains(r.Key)))
+					foreach (var reagent in addition.reagents.m_dict.Keys)
 					{
-						return new TransferResult
+						if (reagentWhitelist.Contains(reagent) == false)
 						{
-							Success = false,
-							Message = "You can't transfer this into " + FancyContainerName
-						};
+							return new TransferResult
+							{
+								Success = false,
+								Message = "You can't transfer this into " + FancyContainerName
+							};
+						}
 					}
 				}
 			}
@@ -219,7 +222,7 @@ namespace Chemistry.Components
 				};
 			}
 
-			// save total ammount before mixing
+			// save total amount before mixing
 			var transferAmount = addition.Total;
 			var beforeMixTotal = CurrentReagentMix.Total;
 			var afterMixTotal = beforeMixTotal + transferAmount;
@@ -263,6 +266,19 @@ namespace Chemistry.Components
 			CurrentReagentMix.Subtract(reagents);
 			OnReagentMixChanged?.Invoke();
 			ReagentsChanged();
+		}
+
+		/// <summary>
+		/// Server side only. Subtract the specified reagent from the container.
+		/// </summary>
+		/// <param name="reagent"></param>
+		/// <returns>Substracted amount</returns>
+		public float Subtract(Reagent reagent, float subAmount)
+		{
+			float result = CurrentReagentMix.Subtract(reagent, subAmount);
+			OnReagentMixChanged?.Invoke();
+			ReagentsChanged();
+			return result;
 		}
 
 		/// <summary>
@@ -343,14 +359,18 @@ namespace Chemistry.Components
 		#region Spill
 		private void SpillAll(bool thrown = false)
 		{
-			if (!IsEmpty)
+			try
 			{
-				if (registerTile && registerTile.CustomTransform)
+				if (!IsEmpty)
 				{
-					var worldPos = registerTile.CustomTransform.AssumedWorldPositionServer();
+					var worldPos = customNetTransform.PushPull.AssumedWorldPositionServer();
 					worldPos.z = 0;
 					SpillAll(worldPos, thrown);
 				}
+			}
+			catch (NullReferenceException exception)
+			{
+				Logger.LogError($"Caught NRE in ReagentContainer SpillAll method: {exception.Message} \n {exception.StackTrace}", Category.Chemistry);
 			}
 		}
 

@@ -38,6 +38,7 @@ namespace SyndicateOps
 		private void OnDisable()
 		{
 			UpdateManager.Remove(CallbackType.PERIODIC_UPDATE, RewardTelecrystals);
+			UpdateManager.Remove(CallbackType.PERIODIC_UPDATE, CountDown);
 		}
 
 		public void AnnounceWar(string declarationMessage)
@@ -49,8 +50,9 @@ namespace SyndicateOps
 				GameManager.Instance.CentComm.ChangeAlertLevel(CentComm.AlertLevel.Red, true);
 				CentComm.MakeAnnouncement(ChatTemplates.PriorityAnnouncement,
 				$"Attention all crew! An open message from the syndicate has been picked up on local radiowaves! Message Reads:\n" +
-				$"{declarationMessage}" ,CentComm.UpdateSound.Alert);
+				$"{declarationMessage}", CentComm.UpdateSound.Alert);
 				UpdateManager.Add(RewardTelecrystals, 60);
+				UpdateManager.Add(CountDown, 1);
 			}
 		}
 
@@ -63,7 +65,14 @@ namespace SyndicateOps
 			{
 				UpdateManager.Remove(CallbackType.PERIODIC_UPDATE, RewardTelecrystals);
 			}
-
+		}
+		public void CountDown()
+		{
+			timer -= 1;
+			if(timer == 0)
+			{
+				UpdateManager.Remove(CallbackType.PERIODIC_UPDATE, CountDown);
+			}
 		}
 	}
 }

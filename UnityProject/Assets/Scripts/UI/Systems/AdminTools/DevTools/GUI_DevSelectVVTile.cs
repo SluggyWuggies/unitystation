@@ -43,11 +43,22 @@ public class GUI_DevSelectVVTile : MonoBehaviour
 		}
 	}
 
-	void Awake()
+	private void Awake()
 	{
 		escapeKeyTarget = GetComponent<EscapeKeyTarget>();
 		lightingSystem = Camera.main.GetComponent<LightingSystem>();
 		ToState(State.SELECTING);
+	}
+
+	private void OnEnable()
+	{
+		UpdateManager.Add(CallbackType.UPDATE, UpdateMe);
+	}
+
+	private void OnDisable()
+	{
+		ToState(State.INACTIVE);
+		UpdateManager.Remove(CallbackType.UPDATE, UpdateMe);
 	}
 
 	private void ToState(State newState)
@@ -82,17 +93,12 @@ public class GUI_DevSelectVVTile : MonoBehaviour
 		}
 	}
 
-	private void OnDisable()
-	{
-		ToState(State.INACTIVE);
-	}
-
 	public void Open()
 	{
 		ToState(State.SELECTING);
 	}
 
-	private void Update()
+	private void UpdateMe()
 	{
 		if (state == State.SELECTING)
 		{
@@ -103,8 +109,7 @@ public class GUI_DevSelectVVTile : MonoBehaviour
 			}
 			if (CommonInput.GetMouseButtonDown(0))
 			{
-				RequestToViewObjectsAtTile.Send(MouseUtils.MouseToWorldPos(),
-					ServerData.UserID, PlayerList.Instance.AdminToken);
+				RequestToViewObjectsAtTile.Send(MouseUtils.MouseToWorldPos());
 				OnEscape();
 			}
 

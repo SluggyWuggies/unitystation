@@ -10,7 +10,6 @@ using UI.Objects.Shuttles;
 using Systems.Shuttles;
 using Messages.Client.NewPlayer;
 using Messages.Server;
-using Shuttles;
 using Tilemaps.Behaviours.Layers;
 
 /// <summary>
@@ -74,8 +73,10 @@ public class MatrixMove : ManagedBehaviour
 	public bool IsMovingServer => serverState.IsMoving && serverState.Speed > 0f;
 	//client-only values
 	public MatrixState ClientState => clientState;
-	private MatrixInfo matrixInfo;
-	public MatrixInfo MatrixInfo => matrixInfo;
+	public MatrixInfo MatrixInfo => matrix.MatrixInfo;
+
+	public Matrix matrix;
+
 	private ShuttleFuelSystem shuttleFuelSystem;
 	public ShuttleFuelSystem ShuttleFuelSystem => shuttleFuelSystem;
 	/// <summary>
@@ -87,7 +88,7 @@ public class MatrixMove : ManagedBehaviour
 	/// <summary>
 	/// If it is currently fuelled
 	/// </summary>
-	[NonSerialized]
+
 	public bool IsFueled;
 
 	public bool IsForceStopped;
@@ -95,15 +96,15 @@ public class MatrixMove : ManagedBehaviour
 	[Tooltip("Does it require fuel in order to fly?")]
 	public bool RequiresFuel;
 
-	//[SyncVar(hook = nameof(OnRcsActivated))]
-	//This is sync'd by the MatrixSync component
-	[HideInInspector]
+	[NonSerialized]
 	public bool rcsModeActive;
+	[NonSerialized]
+	public PlayerScript playerControllingRcs;
 
 	private bool ServerPositionsMatch => serverTargetState.Position == serverState.Position;
-	private bool IsRotatingServer => NeedsRotationClient; //todo: calculate rotation time on server instead
+	public bool IsRotatingServer => NeedsRotationClient; //todo: calculate rotation time on server instead
 	private bool IsAutopilotEngaged => Target != TransformState.HiddenPos;
-	private bool IsMovingClient => clientState.IsMoving && clientState.Speed > 0f;
+	public bool IsMovingClient => clientState.IsMoving && clientState.Speed > 0f;
 
 	/// <summary>
 	/// Dictionary containing lists of RCS thrusters.
@@ -123,7 +124,6 @@ public class MatrixMove : ManagedBehaviour
 	private Vector2Int rcsMovementStartPosition;
 
 	/// <summary>
-	/// position on which player should be after the start of RCS
 	/// position on which shuttle should be located at the end of RCS movement
 	/// </summary>
 	private Vector2Int rcsMovementTargetPosition;
@@ -140,8 +140,10 @@ public class MatrixMove : ManagedBehaviour
 	/// be rotated to match the target?
 	/// </summary>
 	private bool NeedsRotationClient =>
-		Quaternion.Angle(transform.rotation, InitialFacing.OffsetTo(clientState.FacingDirection).Quaternion) != 0;
+		Quaternion.Angle(TransformRotation, InitialFacing.OffsetTo(clientState.FacingDirection).Quaternion) != 0;
 
+
+	private Quaternion TransformRotation = Quaternion.identity;
 
 	private MatrixPositionFilter matrixPositionFilter = new MatrixPositionFilter();
 
@@ -179,11 +181,13 @@ public class MatrixMove : ManagedBehaviour
 	private bool clientStarted;
 	private bool receivedInitialState;
 	private bool pendingInitialRotation;
+
+	private bool serverInitialized;
 	/// <summary>
 	/// Has this matrix move finished receiving its initial state from the server and rotating into its correct
 	/// position?
 	/// </summary>
-	public bool Initialized => clientStarted && receivedInitialState;
+	public bool Initialized => CustomNetworkManager.IsServer? serverInitialized : (clientStarted && receivedInitialState);
 
 	[FormerlySerializedAs("NoConsole"),Tooltip("Disable the ability for players to use a shuttleconsole to control this matrix")]
 	public bool IsNotPilotable = false;
@@ -193,51 +197,36 @@ public class MatrixMove : ManagedBehaviour
 	private void Awake()
 	{
 		networkedMatrix = GetComponent<NetworkedMatrix>();
+		matrix = GetComponentInChildren<Matrix>();
+		if (RequiresFuel)
+		{
+			shuttleFuelSystem = GetComponent<ShuttleFuelSystem>();
+		}
 	}
 
 	public void OnStartClient()
 	{
-		StartCoroutine(WaitForMatrixManager());
+		SyncPivot(pivot, pivot);
+		SyncInitialPosition(initialPosition, initialPosition);
+		MatrixMoveNewPlayer.Send(networkedMatrix.MatrixSync.netId);
+		clientStarted = true;
 	}
 
 	public void OnStartServer()
 	{
-		StartCoroutine(WaitForMatrixManager());
-	}
+		InitServerState();
 
-	IEnumerator WaitForMatrixManager()
-	{
-		while (!MatrixManager.IsInitialized)
+		MatrixMoveEvents.OnStartMovementServer.AddListener(() =>
 		{
-			yield return WaitFor.EndOfFrame;
-		}
-
-		yield return WaitFor.EndOfFrame;
-		if (CustomNetworkManager.IsServer)
-		{
-			InitServerState();
-
-			MatrixMoveEvents.OnStartMovementServer.AddListener(() =>
+			if (floatingSyncHandle == null)
 			{
-				if (floatingSyncHandle == null)
-				{
-					this.StartCoroutine(FloatingAwarenessSync(), ref floatingSyncHandle);
-				}
-			});
-			MatrixMoveEvents.OnStopMovementServer.AddListener(() => this.TryStopCoroutine(ref floatingSyncHandle));
+				this.StartCoroutine(FloatingAwarenessSync(), ref floatingSyncHandle);
+			}
+		});
+		MatrixMoveEvents.OnStopMovementServer.AddListener(() => this.TryStopCoroutine(ref floatingSyncHandle));
 
-			NotifyPlayers();
-		}
-		else
-		{
-			SyncPivot(pivot, pivot);
-			SyncInitialPosition(initialPosition, initialPosition);
-			MatrixMoveNewPlayer.Send(networkedMatrix.MatrixSync.netId);
-			clientStarted = true;
-
-			var child = transform.GetChild(0);
-			matrixInfo = MatrixManager.Get(child.gameObject);
-		}
+		NotifyPlayers();
+		serverInitialized = true;
 	}
 
 	[Server]
@@ -252,7 +241,6 @@ public class MatrixMove : ManagedBehaviour
 		SyncInitialPosition(initialPosition, initialPositionInt);
 
 		var child = transform.GetChild(0);
-		matrixInfo = MatrixManager.Get(child.gameObject);
 		var childPosition = Vector3Int.CeilToInt(new Vector3(child.transform.position.x, child.transform.position.y, 0));
 		SyncPivot(pivot, initialPosition - childPosition);
 
@@ -266,7 +254,6 @@ public class MatrixMove : ManagedBehaviour
 		RecheckThrusters();
 		if (thrusters.Count > 0)
 		{
-			Logger.LogFormat("{0}: Initializing {1} thrusters!", Category.Shuttles, matrixInfo.Matrix.name, thrusters.Count);
 			foreach (var thruster in thrusters)
 			{
 				var integrity = thruster.GetComponent<Integrity>();
@@ -281,7 +268,6 @@ public class MatrixMove : ManagedBehaviour
 
 					   if (thrusters.Count == 0 && IsMovingServer)
 					   {
-						   Logger.LogFormat("All thrusters were destroyed! Stopping {0} soon!", Category.Shuttles, matrixInfo.Matrix.name);
 						   StartCoroutine(StopWithDelay(1f));
 					   }
 				   });
@@ -325,7 +311,7 @@ public class MatrixMove : ManagedBehaviour
 		{
 			SetSpeed(ServerState.Speed / 2);
 			yield return WaitFor.Seconds(delay);
-			Logger.LogFormat("{0}: Stopping due to missing thrusters!", Category.Shuttles, matrixInfo.Matrix.name);
+			Logger.LogFormat("{0}: Stopping due to missing thrusters!", Category.Shuttles, matrix.name);
 			StopMovement();
 		}
 	}
@@ -337,7 +323,7 @@ public class MatrixMove : ManagedBehaviour
 
 	public void RegisterShuttleFuelSystem(ShuttleFuelSystem shuttleFuel)
 	{
-		this.shuttleFuelSystem = shuttleFuel;
+		shuttleFuelSystem = shuttleFuel;
 	}
 
 	public void RegisterShuttleGuiScript(GUI_ShuttleControl shuttleGui)
@@ -346,7 +332,7 @@ public class MatrixMove : ManagedBehaviour
 	}
 	public void RegisterCoordReadoutScript(GUI_CoordReadout coordReadout)
 	{
-		this.coordReadoutScript = coordReadout;
+		coordReadoutScript = coordReadout;
 	}
 
 	private void SyncInitialPosition(Vector3 oldPos, Vector3 initialPos)
@@ -382,6 +368,7 @@ public class MatrixMove : ManagedBehaviour
 	public override void UpdateMe()
 	{
 		AnimateMovement();
+		TransformRotation = transform.rotation;
 	}
 
 	///managed by UpdateManager
@@ -404,19 +391,6 @@ public class MatrixMove : ManagedBehaviour
 				pendingInitialRotation = false;
 			}
 		}
-
-		if (CustomNetworkManager.IsHeadless == false)
-		{
-			if (coordReadoutScript != null) coordReadoutScript.SetCoords(clientState.Position);
-			if (shuttleControlGUI != null && rcsModeActive != shuttleControlGUI.RcsMode)
-			{
-				shuttleControlGUI.ClientToggleRcs(rcsModeActive);
-
-				// int.MaxValue instead of zero to avoid bugs when shuttle is on position (0, 0)
-				rcsMovementStartPosition = new Vector2Int(int.MaxValue, int.MaxValue);
-				rcsMovementTargetPosition = new Vector2Int(int.MaxValue, int.MaxValue);
-			}
-		}
 	}
 
 	[Server]
@@ -430,15 +404,6 @@ public class MatrixMove : ManagedBehaviour
 		{
 			StartMovement();
 		}
-	}
-
-	[Server]
-	public void ToggleRcs(bool on)
-	{
-		networkedMatrix.MatrixSync.OnRcsActivated(rcsModeActive, on);
-		rcsModeActive = on;
-
-
 	}
 
 	/// Start moving. If speed was zero, it'll be set to 1
@@ -494,19 +459,6 @@ public class MatrixMove : ManagedBehaviour
 		clientState.IsMoving = true;
 
 		MatrixMoveEvents.OnStartMovementClient.Invoke();
-	}
-
-	public void OnRcsActivated(bool oldValue, bool newValue)
-	{
-		if (newValue)
-		{
-			CacheRcs();
-			rcsModeActive = true;
-		}
-		else
-		{
-			rcsModeActive = false;
-		}
 	}
 
 	/// Stop movement
@@ -776,12 +728,10 @@ public class MatrixMove : ManagedBehaviour
 		for (var i = 0; i < SensorPositions.Length; i++)
 		{
 			var sensor = SensorPositions[i];
-			Vector3Int sensorPos = MatrixManager.LocalToWorldInt(sensor, matrixInfo, serverTargetState);
+			Vector3Int sensorPos = MatrixManager.LocalToWorldInt(sensor, MatrixInfo, serverTargetState);
 
-			// Exclude the moving matrix, we shouldn't be able to collide with ourselves
-			int[] excludeList = { matrixInfo.Id };
 			if (!MatrixManager.IsPassableAtAllMatrices(sensorPos, sensorPos + dir.RoundToInt(), isServer: true,
-											collisionType: matrixColliderType, excludeList: excludeList))
+											collisionType: matrixColliderType, excludeMatrix: MatrixInfo))
 			{
 				Logger.LogTrace(
 					$"Can't pass {serverTargetState.Position}->{serverTargetState.Position + dir} (because {sensorPos}->{sensorPos + dir})!",
@@ -808,12 +758,10 @@ public class MatrixMove : ManagedBehaviour
 			var sensor = RotationSensors[i];
 			// Need to pass an aggriate local vector in reference to the Matrix GO to get the correct WorldPos
 			Vector3 localSensorAggrigateVector = (rotationSensorContainerTransform.localRotation * sensor.transform.localPosition) + rotationSensorContainerTransform.localPosition;
-			Vector3Int sensorPos = MatrixManager.LocalToWorldInt(localSensorAggrigateVector, matrixInfo, serverTargetState);
+			Vector3Int sensorPos = MatrixManager.LocalToWorldInt(localSensorAggrigateVector, MatrixInfo, serverTargetState);
 
-			// Exclude the rotating matrix, we shouldn't be able to collide with ourselves
-			int[] excludeList = { matrixInfo.Id };
 			if (!MatrixManager.IsPassableAtAllMatrices(sensorPos, sensorPos, isServer: true,
-											collisionType: matrixColliderType, includingPlayers: true, excludeList: excludeList))
+											collisionType: matrixColliderType, includingPlayers: true, excludeMatrix: MatrixInfo))
 			{
 				Logger.LogTrace(
 					$"Can't rotate at {serverTargetState.Position}->{serverTargetState.Position } (because {sensorPos} is occupied)!",
@@ -845,6 +793,7 @@ public class MatrixMove : ManagedBehaviour
 		var oldState = clientState;
 
 		clientState = newState;
+		matrix.MetaTileMap.GlobalCachedBounds = null;
 		Logger.LogTraceFormat("{0} setting client / client target state from message {1}", Category.Shuttles, this, newState);
 
 
@@ -930,6 +879,7 @@ public class MatrixMove : ManagedBehaviour
 			//				When serverState reaches its planned destination,
 			//				embrace all other updates like changed speed and rotation
 			serverState = serverTargetState;
+			matrix.MetaTileMap.GlobalCachedBounds = null;
 			Logger.LogTraceFormat("{0} setting server state from target state {1}", Category.Shuttles, this, serverState);
 			NotifyPlayers();
 		}
@@ -1004,7 +954,6 @@ public class MatrixMove : ManagedBehaviour
 			Logger.LogTraceFormat("{0} server target facing / flying {1}", Category.Shuttles, this, desiredOrientation);
 
 			MatrixMoveEvents.OnRotate.Invoke(new MatrixRotationInfo(this, serverState.FacingDirection.OffsetTo(desiredOrientation), NetworkSide.Server, RotationEvent.Start));
-
 			RequestNotify();
 			return true;
 		}
@@ -1283,7 +1232,7 @@ public class MatrixMove : ManagedBehaviour
 	{
 		ClearRcsCache();
 
-		foreach (Transform child in matrixInfo.Objects)
+		foreach (Transform child in MatrixInfo.Objects)
 		{
 			if (child.CompareTag("Rcs") && child.TryGetComponent(out RcsThruster thruster))
 			{
