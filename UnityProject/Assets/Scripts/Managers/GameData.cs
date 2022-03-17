@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.IO;
+using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using DatabaseAPI;
 using Firebase.Auth;
@@ -8,6 +10,7 @@ using Firebase.Extensions;
 using Lobby;
 using Managers;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 
@@ -74,6 +77,30 @@ public class GameData : MonoBehaviour
 		Init();
 	}
 
+	public async void APITest()
+	{
+		var url = "https://api.unitystation.org/validatetoken?data=";
+
+		HttpRequestMessage r = new HttpRequestMessage(HttpMethod.Get,
+			url + UnityWebRequest.EscapeURL(JsonUtility.ToJson("")));
+
+		CancellationToken cancellationToken = new CancellationTokenSource(120000).Token;
+
+		HttpResponseMessage res;
+		try
+		{
+			res = await ServerData.HttpClient.SendAsync(r, cancellationToken);
+		}
+		catch (System.Net.Http.HttpRequestException e)
+		{
+			forceOfflineMode = true;
+			return;
+		}
+		
+		forceOfflineMode = false;
+	}
+
+
 	private void Init()
 	{
 #if UNITY_EDITOR
@@ -87,7 +114,7 @@ public class GameData : MonoBehaviour
 		forceOfflineMode = !string.IsNullOrEmpty(GetArgument("-offlinemode"));
 		Logger.Log($"Build Version is: {BuildNumber}. " + (OfflineMode ? "Offline mode" : string.Empty));
 		CheckHeadlessState();
-
+		APITest();
 		Environment.SetEnvironmentVariable("MONO_REFLECTION_SERIALIZER", "yes");
 
 		string testServerEnv = Environment.GetEnvironmentVariable("TEST_SERVER");
@@ -100,7 +127,15 @@ public class GameData : MonoBehaviour
 		{
 			if (FirebaseAuth.DefaultInstance.CurrentUser != null)
 			{
-				AttemptAutoJoin(LobbyManager.Instance.lobbyDialogue.LoginSuccess);
+				if (LobbyManager.Instance.OrNull()?.lobbyDialogue != null)
+				{
+					AttemptAutoJoin(LobbyManager.Instance.lobbyDialogue.LoginSuccess);
+				}
+				else
+				{
+					Logger.LogWarning("LobbyManager.Instance == null");
+				}
+
 			}
 		}
 	}
@@ -192,7 +227,7 @@ public class GameData : MonoBehaviour
 		return false;
 	}
 
-	private async void AttemptAutoJoin(Action<String> OnLoginSuccess)
+	private async void AttemptAutoJoin(Action<string> OnLoginSuccess)
 	{
 		await Task.Delay(TimeSpan.FromSeconds(0.1));
 
@@ -202,8 +237,7 @@ public class GameData : MonoBehaviour
 			$"Loading user profile for {FirebaseAuth.DefaultInstance.CurrentUser.DisplayName}");
 
 		await FirebaseAuth.DefaultInstance.CurrentUser.TokenAsync(true).ContinueWithOnMainThread(
-			async task =>
-			{
+			task => {
 				if (task.IsCanceled || task.IsFaulted)
 				{
 					LobbyManager.Instance.lobbyDialogue.LoginError(task.Exception?.Message);
@@ -226,7 +260,7 @@ public class GameData : MonoBehaviour
 
 		GameScreenManager.Instance.serverIP = ip;
 
-		if (!String.IsNullOrEmpty(token))
+		if (string.IsNullOrEmpty(token) == false)
 		{
 			LobbyManager.Instance.lobbyDialogue.ShowLoggingInStatus("Verifying account details..");
 			var refreshToken = new RefreshToken();
@@ -242,7 +276,7 @@ public class GameData : MonoBehaviour
 				return;
 			}
 
-			if (!string.IsNullOrEmpty(response.errorMsg))
+			if (string.IsNullOrEmpty(response.errorMsg) == false)
 			{
 				Logger.LogError($"Something went wrong with hub token validation {response.errorMsg}", Category.DatabaseAPI);
 				LobbyManager.Instance.lobbyDialogue.LoginError($"Could not verify your details {response.errorMsg}");

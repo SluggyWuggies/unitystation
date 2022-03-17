@@ -79,7 +79,11 @@ namespace TileManagement
 		private BetterBoundsInt? LocalCachedBounds;
 		public BetterBounds? GlobalCachedBounds;
 
-		[NonSerialized] public Matrix4x4 localToWorldMatrix = Matrix4x4.identity;
+		[NonSerialized] public Matrix4x4? localToWorldMatrix = null;
+		[NonSerialized] public Matrix4x4? worldToLocalMatrix = null;
+
+		//Vector3[4] {bottomLeft, bottomRight, topLeft, topRight}
+		private Vector3[] globalPoints = new Vector3[4];
 
 		public float Resistance(Vector3Int cellPos, bool includeObjects = true)
 		{
@@ -210,7 +214,9 @@ namespace TileManagement
 
 		public void UpdateMe()
 		{
-			localToWorldMatrix = transform.localToWorldMatrix;
+			var transform1 = transform;
+			localToWorldMatrix = transform1.localToWorldMatrix;
+			worldToLocalMatrix = transform1.worldToLocalMatrix;
 			if (QueuedChanges.Count == 0)
 				return;
 
@@ -1603,12 +1609,19 @@ namespace TileManagement
 
 			var offset = new Vector3(0.5f, 0.5f, 0);
 
-			var bottomLeft = localToWorldMatrix.MultiplyPoint(localBound.min + offset);
-			var bottomRight = localToWorldMatrix.MultiplyPoint(new Vector3(localBound.xMax, localBound.yMin, 0)  + offset);
-			var topLeft = localToWorldMatrix.MultiplyPoint(new Vector3(localBound.xMin, localBound.yMax, 0)  + offset);
-			var topRight = localToWorldMatrix.MultiplyPoint(localBound.max  + offset);
+			if (localToWorldMatrix == null)
+			{
+				Logger.LogError("humm, localToWorldMatrix  tried to be excess before being set humm, Setting to identity matrix, Please fix this ");
+				localToWorldMatrix = Matrix4x4.identity;
+			}
 
-			var globalPoints = new Vector3[4] {bottomLeft, bottomRight, topLeft, topRight};
+			//Vector3[4] {bottomLeft, bottomRight, topLeft, topRight}; //Presuming It's been updated
+			var bottomLeft = localToWorldMatrix.Value.MultiplyPoint(localBound.min + offset);
+			globalPoints[0] = bottomLeft;
+			globalPoints[1] = localToWorldMatrix.Value.MultiplyPoint(new Vector3(localBound.xMax, localBound.yMin, 0)  + offset);
+			globalPoints[2] = localToWorldMatrix.Value.MultiplyPoint(new Vector3(localBound.xMin, localBound.yMax, 0)  + offset);
+			globalPoints[3] = localToWorldMatrix.Value.MultiplyPoint(localBound.max  + offset);
+
 			var minPosition = bottomLeft;
 			var maxPosition = bottomLeft;
 			foreach (var point in globalPoints)
@@ -1622,7 +1635,7 @@ namespace TileManagement
 				Maximum = maxPosition, Minimum = minPosition
 			};
 
-			if (matrix.MatrixMove == null ||
+			if (matrix.IsMovable == false ||
 			    (CustomNetworkManager.IsServer && matrix.MatrixMove.IsMovingServer == false &&
 			     matrix.MatrixMove.IsRotatingServer == false) ||
 			    (CustomNetworkManager.IsServer == false && matrix.MatrixMove.IsMovingClient == false &&
@@ -2025,7 +2038,6 @@ namespace TileManagement
 			return tiles;
 		}
 
-
 		private int FindFirstEmpty(List<TileLocation> LookThroughList)
 		{
 			int NewIndex = LookThroughList.Count;
@@ -2060,7 +2072,7 @@ namespace TileManagement
 		}
 
 		public void RemoveOverlaysOfType(Vector3Int cellPosition, LayerType layerType, OverlayType overlayType,
-			bool onlyIfCleanable = false)
+			bool onlyIfCleanable = false, Color? matchColour = null)
 		{
 			cellPosition.z = 0;
 
@@ -2079,6 +2091,12 @@ namespace TileManagement
 					if (tile == null || !tile.IsCleanable) continue;
 				}
 
+				if (matchColour != null)
+				{
+					var tileColour = GetColour(cellPosition, layerType);
+					if(matchColour != tileColour) continue;
+				}
+
 				RemoveTileWithlayer(cellPosition, layerType);
 			}
 		}
@@ -2088,7 +2106,7 @@ namespace TileManagement
 		/// Dynamically adds overlays to tile position
 		/// </summary>
 		public void AddOverlay(Vector3Int cellPosition, OverlayTile overlayTile, Matrix4x4? transformMatrix = null,
-			Color? color = null)
+			Color? color = null, bool allowMultiple = false)
 		{
 			//use remove methods to remove overlay instead
 			if (overlayTile == null) return;
@@ -2096,7 +2114,7 @@ namespace TileManagement
 			cellPosition.z = 0;
 
 			//Dont add the same overlay twice
-			if (HasOverlay(cellPosition, overlayTile.LayerType, overlayTile)) return;
+			if (HasOverlay(cellPosition, overlayTile.LayerType, overlayTile) && allowMultiple == false) return;
 
 			var overlayPos = GetFreeOverlayPos(cellPosition, overlayTile.LayerType);
 			if (overlayPos == null) return;
@@ -2181,6 +2199,9 @@ namespace TileManagement
 		FireSparkles,
 		FireOverCharged,
 		FireFusion,
-		FireRainbow
+		FireRainbow,
+		Ash,
+		EMP,
+		EMPCenter
 	}
 }

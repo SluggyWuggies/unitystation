@@ -3,16 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Systems.Explosions;
-using ScriptableObjects.Communications;
+using UnityEngine;
+using Mirror;
 using Communications;
 using Managers;
-using Mirror;
-using Objects;
+using Systems.Explosions;
 using Scripts.Core.Transform;
-using UI;
-using UnityEngine;
-
+using UI.Items;
 
 namespace Items.Weapons
 {
@@ -35,10 +32,9 @@ namespace Items.Weapons
 		private HasNetworkTabItem explosiveGUI;
 		[HideInInspector] public GUI_Explosive GUI;
 
-		private bool hasExploded;
-		private bool isArmed;
-		private bool countDownActive = false;
-		private bool isOnObject = false;
+		[SyncVar] private bool isArmed;
+		[SyncVar] private bool countDownActive = false;
+		[SyncVar] private bool isOnObject = false;
 		private GameObject attachedToObject;
 
 		public int TimeToDetonate
@@ -73,33 +69,23 @@ namespace Items.Weapons
 			UpdateManager.Remove(CallbackType.PERIODIC_UPDATE, UpdateBombPosition);
 		}
 
-		public async void Countdown()
+		[Server]
+		public IEnumerator Countdown()
 		{
 			countDownActive = true;
 			spriteHandler.SetSpriteSO(activeSpriteSO);
 			if (GUI != null) GUI.StartCoroutine(GUI.UpdateTimer());
-			await Task.Delay(timeToDetonate * 1000); //Delay is in milliseconds
+			yield return WaitFor.Seconds(timeToDetonate); //Delay is in milliseconds
 			Detonate();
 		}
 
 		private void Detonate()
 		{
-			if (hasExploded)
-			{
-				return;
-			}
-			hasExploded = true;
-
-			if (isServer)
-			{
-				// Get data before despawning
-				var worldPos = objectBehaviour.AssumedWorldPositionServer();
-
-				// Despawn the explosive
-				_ = Despawn.ServerSingle(gameObject);
-				Explosion.StartExplosion(worldPos, explosiveStrength);
-			}
-
+			// Get data before despawning
+			var worldPos = objectBehaviour.AssumedWorldPositionServer();
+			// Despawn the explosive
+			_ = Despawn.ServerSingle(gameObject);
+			Explosion.StartExplosion(worldPos, explosiveStrength);
 		}
 
 		[Server]
@@ -119,7 +105,7 @@ namespace Items.Weapons
 			scaleSync.SetScale(new Vector3(0.6f, 0.6f, 0.6f));
 		}
 
-		public void UpdateBombPosition()
+		private void UpdateBombPosition()
 		{
 			if(attachedToObject == null) return;
 			if(attachedToObject.WorldPosServer() == gameObject.WorldPosServer()) return;
@@ -134,7 +120,14 @@ namespace Items.Weapons
 		{
 			detonateImmediatelyOnSignal = mode;
 		}
+		
+		[Command(requiresAuthority = false)]
+		private void CmdTellServerToDeattachExplosive()
+		{
+			DeAttachExplosive();
+		}
 
+		[Server]
 		private void DeAttachExplosive()
 		{
 			isOnObject = false;
@@ -153,7 +146,7 @@ namespace Items.Weapons
 				Detonate();
 				return;
 			}
-			Countdown();
+			StartCoroutine(Countdown());
 		}
 
 		/// <summary>
@@ -228,7 +221,15 @@ namespace Items.Weapons
 		{
 			RightClickableResult result = new RightClickableResult();
 			if (isOnObject == false) return result;
-			return result.AddElement("Deattach", DeAttachExplosive);
+			if (CustomNetworkManager.IsServer)
+			{
+				result.AddElement("Deattach", DeAttachExplosive);
+			}
+			else
+			{
+				result.AddElement("Deattach", CmdTellServerToDeattachExplosive);
+			}
+			return result;
 		}
 
 		public void ServerPerformInteraction(InventoryApply interaction)
