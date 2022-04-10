@@ -8,8 +8,6 @@ namespace Player
 {
 	public class GhostOrbit : NetworkBehaviour
 	{
-		public static GhostOrbit Instance;
-
 		[SyncVar(hook = nameof(SyncOrbitObject))]
 		private GameObject target;
 
@@ -27,7 +25,6 @@ namespace Player
 			if (netTransform == null) netTransform = GetComponent<PlayerSync>();
 			if (rotateTransform == null) rotateTransform = GetComponent<RotateAroundTransform>();
 			UpdateManager.Add(CallbackType.UPDATE, UpdateMe);
-			Instance = this;
 		}
 
 		private void OnDisable()
@@ -54,7 +51,7 @@ namespace Player
 		private void UpdateMe()
 		{
 			if(isLocalPlayer == false) return;
-
+		
 			if (Input.GetMouseButtonDown(0))
 			{
 				if (hasClicked == false)

@@ -263,8 +263,6 @@ namespace Objects.Engineering
 		[SyncVar(hook = nameof(SyncIsDelam))]
 		private bool isDelam;
 
-		[SerializeField] private int explosionStrength = 55000;
-
 		#region LifeCycle
 
 		private void Awake()
@@ -876,7 +874,7 @@ namespace Objects.Engineering
 
 			RadiationManager.Instance.RequestPulse( registerTile.LocalPositionServer, detonationRads, GetInstanceID());
 
-			Explosion.StartExplosion(registerTile.WorldPositionServer, explosionStrength);
+			Explosion.StartExplosion(registerTile.WorldPositionServer, 10000);
 
 			_ = Despawn.ServerSingle(gameObject);
 		}

@@ -18,7 +18,7 @@ public class SpawnerSearch
 	public static readonly Regex NON_ALPHANUMERIC = new Regex(@"\W", RegexOptions.Compiled);
 
 	// array of structs for fast iteration while searching
-	public readonly DevSpawnerDocument[] documents;
+	private readonly DevSpawnerDocument[] documents;
 
 	private SpawnerSearch(DevSpawnerDocument[] documents)
 	{

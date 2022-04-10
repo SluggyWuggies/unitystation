@@ -96,7 +96,7 @@ public class GameData : MonoBehaviour
 			forceOfflineMode = true;
 			return;
 		}
-
+		
 		forceOfflineMode = false;
 	}
 
@@ -305,7 +305,7 @@ public class GameData : MonoBehaviour
 					if (success)
 					{
 						Logger.Log("Signed in successfully with valid token", Category.DatabaseAPI);
-						OnCharacterScreenCloseFromHubConnect();
+						LobbyManager.Instance.lobbyDialogue.ShowCharacterEditor(OnCharacterScreenCloseFromHubConnect);
 					}
 					else
 					{
@@ -318,17 +318,17 @@ public class GameData : MonoBehaviour
 		{
 			if (FirebaseAuth.DefaultInstance.CurrentUser != null)
 			{
-				AttemptAutoJoin(OnCharacterScreenCloseFromHubConnect);
+				AttemptAutoJoin(OnHubConnectAutoJoinSuccess);
 			}
 		}
 	}
 
-	private void OnCharacterScreenCloseFromHubConnect()
+	private void OnHubConnectAutoJoinSuccess(string msg)
 	{
-		LobbyManager.Instance.lobbyDialogue.OnStartGameFromHub();
+		LobbyManager.Instance.lobbyDialogue.ShowCharacterEditor(OnCharacterScreenCloseFromHubConnect);
 	}
 
-	private void OnCharacterScreenCloseFromHubConnect(string msg)
+	private void OnCharacterScreenCloseFromHubConnect()
 	{
 		LobbyManager.Instance.lobbyDialogue.OnStartGameFromHub();
 	}

@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using AdminCommands;
 using UI.AdminTools;
-using UI.Systems.AdminTools;
 
 
 namespace AdminTools
@@ -13,7 +12,9 @@ namespace AdminTools
 	{
 		[SerializeField] private GameObject retrievingDataScreen = null;
 
+		[SerializeField] private GameObject backBtn = null;
 		[SerializeField] private GameObject gameModePage = null;
+		[SerializeField] private GameObject mainPage = null;
 		[SerializeField] private GameObject playerManagePage = null;
 		[SerializeField] private GameObject playerChatPage = null;
 		[SerializeField] private GameObject playersScrollView = null;
@@ -23,9 +24,6 @@ namespace AdminTools
 		[SerializeField] private GameObject devToolsPage = null;
 		[SerializeField] private GameObject serverSettingsPage = null;
 		[SerializeField] private AdminRespawnPage adminRespawnPage = default;
-		[SerializeField] private Slider transparencySlider;
-		[SerializeField] private Image backgroundImage;
-		public AdminGiveItem giveItemPage;
 		private PlayerChatPage playerChatPageScript;
 		private PlayerManagePage playerManagePageScript;
 		public KickBanEntryPage kickBanEntryPage;
@@ -49,14 +47,7 @@ namespace AdminTools
 		{
 			playerChatPageScript = playerChatPage.GetComponent<PlayerChatPage>();
 			playerManagePageScript = playerManagePage.GetComponent<PlayerManagePage>();
-		}
-
-		private void Update()
-		{
-			if (Input.GetKeyDown(KeyCode.LeftShift))
-			{
-				transparencySlider.gameObject.SetActive(!transparencySlider.IsActive());
-			}
+			ShowMainPage();
 		}
 
 		public void ClosePanel()
@@ -69,10 +60,28 @@ namespace AdminTools
 			gameObject.SetActive(!gameObject.activeInHierarchy);
 		}
 
+		public void OnBackButton()
+		{
+			if (playerChatPage.activeInHierarchy)
+			{
+				playerChatPage.GetComponent<PlayerChatPage>().GoBack();
+				return;
+			}
+			ShowMainPage();
+		}
+
+		public void ShowMainPage()
+		{
+			DisableAllPages();
+			mainPage.SetActive(true);
+			windowTitle.text = "ADMIN TOOL PANEL";
+		}
+
 		public void ShowGameModePage()
 		{
 			DisableAllPages();
 			gameModePage.SetActive(true);
+			backBtn.SetActive(true);
 			windowTitle.text = "GAME MODE MANAGER";
 			retrievingDataScreen.SetActive(true);
 		}
@@ -81,6 +90,7 @@ namespace AdminTools
 		{
 			DisableAllPages();
 			playerManagePage.SetActive(true);
+			backBtn.SetActive(true);
 			windowTitle.text = "PLAYER MANAGER";
 			playersScrollView.SetActive(true);
 			retrievingDataScreen.SetActive(true);
@@ -90,6 +100,7 @@ namespace AdminTools
 		{
 			DisableAllPages();
 			playerChatPage.SetActive(true);
+			backBtn.SetActive(true);
 			windowTitle.text = "PLAYER BWOINK";
 			playersScrollView.SetActive(true);
 			retrievingDataScreen.SetActive(true);
@@ -99,6 +110,7 @@ namespace AdminTools
 		{
 			DisableAllPages();
 			centCommPage.SetActive(true);
+			backBtn.SetActive(true);
 			windowTitle.text = "CENTCOMM";
 		}
 
@@ -107,6 +119,7 @@ namespace AdminTools
 			DisableAllPages();
 			eventsManagerPage.SetActive(true);
 			eventsManagerPage.GetComponent<EventsManagerPage>().GenerateDropDownOptions();
+			backBtn.SetActive(true);
 			windowTitle.text = "EVENTS MANAGER";
 		}
 
@@ -114,6 +127,7 @@ namespace AdminTools
 		{
 			DisableAllPages();
 			roundManagerPage.SetActive(true);
+			backBtn.SetActive(true);
 			windowTitle.text = "ROUND MANAGER";
 		}
 
@@ -121,6 +135,7 @@ namespace AdminTools
 		{
 			DisableAllPages();
 			devToolsPage.SetActive(true);
+			backBtn.SetActive(true);
 			windowTitle.text = "DEV TOOLS";
 			AdminCommandsManager.Instance.CmdRequestProfiles();
 		}
@@ -129,6 +144,7 @@ namespace AdminTools
 		{
 			DisableAllPages();
 			serverSettingsPage.SetActive(true);
+			backBtn.SetActive(true);
 			windowTitle.text = "SERVER SETTINGS";
 		}
 
@@ -139,19 +155,12 @@ namespace AdminTools
 			windowTitle.text = "RESPAWN A PLAYER";
 		}
 
-		public void ShowGiveItemPagePage()
-		{
-			DisableAllPages();
-			giveItemPage.SetActive(true);
-			windowTitle.text = $"Give item to {giveItemPage.selectedPlayer.Script.visibleName}";
-			UIManager.IsInputFocus = true;
-			UIManager.PreventChatInput = true;
-		}
-
 		void DisableAllPages()
 		{
 			retrievingDataScreen.SetActive(false);
 			gameModePage.SetActive(false);
+			mainPage.SetActive(false);
+			backBtn.SetActive(false);
 			playerManagePage.SetActive(false);
 			playerChatPage.SetActive(false);
 			centCommPage.SetActive(false);
@@ -163,7 +172,6 @@ namespace AdminTools
 			areYouSurePage.gameObject.SetActive(false);
 			adminRespawnPage.gameObject.SetActive(false);
 			serverSettingsPage.gameObject.SetActive(false);
-			giveItemPage.SetActive(false);
 		}
 
 		public void CloseRetrievingDataScreen()
@@ -258,13 +266,6 @@ namespace AdminTools
 			{
 				playerChatPageScript.SetData(null);
 			}
-		}
-
-		public void UpdateWindowTransparency()
-		{
-			var bgColor = backgroundImage.color;
-			bgColor.a = transparencySlider.value;
-			backgroundImage.color = bgColor;
 		}
 	}
 }
