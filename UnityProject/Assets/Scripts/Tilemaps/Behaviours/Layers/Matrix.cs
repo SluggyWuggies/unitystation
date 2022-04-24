@@ -14,7 +14,7 @@ using Systems.Atmospherics;
 using Systems.Electricity;
 using Systems.Pipes;
 using Util;
-
+using Tiles;
 
 /// <summary>
 /// Behavior which indicates a matrix - a contiguous grid of tiles.
@@ -57,7 +57,7 @@ public class Matrix : MonoBehaviour
 	public bool IsMainStation;
 	public bool IsLavaLand;
 
-	private CheckedComponent<MatrixMove> checkedMatrixMove;
+	private CheckedComponent<MatrixMove> checkedMatrixMove = new CheckedComponent<MatrixMove>();
 	public bool IsMovable => checkedMatrixMove.HasComponent;
 
 	public MatrixMove MatrixMove => checkedMatrixMove.Component;
