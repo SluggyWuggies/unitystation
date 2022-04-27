@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Systems.Ai;
 using Messages.Server;
+using Messages.Server.SoundMessages;
 using Objects.Telecomms;
 using Systems.Communications;
 using UI.Chat_UI;
@@ -301,35 +302,35 @@ public class ChatRelay : NetworkBehaviour
 
 			ChatUI.Instance.AddChatEntry(message);
 		}
-
+		AudioSourceParameters audioSourceParameters = new AudioSourceParameters();
 		switch (channels)
 		{
-			case ChatChannel.Local:
-				break;
-			case ChatChannel.Action:
-				break;
-			case ChatChannel.Examine:
-				break;
-			case ChatChannel.Ghost: //(Max) : we need a sound for ghosts
-				break;
-			case ChatChannel.System:
-				break;
-			case ChatChannel.Warning:
-				break;
-			case ChatChannel.Blob:
-				break;
-			case ChatChannel.OOC:
-				break;
 			case ChatChannel.Syndicate:
-				_ = SoundManager.Play(Chat.Instance.commonSyndicteChannelSound);
+				audioSourceParameters.Volume = PlayerPrefs.GetFloat(PlayerPrefKeys.RadioVolumeKey);
+				_ = SoundManager.Play(Chat.Instance.commonSyndicteChannelSound,audioSourceParameters: audioSourceParameters);
 				break;
 			case ChatChannel.Security:
-				_ = SoundManager.Play(Chat.Instance.commonSecurityChannelSound);
+
+				audioSourceParameters.Volume = PlayerPrefs.GetFloat(PlayerPrefKeys.RadioVolumeKey);
+				_ = SoundManager.Play(Chat.Instance.commonSecurityChannelSound, audioSourceParameters:audioSourceParameters);
 				break;
-			default:
-				_ = SoundManager.Play(Chat.Instance.commonRadioChannelSound);
+			case ChatChannel.Binary:
+			case ChatChannel.Medical:
+			case ChatChannel.Command:
+			case ChatChannel.Supply:
+			case ChatChannel.CentComm:
+			case ChatChannel.Science:
+			case ChatChannel.Engineering:
+			case ChatChannel.Common:
+				if (PlayerPrefs.GetInt(PlayerPrefKeys.CommonRadioToggleKey) == 1)
+				{
+					audioSourceParameters.Volume = PlayerPrefs.GetFloat(PlayerPrefKeys.RadioVolumeKey);
+					_ = SoundManager.Play(Chat.Instance.commonRadioChannelSound, audioSourceParameters:audioSourceParameters);
+				}
+
 				break;
 		}
+
 	}
 
 	/// <summary>

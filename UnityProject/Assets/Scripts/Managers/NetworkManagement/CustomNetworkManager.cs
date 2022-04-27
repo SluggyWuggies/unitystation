@@ -54,7 +54,10 @@ public class CustomNetworkManager : NetworkManager, IInitialise
 		{
 			new Task(SetUpSpawnablePrefabsIndex).Start();
 		}
-
+		if (ForeverIDLookupSpawnablePrefabs.Count == 0)
+		{
+			new Task(SetUpSpawnablePrefabsForEverID).Start();
+		}
 
 		if (Instance == null)
 		{
@@ -101,6 +104,7 @@ public class CustomNetworkManager : NetworkManager, IInitialise
 	{
 		for (int i = 0; i < allSpawnablePrefabs.Count; i++)
 		{
+			ForeverIDLookupSpawnablePrefabs[allSpawnablePrefabs[i].GetComponent<PrefabTracker>().ForeverID] = allSpawnablePrefabs[i];
 		}
 	}
 
@@ -110,11 +114,12 @@ public class CustomNetworkManager : NetworkManager, IInitialise
 	{
 		CheckTransport();
 		ApplyConfig();
-		//Automatically host if starting up game *not* from lobby
-		if (SceneManager.GetActiveScene().name != "Lobby")
-		{
-			StartHost();
-		}
+
+		// if editor prefs previousEditorScene is StartUp or Lobby, return
+		var prevEditorScene = SubSceneManager.GetEditorPrevScene();
+		if (prevEditorScene == "StartUp" || prevEditorScene == "Lobby") return;
+
+		StartHost();
 	}
 
 	void CheckTransport()
